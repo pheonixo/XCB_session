@@ -70,8 +70,8 @@ LIBS := $(LLIBS) -lm -I/usr/include/freetype2 -lfreetype
 CFLAGS := $(CFLAGS) -Wno-long-long
 
 libctype.a:
-	make -C ../libctype
-	@cp ../libctype/build/libctype.a ./
+	make -C ./libctype
+	@cp ./libctype/build/libctype.a ./
 
 # session: window creation
 xxssn: xcb_session.c $(SRC) $(XHDR) makefile
