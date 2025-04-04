@@ -7,8 +7,7 @@ user_textstring(void) {
   char *string;
   size_t rdSz;
   long filesize;
-  FILE *rh = fopen("/home/steven/Development/Projects/"
-                   "libctype/locale/rwSystems/numbers.c", "r");
+  FILE *rh = fopen("./libctype/locale/rwSystems/numbers.c", "r");
   if (rh == NULL) {  puts("file not found"); return NULL;  }
   fseek(rh, 0 , SEEK_END);
   filesize = ftell(rh);
