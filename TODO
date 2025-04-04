@@ -1,0 +1,82 @@
+TODO notes:
+
+need to go thru textuals.c to increase offsets from int to unsigned size ???
+
+align SBIT_MAPPED with OBIT_SENSITIVE
+
+on auto scroll possible static time variable like mouse bptime
+draw.c still needs dirty/clean compositing instead of draw all
+
+current _default_bank_meter() based on combo button, not actual actuator
+XXX: banks currently only set up is horizontal object layout.
+     and postion/scroll need setup based on position on screen
+./objects.c:243:      /* XXX: one directional bank set up. */
+./banks.c:31:       /* XXX: need binary compat
+think fixed:  with combo/focus issue of drag_selection_box
+
+./textviews_drag.c:242:  /* XXX tbuf in otxt */
+./textviews_drag.c:342:  /* XXX should verify gdata type */
+
+./drag.c:45:        /* XXX TODO a dash-lined rectangle for selection */
+./nexus.c:9:        /* XXX add visiblity */
+./buttons.c:333:    /* XXX add visiblity */
+./textuals.c:535:   /* XXX location_double_click() c parse of parenthesis, etc
+./textviews.c:22:   /* XXX: Draw background. Plain backdrop only set up for.
+./events.c:511:     /* XXX: focus. */
+
+drawing port/nexus: a container of objects that receive events
+bank: a dropdown interface normally contains one nexus. Could contain
+      more to switch out content (Menus?). The nexus metes out to its objects.
+
+session: a collection of windows and data needed at this global level
+interface: collection of drawing ports/nexus to a window and this
+           level's data. Auto-configures on window resize.
+           Sends events to its objects.
+objects: drawing/events that occur within a port and its data. Must attach
+         to a nexus or another object as child.
+
+events: broken into 2 types, basic signals and a motion with button 1 press.
+        motion with button 1 press are separated into 'drag' files.
+
+drag: 6 different types:
+      within an object (selecting and dnd)
+      object to object in same window           INTERNAL_ON
+      window to window within an application    EXTERNAL_ON
+      application window to application window  EXTERNAL_ON
+      gfuse, kind of window within a window that resizes (own seperate file)
+drag: session holds servers created
+      atoms holds needed server constants
+      drag.c holds links/servers to normal signals:
+        3 sections, normal, internal, external
+      textviews_drag.c holds this object's needs
+      gfuse.c holds it use of signals/drag
+
+dropdown/combo:
+      Compiz WM has flicker of content within the button. Math verified, gcc
+      verified (older version built on different system), and 'GNOME Shell' WM
+      provides non-flicker results.
+
+Inclusion status requests of DND not handled
+Drag objects test
+Still need to bring forward (topmost) when becomes target
+
+/* src_actions :
+ XdndActionCopy    0
+ XdndActionMove    1  possible user actions? meaning part of position/status
+ XdndActionLink    2  Unknown abstract, add private unicode characters?
+ XdndActionAsk     4  source run dialog for user input (keyboardless?)
+ XdndActionPrivate 8  Unknown abstract, add private unicode characters?
+*/
+
+Bank must have a first member?
+menu: actavator
+combo: active
+context: none
+tooltip: location selection activator
+
+Right-click context dropdown: owner iface, non-attached
+left-clicked button (menu): owner button, attached lower left
+left-clicked button (combo): owner button, attached button-draw area
+left-clicked button (free): owner button, user defined position
+
+Work clipboard, feel like missing something
