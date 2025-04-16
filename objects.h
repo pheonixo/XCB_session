@@ -41,6 +41,10 @@ extern PhxObject *       ui_object_create(PhxNexus *nexus,
                                           PhxObjectType type,
                                           PhxDrawHandler draw,
                                           PhxRectangle configure);
+extern PhxObject *       ui_object_child_create(PhxObject *obj,
+                                                PhxObjectType type,
+                                                PhxDrawHandler draw,
+                                                PhxRectangle configure);
 extern void              _default_object_raze(void *obj);
 
 extern void              ui_draw_vertical_line(PhxObject *b,
