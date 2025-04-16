@@ -370,6 +370,23 @@ _interface_create(xcb_connection_t *connection,
   return iface;
 }
 
+void
+ui_window_undecorate_set(xcb_window_t window) {
+
+  struct MWMHints {
+    uint32_t   flags, functions, decorations, input_mode, status;
+  } hints = { 2, 0, 0, 0, 0 };
+
+  xcb_intern_atom_cookie_t c0;
+  xcb_intern_atom_reply_t *r0;
+  c0 = xcb_intern_atom(session->connection, 0, 15, "_MOTIF_WM_HINTS");
+  r0 = xcb_intern_atom_reply(session->connection, c0, NULL);
+  xcb_change_property(session->connection, XCB_PROP_MODE_REPLACE, window,
+                      r0->atom, r0->atom, 32, sizeof(hints) >> 2,
+                      &hints);
+  free(r0);
+}
+
 static void
 _window_event_delete(xcb_connection_t *connection, xcb_window_t window) {
 

@@ -81,6 +81,7 @@ extern void            _default_interface_raze(void *iface);
 extern uint16_t        _default_interface_remove_nexus(PhxInterface *iface,
                                                        PhxNexus *nexus);
 
+extern void            ui_window_undecorate_set(xcb_window_t window);
 extern bool            ui_window_is_transient(xcb_window_t window);
 extern void            ui_window_minimum_set(xcb_window_t window,
                                              uint16_t x, uint16_t y);
