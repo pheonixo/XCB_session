@@ -10,6 +10,8 @@
 #define SBIT_RELEASE_IGNORE (1 << 5)     /* Button/key release ignore */
 #define SBIT_SELECTING      (1 << 6)     /* Drag selection of content */
 
+#define SBIT_MAXIMIZED      (1 << 8)     /* For undecorate/keyboard maximze */
+
 /* specific to type of object, bits [0-7] */
   /* nexus: configure updating */  /* other objects not to use for persistant */
 #define NBIT_HORZ_TOUCH      (1 << 0)
