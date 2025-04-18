@@ -218,8 +218,9 @@ _event_keyboard(xcb_generic_event_t *nvt) {
 
     /* A single iface object can have NULL _event_cb.
       User may wish to add 'app' keys for override of do nothing. */
+    /* Address for case where focus follows pointer. Force do nothing. */
   focus = ui_active_focus_get();
-  if (focus->_event_cb != NULL)
+  if ( (focus != NULL) && (focus->_event_cb != NULL) )
     return focus->_event_cb(iface, nvt, focus);
   return true;
 }
