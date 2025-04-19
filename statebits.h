@@ -10,7 +10,10 @@
 #define SBIT_RELEASE_IGNORE (1 << 5)     /* Button/key release ignore */
 #define SBIT_SELECTING      (1 << 6)     /* Drag selection of content */
 
-#define SBIT_MAXIMIZED      (1 << 8)     /* For undecorate/keyboard maximze */
+#define SBIT_UNDECORATED    (1 << 8)     /* For undecorated */
+#define SBIT_HEADERBAR      (1 << 9)     /* For undecorated, adds nexus */
+#define SBIT_HBR_DRAG       (1 << 10)    /* WM type funcs, move/resize */
+#define SBIT_MAXIMIZED      (1 << 11)    /* For undecorate/keyboard maximze */
 
 /* specific to type of object, bits [0-7] */
   /* nexus: configure updating */  /* other objects not to use for persistant */

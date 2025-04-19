@@ -437,8 +437,15 @@ _event_enter(xcb_generic_event_t *nvt) {
   PhxInterface *iface, *imount;
   PhxObject *obj;
   int16_t x, y;
-  xcb_enter_notify_event_t *xing = (xcb_enter_notify_event_t*)nvt;
+  xcb_enter_notify_event_t *xing;
 
+  if ((obj = ui_active_drag_get()) != NULL) {
+    iface = _interface_for(_window_for(obj));
+    if ((iface->state & SBIT_HBR_DRAG) != 0)
+      return true;
+  }
+
+  xing = (xcb_enter_notify_event_t*)nvt;
   iface = _interface_for(xing->event);
   x = xing->event_x;
   y = xing->event_y;
@@ -479,6 +486,13 @@ static bool
 _event_leave(xcb_generic_event_t *nvt) {
 
   PhxObject *obj;
+
+  if ((obj = ui_active_drag_get()) != NULL) {
+    PhxInterface *iface = _interface_for(_window_for(obj));
+    if ((iface->state & SBIT_HBR_DRAG) != 0)
+      return true;
+  }
+
   if ((obj = ui_active_within_get()) != NULL) {
     xcb_enter_notify_event_t *xing = (xcb_enter_notify_event_t*)nvt;
     if (xing->mode == XCB_NOTIFY_MODE_NORMAL) {
@@ -613,7 +627,8 @@ _event_configure(xcb_generic_event_t *nvt) {
   if ((configure->x | configure->y) != 0) {
     if ( (iface->mete_box.x != configure->x)
         || (iface->mete_box.y != configure->y) ) {
-        /* Needed, if want accurate positioning. WM is unreliable */
+        /* Needed, if want accurate positioning. WM is unreliable.
+          Use separingly, causes severe delays. */
       xcb_connection_t *connection = session->connection;
       xcb_screen_t *screen
         = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
@@ -795,10 +810,27 @@ _process_event(xcb_generic_event_t *nvt) {
         = (xcb_reparent_notify_event_t*)nvt;
       PhxInterface *iface = _interface_for(rp->window);
       uint32_t values[2];
+
+      if ((iface->state & SBIT_UNDECORATED) != 0) {
+        struct MWMHints {
+          uint32_t   flags, functions, decorations, input_mode, status;
+        } hints = { 2, 0, 0, 0, 0 };
+      
+        xcb_intern_atom_cookie_t c0;
+        xcb_intern_atom_reply_t *r0;
+        c0 = xcb_intern_atom(session->connection, 0, 15, "_MOTIF_WM_HINTS");
+        r0 = xcb_intern_atom_reply(session->connection, c0, NULL);
+        xcb_change_property(session->connection, XCB_PROP_MODE_REPLACE, rp->window,
+                            r0->atom, r0->atom, 32, sizeof(hints) >> 2,
+                            &hints);
+        free(r0);
+      }
+
       values[0] = iface->mete_box.x;
       values[1] = iface->mete_box.y;
       xcb_configure_window(session->connection, iface->window,
                    XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, values);
+      xcb_flush(session->connection);
       break;
     }
     case XCB_CONFIGURE_NOTIFY: {  /* response_type 22 */
