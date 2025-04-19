@@ -154,17 +154,26 @@ _drag_motion(PhxInterface *iface, xcb_generic_event_t *nvt, PhxObject *obj) {
 
   xcb_motion_notify_event_t *motion;
   PhxObject *has_drag = ui_active_drag_get();
-    /* If an interface, 2 cases. */
-  if ( (has_drag != NULL) && (IS_IFACE_TYPE(has_drag)) ) {
-    if (has_drag->type == PHX_GFUSE)
+
+    /* Interface-type special handing. */
+  if (has_drag != NULL) {
+      /* Currently a button, but should user elect PhxNexus dragging.
+        Uncertainty on case of possible external region dragging. */
+    if ((iface->state & SBIT_HBR_DRAG) != 0)
       return has_drag->_event_cb(iface, nvt, obj);
-    return _drag_selection_box(iface, nvt);
+    if (IS_IFACE_TYPE(has_drag)) {
+      if (has_drag->type == PHX_GFUSE)
+        return has_drag->_event_cb(iface, nvt, obj);
+      return _drag_selection_box(iface, nvt);
+    }
   }
 
   motion = (xcb_motion_notify_event_t*)nvt;
 
 #if DND_EXTERNAL_ON
-  if (has_drag != NULL) {
+    /* -m "Remove excessive work on non-src drags." */
+  if ( (has_drag != NULL)
+      && (has_drag->dnd_quirk != NULL) ) {
     if ( !xdndActivated_get(session->xdndserver)
         && (session->xdndserver->xdndSource.source == 0) )
         /* This does not start server, just loads source drag info. */
@@ -209,7 +218,9 @@ _drag_motion(PhxInterface *iface, xcb_generic_event_t *nvt, PhxObject *obj) {
     if ( (obj->type == PHX_IFACE)
         || ( (!IS_IFACE_TYPE(obj)) && ((obj->state & OBIT_DND_AWARE) == 0) )
         || (obj->_event_cb == NULL) ) {
-      return _drag_selection_box(iface, (xcb_generic_event_t*)motion);
+        /* Special: headerbar allows drag move/resize. */
+      if (obj->i_mount->type != PHX_HEADERBAR)
+        return _drag_selection_box(iface, (xcb_generic_event_t*)motion);
     }
   return false;
 }
@@ -227,7 +238,8 @@ _drag_finish(PhxInterface *iface, xcb_generic_event_t *nvt, PhxObject *obj) {
     return true;
   }
 
-  if (has_drag->type == PHX_GFUSE)
+  if ( (has_drag->type == PHX_GFUSE)
+      || ((iface->state & SBIT_HBR_DRAG) != 0) )
     return has_drag->_event_cb(iface, nvt, obj);
 
   if (obj != NULL) {

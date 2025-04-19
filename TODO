@@ -1,5 +1,8 @@
 TODO notes:
 
+XXX figure out difference reason root and event dont match.
+Drag by root uses different increments then by event.
+
 need to go thru textuals.c to increase offsets from int to unsigned size ???
 
 align SBIT_MAPPED with OBIT_SENSITIVE
@@ -44,6 +47,9 @@ drag: 6 different types:
       window to window within an application    EXTERNAL_ON
       application window to application window  EXTERNAL_ON
       gfuse, kind of window within a window that resizes (own seperate file)
+      7th added:
+        excluded ??? from normal as it is for headerbars, the move/resize
+        is simular to gfuse?
 drag: session holds servers created
       atoms holds needed server constants
       drag.c holds links/servers to normal signals:
@@ -56,9 +62,8 @@ dropdown/combo:
       verified (older version built on different system), and 'GNOME Shell' WM
       provides non-flicker results.
 
-Inclusion status requests of DND not handled
+Inclusion status requests of DND not handled (not sure should include)
 Drag objects test
-Still need to bring forward (topmost) when becomes target
 
 /* src_actions :
  XdndActionCopy    0
@@ -80,3 +85,4 @@ left-clicked button (combo): owner button, attached button-draw area
 left-clicked button (free): owner button, user defined position
 
 Work clipboard, feel like missing something
+

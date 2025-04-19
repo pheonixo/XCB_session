@@ -79,7 +79,8 @@ typedef uint16_t                                         PhxObjectType;
 #define PHX_GFUSE    ((PhxObjectType)((1 << 8) + 3))  /* gripped fuse */
           /* Interface (windows <=> display ports) */
 #define PHX_NEXUS    ((PhxObjectType)4)
-#define PHX_FPORT    ((PhxObjectType)((1 << 8) + 4))  /* nexus with objects */
+#define PHX_FPORT     ((PhxObjectType)((1 << 8) + 4))  /* nexus with objects */
+#define PHX_HEADERBAR ((PhxObjectType)((2 << 8) + 4))  /* nexus with objects */
           /* Objects */
  /* These are just drawings, all same base object struct */
 #define PHX_OBJECT   ((PhxObjectType)5)
@@ -99,7 +100,6 @@ typedef uint16_t                                         PhxObjectType;
 #define OBJECT_BASE_TYPE(a)  ( ((a)->type)       & (uint16_t)0x0FF)
 #define OBJECT_STYLE(a)      ((((a)->type) >> 8) & (uint16_t)0x0FF)
 
-/*typedef struct xcb_xdndserver_t xcb_xdndserver_t;*/
 typedef struct _PhxSession {
  xcb_connection_t     *connection;
  xcb_keysym_t         *keysyms;      /* based off XGetKeyboardMapping() */
