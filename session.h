@@ -124,6 +124,9 @@ typedef struct _PhxSession {
 #if DND_EXTERNAL_ON
  xcb_xdndserver_t     *xdndserver;
 #endif
+  /* addressment of WM issues. */
+ PhxInterface         **stack_order;
+ uint16_t             has_WM;
 } PhxSession;
 
 /* defines within session.c */

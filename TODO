@@ -1,5 +1,7 @@
 TODO notes:
 
+Deal with Window Manager issues of oddities, include no WM also.
+
 XXX figure out difference reason root and event dont match.
 Drag by root uses different increments then by event.
 

@@ -128,5 +128,10 @@ xfbar: xcb_fbar.c xcb_fbar.h  $(SRC) $(XHDR) libctype.a makefile
 xfbar2: xcb_fbar2.c  xcb_fbar.h $(SRC) $(XHDR) libctype.a makefile
 	gcc $(CFLAGS) -o xfbar2 xcb_fbar2.c $(SRC) $(LIBS) -L./ -lctype
 
+#  Design of Headerport
+# nexus hearderbar (textview add on)
+xhbar: xcb_hbar.c $(SRC) $(XHDR) libctype.a makefile
+	gcc $(CFLAGS) -o xhbar xcb_hbar.c $(SRC) $(LIBS) -L./ -lctype
+
 all: xxssn xxss2 xxnex xxgne xxfse xxbtn xxtv1 xxtxt xxgtx xxbnk xebar \
 xfbar xfbar2

@@ -27,10 +27,12 @@ main(int argc, char *argv[]) {
 #if DEBUG_EVENTS_ON
     /* turn off XCB_MOTION_NOTIFY reporting */
   debug_flags &= ~((uint64_t)1 << XCB_MOTION_NOTIFY);
+/*
   debug_flags &= ~((uint64_t)1 << XCB_PROPERTY_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_CONFIGURE_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_EXPOSE);
   debug_flags &= ~((uint64_t)1 << XCB_VISIBILITY_NOTIFY);
+*/
 #endif
 
     /* A 'topmost' decorated window */
@@ -44,7 +46,7 @@ main(int argc, char *argv[]) {
   xcb_map_window(session->connection, window);
 
   configure.x -= 200;
-  configure.y -= 200;
+  configure.y -= 180;
   window = ui_window_create(configure);
   ui_window_name(window);
   xcb_map_window(session->connection, window);

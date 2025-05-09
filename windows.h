@@ -77,6 +77,7 @@ extern void            ui_window_name(xcb_window_t window);
 extern xcb_window_t    ui_window_create(PhxRectangle configure);
 extern xcb_window_t    ui_dropdown_create(PhxRectangle configure,
                                           xcb_window_t transient_for_window);
+extern void            _window_stack_topmost(PhxInterface *iface);
 extern void            _default_interface_raze(void *iface);
 extern uint16_t        _default_interface_remove_nexus(PhxInterface *iface,
                                                        PhxNexus *nexus);

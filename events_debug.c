@@ -217,16 +217,21 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
     }
     case XCB_PROPERTY_NOTIFY: {   /* response_type 28 */
       char buffer[64];
+      xcb_window_t window;
       xcb_property_notify_event_t *prop
         = (xcb_property_notify_event_t*)nvt;
       xcb_get_atom_name_reply_t *reply
         = xcb_get_atom_name_reply(session->connection,
                      xcb_get_atom_name(session->connection, prop->atom), NULL);
-      PhxInterface *iface = _interface_for(prop->window);
-      xcb_window_t window = (iface == NULL) ? 0 : iface->window;
       memmove(buffer, xcb_get_atom_name_name(reply), reply->name_len);
       buffer[reply->name_len] = 0;
       free(reply);
+      window = prop->window;
+      if (prop->state != XCB_PROPERTY_DELETE) {
+          /* For validation of iface. */
+        PhxInterface *iface = _interface_for(window);
+        window = (iface == NULL) ? 0 : iface->window;
+      }
       printf("window %"PRIu32", XCB_PROPERTY_NOTIFY."
          " atom %"PRIu32" %s, state %"PRIu8"  %s\n",
          window, prop->atom, buffer, prop->state, caller);

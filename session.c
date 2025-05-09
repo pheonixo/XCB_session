@@ -240,6 +240,14 @@ _session_create(xcb_connection_t *connection) {
   }
   memset(session->iface, 0, aSz);
 
+  session->stack_order = malloc(aSz);
+  if (session->stack_order == NULL) {
+    free(session->iface);
+    free(session);
+    return NULL;
+  }
+  memset(session->stack_order, 0, aSz);
+
     /* Global atoms for Clipboard and DND use. */
   ui_atoms_initialize(connection);
 
@@ -334,6 +342,7 @@ ui_session_shutdown(void) {
 #endif
   if (session->xclipboard != NULL)
     free(session->xclipboard);
+  free(session->stack_order);
   free(session->iface);
   free(session);
 }

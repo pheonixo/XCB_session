@@ -156,6 +156,77 @@ ui_attributes_font_em_set(PhxObject *obj, int16_t font_em) {
                          font_em);
 }
 
+#pragma mark *** Window Management ***
+
+void
+_window_stack_topmost(PhxInterface *iface) {
+
+  uint16_t idx;
+
+  if (session->ncount > 1) {
+    for (idx = 0; idx < session->ncount; idx++)
+      if (iface == session->stack_order[idx])  break;
+    for (; idx < session->ncount; idx++)
+      session->stack_order[idx] = session->stack_order[(idx + 1)];
+    session->stack_order[(idx - 1)] = iface;
+  }
+}
+
+static void
+_window_stack_remove(PhxInterface *iface) {
+
+  uint16_t idx;
+
+  for (idx = 0; idx < session->ncount; idx++)
+    if (iface == session->stack_order[idx])  break;
+
+  DEBUG_ASSERT((idx == session->ncount), "error: no interface found.");
+
+    /* idx + 1 will be NULL when idx == (session->ncount - 1) */
+  for (; idx < session->ncount; idx++)
+    session->stack_order[idx] = session->stack_order[(idx + 1)];
+}
+
+#pragma mark *** Events ***
+/* These should be used as defaults, or when no window manager. */
+bool
+_default_interface_meter(PhxInterface *iface,
+                         xcb_generic_event_t *nvt,
+                         PhxObject *obj) {
+
+  uint8_t response = nvt->response_type & (uint8_t)0x7F;
+
+  if (response == XCB_KEY_RELEASE) {
+
+    xcb_key_press_event_t *kp;
+    xcb_keysym_t keyval;
+    uint16_t state;
+
+    kp     = (xcb_key_press_event_t*)nvt;
+    keyval = _xcb_keysym_for(kp->detail, kp->state);
+    state = kp->state & (  XCB_MOD_MASK_1
+                         | XCB_MOD_MASK_CONTROL
+                         | XCB_MOD_MASK_SHIFT);
+
+    if ((state & XCB_MOD_MASK_CONTROL) != 0) {
+      if (keyval == 'q') {
+        xcb_client_message_event_t *message = calloc(32, 1);    
+        message->response_type  = XCB_CLIENT_MESSAGE;
+        message->format         = 32;
+        message->window         = kp->event;
+        message->type           = WM_PROTOCOLS;
+        message->data.data32[0] = WM_DELETE_WINDOW;
+        message->data.data32[1] = kp->time;
+        xcb_send_event(session->connection, false, message->window,
+                           XCB_EVENT_MASK_NO_EVENT, (char*)message);
+        xcb_flush(session->connection);
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 #pragma mark *** Creation ***
 
 uint16_t
@@ -223,6 +294,8 @@ _default_interface_raze(void *obj) {
     cairo_surface_destroy(iface->vid_buffer);
     iface->vid_buffer = NULL;
   }
+
+  _window_stack_remove(iface);
 
   free(iface);
 }
@@ -296,11 +369,20 @@ static PhxInterface *
 _interface_create(xcb_connection_t *connection,
                   PhxRectangle configure, void *generic_window) {
 
+  uint16_t idx;
   cairo_status_t err;
   xcb_visualtype_t *visual;
   xcb_window_t window = *(xcb_window_t*)generic_window;
+  PhxInterface *iface;
 
-  PhxInterface *iface = malloc(sizeof(PhxInterface));
+  if (_obj_alloc_test((void**)&session->iface, sizeof(PhxInterface*),
+                                                    session->ncount))
+    return NULL;
+  if (_obj_alloc_test((void**)&session->stack_order, sizeof(PhxInterface*),
+                                                    session->ncount))
+    return NULL;
+
+  iface = malloc(sizeof(PhxInterface));
   if (iface == NULL) {
     DEBUG_ASSERT(true, "Out of memory... _interface_create()");
     return NULL;
@@ -328,6 +410,7 @@ _interface_create(xcb_connection_t *connection,
   iface->min_max.w = INT16_MAX;
   iface->min_max.h = INT16_MAX;
 
+  iface->_event_cb = _default_interface_meter;
   iface->_raze_cb = _default_interface_raze;
 
     /* create window's drawing surface */
@@ -367,6 +450,15 @@ _interface_create(xcb_connection_t *connection,
     free(iface);
     return NULL;
   }
+
+    /* Add interface to session. Stacking order assumes it is
+     to be an unmapped window, so to place on bottom. */
+  session->iface[session->ncount] = iface;
+  for (idx = 0; idx < session->ncount; idx++)
+    session->stack_order[(idx + 1)] = session->stack_order[idx];
+  session->stack_order[0] = iface;
+  session->ncount += 1;
+
   return iface;
 }
 
@@ -465,8 +557,6 @@ ui_window_create(PhxRectangle configure) {
   connection = session->connection;
   iface = _interface_create(connection, configure, &window);
   if (iface == NULL)  return 0;
-  session->iface[session->ncount] = iface;
-  session->ncount += 1;
 
   return window;
 }
@@ -490,8 +580,6 @@ ui_dialog_create(PhxRectangle configure, xcb_window_t transient_for_window) {
   iface = _interface_create(connection, configure, &window);
   if (iface == NULL)  return 0;
   iface->type = PHX_ITDLG;
-  session->iface[session->ncount] = iface;
-  session->ncount += 1;
   iface->i_mount = _interface_for(transient_for_window);
   return window;
 }
@@ -521,8 +609,6 @@ ui_dropdown_create(PhxRectangle configure, xcb_window_t transient_for_window) {
   iface = _interface_create(connection, configure, &window);
   if (iface == NULL)  return 0;
   iface->type = PHX_ITDDL;
-  session->iface[session->ncount] = iface;
-  session->ncount += 1;
   iface->i_mount = _interface_for(transient_for_window);
   return window;
 }

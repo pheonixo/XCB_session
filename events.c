@@ -265,6 +265,21 @@ _event_mouse(xcb_generic_event_t *nvt) {
   iface = _interface_for(mouse->event);
   obj = _get_object_at_pointer(iface, x, y);
 
+  if (session->has_WM == 0) {
+    if (focus == NULL)  goto rnf;
+    if (_window_for(focus) != mouse->event) {
+      const static uint32_t values[] = { XCB_STACK_MODE_ABOVE };
+  rnf:
+      xcb_configure_window(session->connection, mouse->event,
+                           XCB_CONFIG_WINDOW_STACK_MODE, values);
+      iface->state &= ~SBIT_CLICKS;
+      xcb_set_input_focus(session->connection, XCB_INPUT_FOCUS_POINTER_ROOT,
+                                         _window_for(obj), XCB_CURRENT_TIME);
+      /*printf("raise and focus window %d\n", _window_for(obj));*/
+      return true;
+    }
+  }
+
   if (!locus) {
     if (ui_active_drag_get() != NULL)
       return _drag_finish(iface, nvt, obj);
@@ -439,12 +454,6 @@ _event_enter(xcb_generic_event_t *nvt) {
   int16_t x, y;
   xcb_enter_notify_event_t *xing;
 
-  if ((obj = ui_active_drag_get()) != NULL) {
-    iface = _interface_for(_window_for(obj));
-    if ((iface->state & SBIT_HBR_DRAG) != 0)
-      return true;
-  }
-
   xing = (xcb_enter_notify_event_t*)nvt;
   iface = _interface_for(xing->event);
   x = xing->event_x;
@@ -457,10 +466,9 @@ _event_enter(xcb_generic_event_t *nvt) {
 #else
   if (ui_active_within_get() != NULL)
 #endif
-      /* Can receive enter after a drop in within */
-    DEBUG_ASSERT(( (ui_active_within_get() != NULL)
-                  && (ui_active_within_get() == ui_active_focus_get())
-                   && ((iface->state & SBIT_FOCUS_CLICK) == 0) ),
+    DEBUG_ASSERT(( (ui_active_within_get() == ui_active_focus_get())
+                   && ((iface->state & SBIT_FOCUS_CLICK) == 0)
+                    && ((iface->state & SBIT_HBR_DRAG) == 0) ),
                          "failure: within already set.");
 
   if (obj == NULL) {
@@ -486,12 +494,6 @@ static bool
 _event_leave(xcb_generic_event_t *nvt) {
 
   PhxObject *obj;
-
-  if ((obj = ui_active_drag_get()) != NULL) {
-    PhxInterface *iface = _interface_for(_window_for(obj));
-    if ((iface->state & SBIT_HBR_DRAG) != 0)
-      return true;
-  }
 
   if ((obj = ui_active_within_get()) != NULL) {
     xcb_enter_notify_event_t *xing = (xcb_enter_notify_event_t*)nvt;
@@ -528,6 +530,7 @@ _event_focus(xcb_generic_event_t *nvt) {
   bool locus = ((nvt->response_type & (uint8_t)0x7F) == XCB_FOCUS_IN);
   xcb_focus_in_event_t *focus = (xcb_focus_in_event_t*)nvt;
   PhxInterface *iface = _interface_for(focus->event);
+
   if (iface != NULL) {
     iface->state &= ~SBIT_CLICKS;
       /* On non-dropdown windows, first content click focuses. */
@@ -593,8 +596,7 @@ _event_visibility(xcb_generic_event_t *nvt) {
         XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE
            | XCB_EVENT_MASK_POINTER_MOTION,
         XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC,
-        XCB_NONE, XCB_NONE, XCB_CURRENT_TIME
-    );
+        XCB_NONE, XCB_NONE, XCB_CURRENT_TIME);
     r0 = xcb_grab_pointer_reply(session->connection, c0, NULL);
     if ((r0 == NULL) || (r0->status != XCB_GRAB_STATUS_SUCCESS)) {
       puts("grab failed");
@@ -789,6 +791,14 @@ _process_event(xcb_generic_event_t *nvt) {
            send false to exit loop */
       xcb_destroy_notify_event_t *destroy
         = (xcb_destroy_notify_event_t*)nvt;
+      if ( (session->has_WM == 0) && (session->ncount > 1) ) {
+          /* Should be topmost */
+        PhxInterface *iface = session->stack_order[(session->ncount - 2)];
+        /*printf("new XCB_DESTROY_NOTIFY focus code %d\n", iface->window);*/
+        xcb_set_input_focus(session->connection, XCB_INPUT_FOCUS_POINTER_ROOT,
+                                        iface->window, XCB_CURRENT_TIME);
+        ui_active_focus_set((PhxObject*)iface);
+      }
       if (_interface_remove_for(destroy->window) == 0) {
         free(nvt);
         return false;
@@ -798,9 +808,22 @@ _process_event(xcb_generic_event_t *nvt) {
 
       /* these 4 because of XCB_EVENT_MASK_STRUCTURE_NOTIFY */
     case XCB_UNMAP_NOTIFY:        /* response_type 18 */
+      break;
+
     case XCB_MAP_NOTIFY: {        /* response_type 19 */
+      if (session->has_WM == 0) {
+        xcb_map_notify_event_t *map = (xcb_map_notify_event_t*)nvt;
+          /* Should be topmost */
+        PhxInterface *iface = _interface_for(map->event);
+        /*puts("new XCB_MAP_NOTIFY code sets input");*/
+        _window_stack_topmost(iface);
+        xcb_set_input_focus(session->connection, XCB_INPUT_FOCUS_POINTER_ROOT,
+                                        iface->window, XCB_CURRENT_TIME);
+        ui_active_focus_set((PhxObject*)iface);
+      }
       break;
     }
+
     case XCB_REPARENT_NOTIFY: {   /* response_type 21 */
         /* position after map, to design user requested of window
          * set once and when window manager asks to reparent
@@ -912,6 +935,23 @@ void
 xcb_main(void) {
 
   xcb_connection_t *connection = session->connection;
+
+    /* Guard against running main without a purpose. */
+  if (session->ncount == 0) {
+    DEBUG_ASSERT(true, "error: nothing for xcb_main() to do.");
+    return;
+  }
+    /* Test if Window manager exists. Might even be us? */
+  if (session->has_WM == 0) {
+    xcb_screen_t *screen;
+    xcb_get_window_attributes_cookie_t c0;
+    xcb_get_window_attributes_reply_t *r0;
+    screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
+    c0 = xcb_get_window_attributes(connection, screen->root);
+    r0 = xcb_get_window_attributes_reply(connection, c0, NULL);
+    session->has_WM =
+       !!(r0->all_event_masks & XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT);
+  }
 
     /* application-wide clipboard */
   session->xclipboard = xclb_initialize(connection);
