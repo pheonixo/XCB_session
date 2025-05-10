@@ -31,6 +31,9 @@ _default_nexus_meter(PhxInterface *iface,
     return false;
   }
 
+  if ((nvt->response_type & (uint8_t)0x7F) == XCB_ENTER_NOTIFY)
+    ui_cursor_set_named("left_ptr", iface->window);
+
     /* Nexus was sent an iface type. Should only be 'self'.
       Case of configure has handled, but internal objects may adjust. */
   if (obj->ncount != 0) {

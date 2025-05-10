@@ -220,8 +220,9 @@ _event_keyboard(xcb_generic_event_t *nvt) {
     /* Address for case where focus follows pointer. Force do nothing. */
   focus = ui_active_focus_get();
   if ( (focus != NULL) && (focus->_event_cb != NULL) )
-    return focus->_event_cb(iface, nvt, focus);
-  return true;
+    if (focus->_event_cb(iface, nvt, focus))
+      return true;
+  return _default_interface_meter(iface, nvt, focus);
 }
 
 /*#define DEBUG_BUTTON(a,b) \
@@ -478,12 +479,8 @@ _event_enter(xcb_generic_event_t *nvt) {
                         "failure: entered NULL object.");
     return false;
   }
-  if (IS_WINDOW_TYPE(obj))
-    ui_cursor_set_named("left_ptr", xing->event);
-
-    /* Occurance when 'within' (above content area) and focus_in occurs.
-      Leave extra code incase can make use of. Currently affects DND flag. */
-  /*if (xing->mode != 0)  xing->mode = 0;*/
+    /* Need basic on entry, objects set to thier desire. */
+  ui_cursor_set_named("left_ptr", xing->event);
 
   imount = (PhxInterface*)obj;
   if (!IS_IFACE_TYPE(obj))  imount = obj->i_mount;

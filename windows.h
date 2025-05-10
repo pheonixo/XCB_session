@@ -81,6 +81,9 @@ extern void            _window_stack_topmost(PhxInterface *iface);
 extern void            _default_interface_raze(void *iface);
 extern uint16_t        _default_interface_remove_nexus(PhxInterface *iface,
                                                        PhxNexus *nexus);
+extern bool            _default_interface_meter(PhxInterface *iface,
+                                                xcb_generic_event_t *nvt,
+                                                PhxObject *obj);
 
 extern void            ui_window_undecorate_set(xcb_window_t window);
 extern bool            ui_window_is_transient(xcb_window_t window);

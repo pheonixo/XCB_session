@@ -182,6 +182,11 @@ _default_interface_meter(PhxInterface *iface,
 
   uint8_t response = nvt->response_type & (uint8_t)0x7F;
 
+  if (response == XCB_ENTER_NOTIFY) {
+    ui_cursor_set_named("left_ptr", iface->window);
+    return true;
+  }
+
   if (response == XCB_KEY_RELEASE) {
 
     xcb_key_press_event_t *kp;
