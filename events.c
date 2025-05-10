@@ -104,7 +104,6 @@ _coordinates_for_object(PhxInterface *iface, xcb_generic_event_t *nvt,
       = xcb_query_pointer(session->connection, iface->window);
     xcb_query_pointer_reply_t *r0
       = xcb_query_pointer_reply(session->connection, c0, NULL);
-    xcb_flush(session->connection);
     x = r0->root_x;
     y = r0->root_y;
     free(r0);
@@ -275,9 +274,12 @@ _event_mouse(xcb_generic_event_t *nvt) {
       iface->state &= ~SBIT_CLICKS;
       xcb_set_input_focus(session->connection, XCB_INPUT_FOCUS_POINTER_ROOT,
                                          _window_for(obj), XCB_CURRENT_TIME);
-      /*printf("raise and focus window %d\n", _window_for(obj));*/
+      _window_stack_topmost(_interface_for(_window_for(obj)));
       return true;
     }
+  } else {
+    if (iface != session->stack_order[(session->ncount - 1)])
+      _window_stack_topmost(iface);
   }
 
   if (!locus) {
@@ -476,6 +478,9 @@ _event_enter(xcb_generic_event_t *nvt) {
                         "failure: entered NULL object.");
     return false;
   }
+  if (IS_WINDOW_TYPE(obj))
+    ui_cursor_set_named("left_ptr", xing->event);
+
     /* Occurance when 'within' (above content area) and focus_in occurs.
       Leave extra code incase can make use of. Currently affects DND flag. */
   /*if (xing->mode != 0)  xing->mode = 0;*/
@@ -794,7 +799,6 @@ _process_event(xcb_generic_event_t *nvt) {
       if ( (session->has_WM == 0) && (session->ncount > 1) ) {
           /* Should be topmost */
         PhxInterface *iface = session->stack_order[(session->ncount - 2)];
-        /*printf("new XCB_DESTROY_NOTIFY focus code %d\n", iface->window);*/
         xcb_set_input_focus(session->connection, XCB_INPUT_FOCUS_POINTER_ROOT,
                                         iface->window, XCB_CURRENT_TIME);
         ui_active_focus_set((PhxObject*)iface);
@@ -811,12 +815,10 @@ _process_event(xcb_generic_event_t *nvt) {
       break;
 
     case XCB_MAP_NOTIFY: {        /* response_type 19 */
+      xcb_map_notify_event_t *map = (xcb_map_notify_event_t*)nvt;
+      PhxInterface *iface = _interface_for(map->event);
+      _window_stack_topmost(iface);
       if (session->has_WM == 0) {
-        xcb_map_notify_event_t *map = (xcb_map_notify_event_t*)nvt;
-          /* Should be topmost */
-        PhxInterface *iface = _interface_for(map->event);
-        /*puts("new XCB_MAP_NOTIFY code sets input");*/
-        _window_stack_topmost(iface);
         xcb_set_input_focus(session->connection, XCB_INPUT_FOCUS_POINTER_ROOT,
                                         iface->window, XCB_CURRENT_TIME);
         ui_active_focus_set((PhxObject*)iface);
@@ -853,7 +855,6 @@ _process_event(xcb_generic_event_t *nvt) {
       values[1] = iface->mete_box.y;
       xcb_configure_window(session->connection, iface->window,
                    XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, values);
-      xcb_flush(session->connection);
       break;
     }
     case XCB_CONFIGURE_NOTIFY: {  /* response_type 22 */

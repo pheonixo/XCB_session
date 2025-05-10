@@ -297,6 +297,21 @@ _interface_for(xcb_window_t window) {
   return NULL;
 }
 
+static void
+_stack_remove(PhxInterface *iface) {
+
+  uint16_t idx;
+
+  for (idx = 0; idx < session->ncount; idx++)
+    if (iface == session->stack_order[idx])  break;
+
+  DEBUG_ASSERT((idx == session->ncount), "error: no interface found.");
+
+    /* idx + 1 will be NULL when idx == (session->ncount - 1) */
+  for (; idx < session->ncount; idx++)
+    session->stack_order[idx] = session->stack_order[(idx + 1)];
+}
+
 uint16_t
 _interface_remove_for(xcb_window_t window) {
 
@@ -320,6 +335,7 @@ _interface_remove_for(xcb_window_t window) {
   do {
     PhxInterface *iface = session->iface[(--sdx)];
     if (iface->window == window) {
+      _stack_remove(iface);
       if (iface->_raze_cb != NULL)  iface->_raze_cb(iface);
       if ((session->ncount - 1) != sdx)
         memmove(&session->iface[sdx], &session->iface[(sdx + 1)],

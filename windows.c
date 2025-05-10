@@ -172,22 +172,8 @@ _window_stack_topmost(PhxInterface *iface) {
   }
 }
 
-static void
-_window_stack_remove(PhxInterface *iface) {
-
-  uint16_t idx;
-
-  for (idx = 0; idx < session->ncount; idx++)
-    if (iface == session->stack_order[idx])  break;
-
-  DEBUG_ASSERT((idx == session->ncount), "error: no interface found.");
-
-    /* idx + 1 will be NULL when idx == (session->ncount - 1) */
-  for (; idx < session->ncount; idx++)
-    session->stack_order[idx] = session->stack_order[(idx + 1)];
-}
-
 #pragma mark *** Events ***
+
 /* These should be used as defaults, or when no window manager. */
 bool
 _default_interface_meter(PhxInterface *iface,
@@ -294,8 +280,6 @@ _default_interface_raze(void *obj) {
     cairo_surface_destroy(iface->vid_buffer);
     iface->vid_buffer = NULL;
   }
-
-  _window_stack_remove(iface);
 
   free(iface);
 }

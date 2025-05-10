@@ -46,7 +46,7 @@ main(int argc, char *argv[]) {
   xcb_map_window(session->connection, window);
 
   configure.x -= 200;
-  configure.y -= 180;
+  configure.y -= 200;
   window = ui_window_create(configure);
   ui_window_name(window);
   xcb_map_window(session->connection, window);
