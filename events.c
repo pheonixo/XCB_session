@@ -592,6 +592,12 @@ _event_visibility(xcb_generic_event_t *nvt) {
   if (ui_window_is_transient(seen->window)) {
     xcb_grab_pointer_cookie_t c0;
     xcb_grab_pointer_reply_t *r0;
+      /* On non-WM, need to raise transients. */
+    if (session->has_WM == 0) {
+      const static uint32_t values[] = { XCB_STACK_MODE_ABOVE };
+      xcb_configure_window(session->connection, seen->window,
+                           XCB_CONFIG_WINDOW_STACK_MODE, values);
+    }
       /* does not send focus in/out events. */
     xcb_set_input_focus(session->connection, XCB_INPUT_FOCUS_PARENT,
                                      seen->window, XCB_CURRENT_TIME);
