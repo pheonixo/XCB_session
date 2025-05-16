@@ -159,41 +159,56 @@ _xcb_keysym_alloc(xcb_connection_t *connection) {
 #pragma mark *** Cursor ***
 
 void
+ui_cursor_initialize(const char *named) {
+
+  uint16_t sdx;
+  session->cursor_default
+    = xcb_cursor_load_cursor(session->cursor_ctx, named);
+  sdx = session->ncount;
+  do
+    xcb_change_window_attributes(session->connection,
+                                 session->iface[(--sdx)]->window,
+                                 XCB_CW_CURSOR, &session->cursor_default);
+  while (sdx != 0);
+}
+
+void
 ui_cursor_set_named(const char *named, xcb_window_t window) {
 
+    /* Request for default or WM control */
   if (named == NULL) {
     if (session->cursor_id != 0) {
       xcb_free_cursor(session->connection, session->cursor_id);
       session->cursor_id = 0;
       free((void*)session->cursor_named);
       session->cursor_named = NULL;
+default_cursor:
       xcb_change_window_attributes(session->connection, window,
-                                       XCB_CW_CURSOR, &session->cursor_id);
+                                   XCB_CW_CURSOR, &session->cursor_default);
     }
     return;
   }
-    /* case: a system does not have a named cursor, so it uses 0.
-      Keep named, but associate with id 0. */
-  if (session->cursor_named == NULL)  goto load_cursor;
-    /* same name identifiers, use previous found id */
-  if (strcmp(named, session->cursor_named) == 0)
-    goto change_cursor;   /* window may/may not be the same, so change. */
-    /* other than id 0, free cursor */
+    /* Has 'named', but is it an alias, currently loaded, or not found. */
+    /* Two main alias, "text" and gnome hack, "dnd-no-drop". */
+    /* use default name for "text" */
+  if (strcmp(named, "text") == 0)         named = "xterm";
+  if (strcmp(named, "dnd-no-drop") == 0)  named = "dnd-none";
+    /* See if currently loaded. Load cursor attribute anyway,
+      since we don't cache xcb_window_t */
+  if ( (session->cursor_named != NULL)
+      && (strcmp(named, session->cursor_named) == 0) ) {
+    goto change_cursor;
+  }
+    /* Find requested 'named'. 0 id can be returned. If so, use 'named'
+      and like above, change since xcb_window_t not cached. */
+  free((void*)session->cursor_named);
+  session->cursor_named = strdup(named);
   if (session->cursor_id != 0)
     xcb_free_cursor(session->connection, session->cursor_id);
-    /* known from above tests that cursor_named != NULL */
-  free((void*)session->cursor_named);
-load_cursor:
   session->cursor_id = xcb_cursor_load_cursor(session->cursor_ctx, named);
-
-    /* gnome wm hack */
-  if ( (session->cursor_id == 0)
-      && (strcmp(named, "dnd-no-drop") == 0) )
-    session->cursor_id
-      = xcb_cursor_load_cursor(session->cursor_ctx, "dnd-none");
-
-  session->cursor_named = strdup(named);
+    /* Check if found. */
 change_cursor:
+  if (session->cursor_id == 0)  goto default_cursor;
   xcb_change_window_attributes(session->connection, window,
                                      XCB_CW_CURSOR, &session->cursor_id);
 }

@@ -169,6 +169,7 @@ _enter_leave_notices(PhxInterface *iface,
   if (imount->_event_cb == NULL) {
     DEBUG_ASSERT((!IS_WINDOW_TYPE(imount)),
                       "error: no _event_cb for interface.");
+    ui_cursor_set_named(NULL, iface->window);
     return false;
   }
   return imount->_event_cb(iface, nvt, obj);
@@ -209,8 +210,9 @@ _event_keyboard(xcb_generic_event_t *nvt) {
   PhxInterface *iface       = _interface_for(kp->event);
   PhxObject *focus;
 
-    /* Accidentically sent to us ? */
-  if (iface == NULL)  return false;
+    /* Accidentically sent to us ? or deleted window */
+  if ( (iface == NULL)
+      || (iface->vid_buffer == NULL) )  return false;
 
     /* Default gets first shot at this. Don't allow overrride. */
   if (_drag_keyboard(iface, nvt))  return true;
@@ -837,7 +839,7 @@ _process_event(xcb_generic_event_t *nvt) {
         struct MWMHints {
           uint32_t   flags, functions, decorations, input_mode, status;
         } hints = { 2, 0, 0, 0, 0 };
-      
+
         xcb_intern_atom_cookie_t c0;
         xcb_intern_atom_reply_t *r0;
         c0 = xcb_intern_atom(session->connection, 0, 15, "_MOTIF_WM_HINTS");
@@ -949,6 +951,12 @@ xcb_main(void) {
     r0 = xcb_get_window_attributes_reply(connection, c0, NULL);
     session->has_WM =
        !!(r0->all_event_masks & XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT);
+  }
+
+  if ( (CURSOR_DEFAULT != NULL) || (session->has_WM == 0) ) {
+    const char *named
+      = (CURSOR_DEFAULT != NULL) ? CURSOR_DEFAULT : "left_ptr";
+    ui_cursor_initialize(named);
   }
 
     /* application-wide clipboard */

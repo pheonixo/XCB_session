@@ -76,7 +76,7 @@ _textview_keyboard(PhxInterface *iface,
 
   if ((tbuf = (PhxTextbuffer*)obj->exclusive) == NULL) {
     DEBUG_ASSERT(true, "textview has no textbuffer. _textview_keyboard().");
-    return true;
+    return false;
   }
 
   kp     = (xcb_key_press_event_t*)nvt;
@@ -627,11 +627,15 @@ _default_textview_raze(void *obj) {
 
   PhxObjectTextview *otxt = (PhxObjectTextview*)obj;
   _default_textbuffer_raze((PhxTextbuffer*)otxt->exclusive);
-#if DND_INTERNAL_ON
+  free(otxt->exclusive);
+  otxt->exclusive = NULL;
+#if (DND_INTERNAL_ON || DND_EXTERNAL_ON)
   if (otxt->dnd_quirk->watypes_count > 1)
     free(otxt->dnd_quirk->watypes);
+  free(otxt->dnd_quirk);
+  otxt->dnd_quirk = NULL;
 #endif
-  free(otxt->exclusive);
+  _default_object_raze(obj);
 }
 
 PhxObjectTextview *

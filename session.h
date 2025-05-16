@@ -11,6 +11,9 @@
 #include <limits.h>
 /* xcb supplemental code (not included on all OS(s)) */
 #include "cursor/xcb_cursor.h"
+/* Sets default cursor when in window. For window managers NULL
+  normally uses "left_ptr". For no WM we set "left_ptr" for 'NULL'. */
+#define CURSOR_DEFAULT ((const char*)NULL)  /* const char* */
 
 typedef struct _PhxInterface                             PhxInterface;
 typedef struct _PhxObject                                PhxObject;
@@ -53,7 +56,7 @@ extern char *strdup(const char*);
 #define DEBUG_EVENTS_ON 1
 #if DEBUG_EVENTS_ON
  extern void _debug_event(xcb_generic_event_t *nvt, const char *caller);
-/* #define DEBUG_EVENTS(a)    _debug_event(nvt, (a)) */
+/* #define DEBUG_EVENTS(a)    _debug_event(nvt, (a))*/
   #define DEBUG_EVENTS(a)    (void)(a)
    /* during debug, allowed to turn off/on specific events */
  extern uint64_t debug_flags;
@@ -102,20 +105,21 @@ typedef uint16_t                                         PhxObjectType;
 
 typedef struct _PhxSession {
  xcb_connection_t     *connection;
- xcb_keysym_t         *keysyms;      /* based off XGetKeyboardMapping() */
- xcb_cursor_context_t *cursor_ctx;   /* xcb supplemental code */
- const char           *cursor_named; /* strdup of named cursor using */
- PhxInterface         **iface;       /* list of windows */
- PhxObject            *has_focus;    /* object receiving keyboard */
- PhxObject            *obj_within;   /* object under mouse pointer */
- PhxObject            *has_drag;     /* object that intiated a dnd grab */
- xcb_clipboard_t      *xclipboard;   /* session-wide clipboard */
- phx_findboard_t      *xfindboard;   /* session-wide findboard */
- PhxRectangle         frame;         /* WM window frame */
- xcb_cursor_t         cursor_id;     /* cursor id of named */
+ xcb_keysym_t         *keysyms;        /* based off XGetKeyboardMapping() */
+ xcb_cursor_context_t *cursor_ctx;     /* xcb supplemental code */
+ const char           *cursor_named;   /* strdup of named cursor using */
+ PhxInterface         **iface;         /* list of windows */
+ PhxObject            *has_focus;      /* object receiving keyboard */
+ PhxObject            *obj_within;     /* object under mouse pointer */
+ PhxObject            *has_drag;       /* object that intiated a dnd grab */
+ xcb_clipboard_t      *xclipboard;     /* session-wide clipboard */
+ phx_findboard_t      *xfindboard;     /* session-wide findboard */
+ PhxRectangle         frame;           /* WM window frame */
+ xcb_cursor_t         cursor_default;  /* cursor id of "NULL" */
+ xcb_cursor_t         cursor_id;       /* cursor id of named */
  uint8_t              sym_stride;
  uint8_t              sym_min;
- uint16_t             ncount;        /* number of windows */
+ uint16_t             ncount;          /* number of windows */
  int16_t              last_event_x;
  int16_t              last_event_y;
 #if (DND_INTERNAL_ON || DND_EXTERNAL_ON)
@@ -141,6 +145,7 @@ extern PhxInterface *    _interface_for(xcb_window_t window);
 extern uint16_t          _interface_remove_for(xcb_window_t window);
 extern PhxSession *      _session_create(xcb_connection_t *connection);
 extern void              ui_session_shutdown(void);
+extern void              ui_cursor_initialize(const char *named);
 extern void              ui_cursor_set_named(const char *named,
                                              xcb_window_t window);
 extern const char *      ui_cursor_get_named(void);

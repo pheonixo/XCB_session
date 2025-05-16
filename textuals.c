@@ -147,6 +147,7 @@ phxmarks_raze(PhxTextbuffer *tbuf) {
     if (mPtr->_mark_raze != NULL)
       mPtr->_mark_raze(tbuf);
     free(mPtr);
+    tbuf->mark_list[idx] = NULL;
   } while ((mPtr = tbuf->mark_list[(++idx)]) != NULL);
 }
 
@@ -1798,11 +1799,11 @@ _default_textbuffer_raze(void *obj) {
 
   PhxTextbuffer *tbuf;
   if ((tbuf = (PhxTextbuffer*)obj) != NULL) {
+    free(tbuf->draw_buffer);   tbuf->draw_buffer = NULL;
     phxmarks_raze(tbuf);
-    free(tbuf->mark_list);
-    free(tbuf->glyph_widths);
-    free(tbuf->draw_buffer);
-    free(tbuf->string);
+    free(tbuf->mark_list);     tbuf->mark_list = NULL;
+    free(tbuf->glyph_widths);  tbuf->glyph_widths = NULL;
+    free(tbuf->string);        tbuf->string = NULL;
   }
 }
 

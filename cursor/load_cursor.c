@@ -434,7 +434,7 @@ xcb_cursor_load_cursor(xcb_cursor_context_t *c, const char *name) {
 
   if (fd == -1 || core_char > -1) {
     xcb_cursor_t cid;
-    if (core_char == -1)
+    if ( (core_char == -1) && (name != NULL) )
       core_char = cursor_shape_to_id(name);
     if (core_char == -1)
       return XCB_NONE;

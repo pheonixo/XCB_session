@@ -283,7 +283,9 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
           printf("error: %"PRIu8" %s %s\n",
                 err->error_code, extension_errors[code], caller);
         } else {
-          printf("unknown error: %"PRIu8" %s\n", err->error_code, caller);
+          printf("unknown error: %"PRIu8" (%"PRIu8":%"PRIu16") %"PRIu32" %s\n",
+                 err->error_code, err->major_code, err->minor_code,
+                 err->resource_id, caller);
         }
         break;
       }

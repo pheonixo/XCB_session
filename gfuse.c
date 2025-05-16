@@ -408,7 +408,7 @@ _drag_motion_gfuse(PhxInterface *iface,
 
       /* Cursor was set by enter notice. */
     DEBUG_ASSERT((ui_cursor_get_named() == NULL),
-                         "Cursor not set from entered.");
+                         "Cursor not set from entered or missing diagonals.");
       /* Since drag is NULL, 'obj' will be gfuse.
          Also must have gravity since entered this cb. */
     gravity = _set_cursor_from_gravity(iface, (PhxNFuse*)obj, x, y);

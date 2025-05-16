@@ -182,10 +182,7 @@ _default_interface_meter(PhxInterface *iface,
 
   uint8_t response = nvt->response_type & (uint8_t)0x7F;
 
-  if (response == XCB_ENTER_NOTIFY) {
-    ui_cursor_set_named("left_ptr", iface->window);
-    return true;
-  }
+  DEBUG_EVENTS("_default_interface_meter");
 
   if (response == XCB_KEY_RELEASE) {
 
@@ -201,7 +198,8 @@ _default_interface_meter(PhxInterface *iface,
 
     if ((state & XCB_MOD_MASK_CONTROL) != 0) {
       if (keyval == 'q') {
-        xcb_client_message_event_t *message = calloc(32, 1);    
+        xcb_client_message_event_t *message;
+        message = calloc(32, 1);
         message->response_type  = XCB_CLIENT_MESSAGE;
         message->format         = 32;
         message->window         = kp->event;
@@ -215,7 +213,7 @@ _default_interface_meter(PhxInterface *iface,
       }
     }
   }
-  return false;
+  return true;
 }
 
 #pragma mark *** Creation ***
@@ -523,6 +521,10 @@ _window_create(PhxRectangle configure) {
                     screen->root_visual,           /* visual         */
                     mask, values);                 /* masks */
 
+    /* When creating windows after xcb_main() running. */
+  if (session->cursor_default != 0)
+    xcb_change_window_attributes(session->connection, window,
+                                 XCB_CW_CURSOR, &session->cursor_default);
 
   _window_event_delete(connection, window);
 /*  _window_event_focus(connection, window);*/
