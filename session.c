@@ -192,23 +192,29 @@ default_cursor:
     /* Two main alias, "text" and gnome hack, "dnd-no-drop". */
     /* use default name for "text" */
   if (strcmp(named, "text") == 0)         named = "xterm";
-  if (strcmp(named, "dnd-no-drop") == 0)  named = "dnd-none";
     /* See if currently loaded. Load cursor attribute anyway,
       since we don't cache xcb_window_t */
-  if ( (session->cursor_named != NULL)
-      && (strcmp(named, session->cursor_named) == 0) ) {
-    goto change_cursor;
+  if (session->cursor_named != NULL) {
+    if (strcmp(named, session->cursor_named) == 0)  goto change_cursor;
+    free((void*)session->cursor_named);
   }
     /* Find requested 'named'. 0 id can be returned. If so, use 'named'
       and like above, change since xcb_window_t not cached. */
-  free((void*)session->cursor_named);
   session->cursor_named = strdup(named);
   if (session->cursor_id != 0)
     xcb_free_cursor(session->connection, session->cursor_id);
   session->cursor_id = xcb_cursor_load_cursor(session->cursor_ctx, named);
     /* Check if found. */
 change_cursor:
-  if (session->cursor_id == 0)  goto default_cursor;
+  if (session->cursor_id == 0) {
+    if (strcmp(named, "dnd-no-drop") == 0) {
+      session->cursor_id
+        = xcb_cursor_load_cursor(session->cursor_ctx, "dnd-none");
+      if (session->cursor_id != 0)  goto change_attrib;
+    }
+    goto default_cursor;
+  }
+change_attrib:
   xcb_change_window_attributes(session->connection, window,
                                      XCB_CW_CURSOR, &session->cursor_id);
 }

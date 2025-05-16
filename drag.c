@@ -1104,8 +1104,9 @@ _get_pointer_window(xcb_xdndserver_t *dserv,
 
   xcb_window_t rWindow = 0;
 
-  if ( (r0->root_x == root_x) && (r0->root_y == root_y)
-      && (r0->child != 0) ) {
+  if (r0->child == 0) {
+    ui_cursor_set_named("dnd-no-drop", dserv->xdndSource.source);
+  } else if ( (r0->root_x == root_x) && (r0->root_y == root_y) ) {
     xcb_get_geometry_cookie_t c1
       = xcb_get_geometry(dserv->connection, r0->child);
     xcb_get_geometry_reply_t *r1
@@ -1120,6 +1121,7 @@ _get_pointer_window(xcb_xdndserver_t *dserv,
     }
     free(r1);
   }
+
   free(r0);
   return rWindow;
 }
