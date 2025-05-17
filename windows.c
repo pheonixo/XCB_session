@@ -89,22 +89,7 @@ ui_window_maximum_get(xcb_window_t window, uint16_t *x, uint16_t *y) {
 
 bool
 ui_window_is_transient(xcb_window_t window) {
-
-  xcb_get_property_cookie_t cookie
-    = xcb_get_property(session->connection, 0, window,
-                       XCB_ATOM_WM_TRANSIENT_FOR, XCB_ATOM_WINDOW, 0, 1);
-  xcb_get_property_reply_t *reply
-    = xcb_get_property_reply(session->connection, cookie, NULL);
-  bool transient = false;
-  if (reply != NULL) {
-    if ( (reply->type == XCB_ATOM_WINDOW)
-        && (reply->format == 32)
-        && (reply->length != 0) ) {
-      transient = true;
-    }
-    free(reply);
-  }
-  return transient;
+  return !!(_interface_for(window)->state & SBIT_TRANSIENT);
 }
 
 /* Use of int to match enum size. */
@@ -571,6 +556,7 @@ ui_dialog_create(PhxRectangle configure, xcb_window_t transient_for_window) {
   iface = _interface_create(connection, configure, &window);
   if (iface == NULL)  return 0;
   iface->type = PHX_ITDLG;
+  iface->state |= SBIT_TRANSIENT;
   iface->i_mount = _interface_for(transient_for_window);
   return window;
 }
@@ -600,6 +586,7 @@ ui_dropdown_create(PhxRectangle configure, xcb_window_t transient_for_window) {
   iface = _interface_create(connection, configure, &window);
   if (iface == NULL)  return 0;
   iface->type = PHX_ITDDL;
+  iface->state |= SBIT_TRANSIENT;
   iface->i_mount = _interface_for(transient_for_window);
   return window;
 }

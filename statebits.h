@@ -6,9 +6,10 @@
 /* specific PHX_IFACE only bits [0-31] */
 #define SBIT_CLICKS         3            /* bits 0,1 click count */
 #define SBIT_MAPPED         (1 << 3)     /* Same as Object's visible */
-#define SBIT_FOCUS_CLICK    (1 << 4)     /* Button used to make topmost */
-#define SBIT_RELEASE_IGNORE (1 << 5)     /* Button/key release ignore */
-#define SBIT_SELECTING      (1 << 6)     /* Drag selection of content */
+#define SBIT_TRANSIENT      (1 << 4)     /* Same as Object's visible */
+#define SBIT_FOCUS_CLICK    (1 << 5)     /* Button used to make topmost */
+#define SBIT_RELEASE_IGNORE (1 << 6)     /* Button/key release ignore */
+#define SBIT_SELECTING      (1 << 7)     /* Drag selection of content */
 
 #define SBIT_UNDECORATED    (1 << 8)     /* For undecorated */
 #define SBIT_HEADERBAR      (1 << 9)     /* For undecorated, adds nexus */
