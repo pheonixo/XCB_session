@@ -384,19 +384,14 @@ static bool
 _textview_crossing(PhxInterface *iface,
                    xcb_generic_event_t *nvt,
                    PhxObject *obj)  {
-  char *named;
-  bool locus;
 
   if (_textview_drag_crossing(iface, nvt, obj))
     return true;
 
-  named = NULL;
-  locus = ((nvt->response_type & (uint8_t)0x7F) == XCB_ENTER_NOTIFY);
-  if (locus) {
+  if ((nvt->response_type & (uint8_t)0x7F) == XCB_ENTER_NOTIFY) {
     obj->state &= ~(OBIT_DND_CARET | OBIT_DND_COPY | OBIT_DND);
-    named = "text";
+    ui_cursor_set_named("text", iface->window);
   }
-  ui_cursor_set_named(named, iface->window);
   return true;
 }
 
