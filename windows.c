@@ -153,7 +153,7 @@ _window_stack_topmost(PhxInterface *iface) {
       if (iface == session->stack_order[idx])  break;
     for (; idx < session->ncount; idx++)
       session->stack_order[idx] = session->stack_order[(idx + 1)];
-    session->stack_order[(idx - 1)] = iface;
+    session->stack_order[(session->ncount - 1)] = iface;
   }
 }
 
@@ -434,8 +434,8 @@ _interface_create(xcb_connection_t *connection,
     /* Add interface to session. Stacking order assumes it is
      to be an unmapped window, so to place on bottom. */
   session->iface[session->ncount] = iface;
-  for (idx = 0; idx < session->ncount; idx++)
-    session->stack_order[(idx + 1)] = session->stack_order[idx];
+  for (idx = session->ncount; idx > 0; idx--)
+    session->stack_order[idx] = session->stack_order[(idx - 1)];
   session->stack_order[0] = iface;
   session->ncount += 1;
 
