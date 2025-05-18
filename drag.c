@@ -702,7 +702,6 @@ xdndDropable_set(xcb_xdndserver_t *dserv, bool set) {
   dserv->xdndState.state
     = (dserv->xdndState.state & (uint16_t)~0x1000) | (set << 12);
 }
-#if RAISED
     /* Viewable drop code. */
 __inline bool
 xdndRaised_get(xcb_xdndserver_t *dserv) {
@@ -714,7 +713,6 @@ xdndRaised_set(xcb_xdndserver_t *dserv, bool set) {
   dserv->xdndState.state
     = (dserv->xdndState.state & (uint16_t)~0x2000) | (set << 13);
 }
-#endif
 
 xcb_xdndserver_t *
 xdnd_initialize(xcb_connection_t *connection,
@@ -740,7 +738,6 @@ xdnd_window_awareness(xcb_connection_t *connection, xcb_window_t window) {
                       1, &XDND_PROTOCOL_VERSION);
 }
 
-#if RAISED
     /* Viewable drop code. */
 /* The connection c and the window win are supposed to be defined*/
 static void
@@ -749,7 +746,6 @@ _raise_target_window(xcb_connection_t *connection, xcb_window_t window) {
   xcb_configure_window(connection, window,
                          XCB_CONFIG_WINDOW_STACK_MODE, values);
 }
-#endif
 
 static void
 _xdnd_shutdown(xcb_xdndserver_t *dserv) {
@@ -886,10 +882,8 @@ xdnd_quirk_dst_load(xcb_xdndserver_t *dserv,
   DND_DEBUG_PRINT("xdnd_quirk_dst_load()", owner);
   if (dserv->xdndSource.source == owner) {
       /* Attempt to drop on self. Revert to internal handling. */
-#if RAISED
       /* Viewable drop code. */
     _raise_target_window(dserv->connection, owner);
-#endif
 
     _xdnd_shutdown(dserv);
     return true;
@@ -1426,7 +1420,6 @@ xdnd_process_message(xcb_xdndserver_t *dserv,
       /* Finished sent possibly by us, or by some WM on dnd unaware. */
     if (xdndVersion_get(dserv) != (uint8_t)~0) {
 
-#if RAISED
       /* Viewable drop code. */
         /* Drop completed on external window. Window was raised,
           but our window (has focus and drag) is now a background
@@ -1434,7 +1427,6 @@ xdnd_process_message(xcb_xdndserver_t *dserv,
       xcb_set_input_focus(session->connection,
                           XCB_INPUT_FOCUS_POINTER_ROOT,
                           XCB_NONE, XCB_CURRENT_TIME);
-#endif
 
         /* Under version 5, forced to perform action. Above can signal
           that no drop was performed, so take no action. */
@@ -1593,13 +1585,11 @@ xdnd_process_message(xcb_xdndserver_t *dserv,
        accept with an action other than None. */
     /* Only if window can't accept can we short circut process */
 
-#if RAISED
     /* Viewable drop code. */
   if (xdndDropable_get(dserv) && !xdndRaised_get(dserv)) {
     xdndRaised_set(dserv, true);
     _raise_target_window(dserv->connection, dserv->xdndState.target);
   }
-#endif
 
     /* version >=2: allows XCB_NONE for rejection. */
   if ( (xdndDropable_get(dserv) != (request->data.data32[1] & 1))

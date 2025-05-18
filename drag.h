@@ -8,8 +8,6 @@ typedef struct xcb_dnd_notify_event_t xcb_idndserver_t;
 
 #include "session.h"
 
-#define RAISED 1
-
  /* These are the basics for dnd, the handling when within an object. */
 bool  _drag_selection_box(PhxInterface *, xcb_generic_event_t *);
 bool  _drag_motion(PhxInterface *, xcb_generic_event_t *, PhxObject *);
