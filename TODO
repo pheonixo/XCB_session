@@ -2,12 +2,12 @@ TODO notes:
 
 Deal with Window Manager issues of oddities, include no WM also.
 
+XCB_(MAP/UNMAP)_NOTIFY should be the stack controller.
+
 XXX figure out difference reason root and event dont match.
 Drag by root uses different increments then by event.
 
 need to go thru textuals.c to increase offsets from int to unsigned size ???
-
-align SBIT_MAPPED with OBIT_SENSITIVE
 
 on auto scroll possible static time variable like mouse bptime
 draw.c still needs dirty/clean compositing instead of draw all

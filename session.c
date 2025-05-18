@@ -326,7 +326,13 @@ _stack_remove(PhxInterface *iface) {
   for (idx = 0; idx < session->ncount; idx++)
     if (iface == session->stack_order[idx])  break;
 
-  DEBUG_ASSERT((idx == session->ncount), "error: no interface found.");
+    /* Debugging only. */
+  if (idx == session->ncount) {
+    uint16_t cdx;
+    for (cdx = 0; cdx < session->ncount; cdx++)
+      if (!!((session->stack_order[cdx])->state & SBIT_MAPPED))
+        DEBUG_ASSERT(true, "error: no interface found.");
+  }
 
     /* idx + 1 will be NULL when idx == (session->ncount - 1) */
   for (; idx < session->ncount; idx++)

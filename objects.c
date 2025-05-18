@@ -18,28 +18,15 @@ visible_get(PhxObject *obj) {
 void
 sensitive_set(PhxObject *obj, bool sensitive) {
 
-  if (sensitive) {
-    if (!IS_WINDOW_TYPE(obj))
-      obj->state &= ~OBIT_SENSITIVE;
-    else
-      obj->state &= ~SBIT_MAPPED;
-    return;
+  if (sensitive)  obj->state &= ~OBIT_SENSITIVE;
+  else {          obj->state |=  OBIT_SENSITIVE;
+      /* Test if related to a combo button */
+    ui_bank_insensitive_set(obj);
   }
-
-  if (IS_WINDOW_TYPE(obj)) {
-    obj->state |= SBIT_MAPPED;
-    return;
-  }
-
-  obj->state |=  OBIT_SENSITIVE;
-    /* Test if related to a combo button */
-  ui_bank_insensitive_set(obj);
 }
 
 __inline bool
 sensitive_get(PhxObject *obj) {
-  if (IS_WINDOW_TYPE(obj))
-    return ((obj->state & SBIT_MAPPED) == 0);
   return ((obj->state & OBIT_SENSITIVE) == 0);
 }
 

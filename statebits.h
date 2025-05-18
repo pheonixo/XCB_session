@@ -5,16 +5,17 @@
 
 /* specific PHX_IFACE only bits [0-31] */
 #define SBIT_CLICKS         3            /* bits 0,1 click count */
-#define SBIT_MAPPED         (1 << 3)     /* Same as Object's visible */
-#define SBIT_TRANSIENT      (1 << 4)     /* Same as Object's visible */
-#define SBIT_FOCUS_CLICK    (1 << 5)     /* Button used to make topmost */
-#define SBIT_RELEASE_IGNORE (1 << 6)     /* Button/key release ignore */
-#define SBIT_SELECTING      (1 << 7)     /* Drag selection of content */
+#define SBIT_TRANSIENT      (1 << 3)     /* Special window type */
+#define SBIT_MAPPED         (1 << 4)     /* Same as Object's visible */
+#define SBIT_SENSITIVE      (1 << 5)     /* Alignment with objects */
+#define SBIT_FOCUS_CLICK    (1 << 6)     /* Button used to make topmost */
+#define SBIT_RELEASE_IGNORE (1 << 7)     /* Button/key release ignore */
+#define SBIT_SELECTING      (1 << 8)     /* Drag selection of content */
 
-#define SBIT_UNDECORATED    (1 << 8)     /* For undecorated */
-#define SBIT_HEADERBAR      (1 << 9)     /* For undecorated, adds nexus */
-#define SBIT_HBR_DRAG       (1 << 10)    /* WM type funcs, move/resize */
-#define SBIT_MAXIMIZED      (1 << 11)    /* For undecorate/keyboard maximze */
+#define SBIT_UNDECORATED    (1 << 9)     /* For undecorated */
+#define SBIT_HEADERBAR      (1 << 10)    /* For undecorated, adds nexus */
+#define SBIT_HBR_DRAG       (1 << 11)    /* WM type funcs, move/resize */
+#define SBIT_MAXIMIZED      (1 << 12)    /* For undecorate/keyboard maximze */
 
 /* specific to type of object, bits [0-7] */
   /* nexus: configure updating */  /* other objects not to use for persistant */
@@ -25,12 +26,12 @@
 #define OBIT_BTN_FRAME       (1 << 2)
   /* textviews: location drop used to draw caret insert point */
 #define OBIT_DND_CARET       (1 << 0) /* dnd caret draw */
-  /* on first click, use only as a focus_in event */
-#define OBIT_FOCUS_ONCLICK   (1 << 7) /* Button/key release ignore */
+
+#define OBIT_VISIBLE         (1 << 4)
+#define OBIT_SENSITIVE       (1 << 5)
+#define OBIT_FOCUS_ONCLICK   (1 << 6) /* Button/key release ignore */
 
 /* specific to all objects,    bits [8-15] */
-#define OBIT_VISIBLE         (1 <<  8) /* 8 */
-#define OBIT_SENSITIVE       (1 <<  9) /* 9 */
 #define OBIT_DND_AWARE       (1 << 10) /* Has dnd handler, 0 == unaware */
 #define OBIT_DND             (1 << 11) /* highlight, drag is within object */
 #define DRAG_CURSOR_BIT      12

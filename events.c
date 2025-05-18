@@ -798,16 +798,9 @@ _process_event(xcb_generic_event_t *nvt) {
 
     case XCB_DESTROY_NOTIFY: {    /* response_type 17 */
         /* assume a kill, delete all windows (do their thing)
-           send false to exit loop */
+           send false to exit xcb_run() loop */
       xcb_destroy_notify_event_t *destroy
         = (xcb_destroy_notify_event_t*)nvt;
-      if ( (session->has_WM == 0) && (session->ncount > 1) ) {
-          /* Should be topmost */
-        PhxInterface *iface = session->stack_order[(session->ncount - 2)];
-        xcb_set_input_focus(session->connection, XCB_INPUT_FOCUS_POINTER_ROOT,
-                                        iface->window, XCB_CURRENT_TIME);
-        ui_active_focus_set((PhxObject*)iface);
-      }
       if (_interface_remove_for(destroy->window) == 0) {
         free(nvt);
         return false;
@@ -816,8 +809,27 @@ _process_event(xcb_generic_event_t *nvt) {
     }
 
       /* these 4 because of XCB_EVENT_MASK_STRUCTURE_NOTIFY */
-    case XCB_UNMAP_NOTIFY:        /* response_type 18 */
+    case XCB_UNMAP_NOTIFY: {      /* response_type 18 */
+      uint16_t     sdx = session->ncount - 1;
+      PhxInterface *iface = session->stack_order[sdx];
+      iface->state &= ~SBIT_MAPPED;
+      if (sdx != 0) {
+        do {
+          iface = session->stack_order[(--sdx)];
+          if (!!(iface->state & SBIT_MAPPED))  break;
+        } while (sdx != 0);
+        if (session->has_WM == 0) {
+            /* Should be topmost or at least the initial app window.
+              Should allow for ^q to exit app. */
+          xcb_set_input_focus(session->connection,
+                              XCB_INPUT_FOCUS_POINTER_ROOT,
+                              iface->window, XCB_CURRENT_TIME);
+          ui_active_focus_set((PhxObject*)iface);
+        }
+        _window_stack_topmost(iface);
+      }
       break;
+    }
 
     case XCB_MAP_NOTIFY: {        /* response_type 19 */
       xcb_map_notify_event_t *map = (xcb_map_notify_event_t*)nvt;
