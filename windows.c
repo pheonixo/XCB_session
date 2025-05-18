@@ -198,7 +198,7 @@ _default_interface_meter(PhxInterface *iface,
       }
     }
   }
-  return true;
+  return false;
 }
 
 #pragma mark *** Creation ***
