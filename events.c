@@ -818,14 +818,6 @@ _process_event(xcb_generic_event_t *nvt) {
           iface = session->stack_order[(--sdx)];
           if (!!(iface->state & SBIT_MAPPED))  break;
         } while (sdx != 0);
-        if (session->has_WM == 0) {
-            /* Should be topmost or at least the initial app window.
-              Should allow for ^q to exit app. */
-          xcb_set_input_focus(session->connection,
-                              XCB_INPUT_FOCUS_POINTER_ROOT,
-                              iface->window, XCB_CURRENT_TIME);
-          ui_active_focus_set((PhxObject*)iface);
-        }
         _window_stack_topmost(iface);
       }
       break;
@@ -834,12 +826,8 @@ _process_event(xcb_generic_event_t *nvt) {
     case XCB_MAP_NOTIFY: {        /* response_type 19 */
       xcb_map_notify_event_t *map = (xcb_map_notify_event_t*)nvt;
       PhxInterface *iface = _interface_for(map->event);
+      iface->state |= SBIT_MAPPED;
       _window_stack_topmost(iface);
-      if (session->has_WM == 0) {
-        xcb_set_input_focus(session->connection, XCB_INPUT_FOCUS_POINTER_ROOT,
-                                        iface->window, XCB_CURRENT_TIME);
-        ui_active_focus_set((PhxObject*)iface);
-      }
       break;
     }
 

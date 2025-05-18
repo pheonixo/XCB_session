@@ -155,6 +155,15 @@ _window_stack_topmost(PhxInterface *iface) {
       session->stack_order[idx] = session->stack_order[(idx + 1)];
     session->stack_order[(session->ncount - 1)] = iface;
   }
+  if (session->has_WM == 0) {
+    const static uint32_t values[] = { XCB_STACK_MODE_ABOVE };
+    xcb_configure_window(session->connection, iface->window,
+                         XCB_CONFIG_WINDOW_STACK_MODE, values);
+    iface->state &= ~SBIT_CLICKS;
+    xcb_set_input_focus(session->connection,
+                        XCB_INPUT_FOCUS_POINTER_ROOT,
+                        iface->window, XCB_CURRENT_TIME);
+  }
 }
 
 #pragma mark *** Events ***
