@@ -149,19 +149,45 @@ _window_stack_topmost(PhxInterface *iface) {
   uint16_t idx;
 
   if (session->ncount > 1) {
+    xcb_window_t was_window
+      = session->stack_order[(session->ncount - 1)]->window;
     for (idx = 0; idx < session->ncount; idx++)
       if (iface == session->stack_order[idx])  break;
     for (; idx < session->ncount; idx++)
       session->stack_order[idx] = session->stack_order[(idx + 1)];
     session->stack_order[(session->ncount - 1)] = iface;
+
+    if (session->has_WM != 0) {
+      xcb_connection_t *connection = session->connection;
+      xcb_screen_t *screen
+        = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
+      xcb_intern_atom_cookie_t c0;
+      xcb_intern_atom_reply_t *r0;
+      xcb_client_message_event_t *message;
+      c0 = xcb_intern_atom(connection, 0, 18, "_NET_ACTIVE_WINDOW");
+      r0 = xcb_intern_atom_reply(connection, c0, NULL);
+      message = calloc(32, 1);
+      message->response_type  = XCB_CLIENT_MESSAGE;
+      message->format         = 32;
+      message->window         = iface->window;
+      message->type           = r0->atom;
+      free(r0);
+      message->data.data32[0] = 1;
+      message->data.data32[1] = XCB_CURRENT_TIME;
+      message->data.data32[2] = was_window;
+      xcb_send_event(connection, false, screen->root,
+                         XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT |
+                         XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY, (char*)message);
+      xcb_flush(connection);
+    }
   }
-  if (session->has_WM == 0) {
+  {
     const static uint32_t values[] = { XCB_STACK_MODE_ABOVE };
     xcb_configure_window(session->connection, iface->window,
                          XCB_CONFIG_WINDOW_STACK_MODE, values);
     iface->state &= ~SBIT_CLICKS;
     xcb_set_input_focus(session->connection,
-                        XCB_INPUT_FOCUS_POINTER_ROOT,
+                        XCB_INPUT_FOCUS_PARENT,
                         iface->window, XCB_CURRENT_TIME);
   }
 }
