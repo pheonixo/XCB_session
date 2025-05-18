@@ -160,15 +160,21 @@ _window_stack_topmost(PhxInterface *iface) {
 #pragma mark *** Events ***
 
 /* These should be used as defaults, or when no window manager. */
+/*  Quit in window deletes it and its children.
+  Dialogs behave as window, but don't quit owner.
+  DropDownLists should just deactivate DDL. */
 bool
 _default_interface_meter(PhxInterface *iface,
                          xcb_generic_event_t *nvt,
                          PhxObject *obj) {
+  uint8_t response;
 
-  uint8_t response = nvt->response_type & (uint8_t)0x7F;
+    /* We handle only == PHX_IFACE. Not its variants. */
+  if (iface->type != PHX_IFACE)  return true;
 
   DEBUG_EVENTS("_default_interface_meter");
 
+  response = nvt->response_type & (uint8_t)0x7F;
   if (response == XCB_KEY_RELEASE) {
 
     xcb_key_press_event_t *kp;
@@ -382,8 +388,10 @@ _interface_create(xcb_connection_t *connection,
   iface->min_max.w = INT16_MAX;
   iface->min_max.h = INT16_MAX;
 
-  iface->_event_cb = _default_interface_meter;
-  iface->_raze_cb = _default_interface_raze;
+    /* Do not set default handlers here.
+      Should be set at ui_<variation>_create() level. */
+  iface->_event_cb = NULL;
+  iface->_raze_cb  = NULL;
 
     /* create window's drawing surface */
   if ((visual = _find_visual(connection)) == NULL) {
@@ -533,6 +541,8 @@ ui_window_create(PhxRectangle configure) {
   connection = session->connection;
   iface = _interface_create(connection, configure, &window);
   if (iface == NULL)  return 0;
+  iface->_event_cb = _default_interface_meter;
+  iface->_raze_cb = _default_interface_raze;
 
   return window;
 }
@@ -558,6 +568,8 @@ ui_dialog_create(PhxRectangle configure, xcb_window_t transient_for_window) {
   iface->type = PHX_ITDLG;
   iface->state |= SBIT_TRANSIENT;
   iface->i_mount = _interface_for(transient_for_window);
+  iface->_event_cb = NULL;
+  iface->_raze_cb = _default_interface_raze;
   return window;
 }
 
@@ -588,6 +600,8 @@ ui_dropdown_create(PhxRectangle configure, xcb_window_t transient_for_window) {
   iface->type = PHX_ITDDL;
   iface->state |= SBIT_TRANSIENT;
   iface->i_mount = _interface_for(transient_for_window);
+  iface->_event_cb = NULL;
+  iface->_raze_cb = _default_interface_raze;
   return window;
 }
 
