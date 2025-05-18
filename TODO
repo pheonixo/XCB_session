@@ -3,6 +3,14 @@ TODO notes:
 Deal with Window Manager issues of oddities, include no WM also.
 
 XCB_(MAP/UNMAP)_NOTIFY should be the stack controller.
+WM TAKE focus need to understand
+
+XDND can raise window, can send take focus, but up to app to take?
+XDND within app cant still send and will do requardless of WM sends,
+when drop on other than source.
+alt-drop retain focus?
+XDND focus shift on drop
+Oustide app click, on no-wm shift to follow by mouse
 
 XXX figure out difference reason root and event dont match.
 Drag by root uses different increments then by event.

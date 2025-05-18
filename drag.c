@@ -1419,15 +1419,6 @@ xdnd_process_message(xcb_xdndserver_t *dserv,
 
       /* Finished sent possibly by us, or by some WM on dnd unaware. */
     if (xdndVersion_get(dserv) != (uint8_t)~0) {
-
-      /* Viewable drop code. */
-        /* Drop completed on external window. Window was raised,
-          but our window (has focus and drag) is now a background
-          window. Remove focus. Note: missing "XCB_POINTER_ROOT". */
-      xcb_set_input_focus(session->connection,
-                          XCB_INPUT_FOCUS_POINTER_ROOT,
-                          XCB_NONE, XCB_CURRENT_TIME);
-
         /* Under version 5, forced to perform action. Above can signal
           that no drop was performed, so take no action. */
       if ( (xdndVersion_get(dserv) < (uint16_t)5)
