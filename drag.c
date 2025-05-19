@@ -65,10 +65,19 @@ _drag_keyboard(PhxInterface *iface, xcb_generic_event_t *nvt) {
           xdnd_drag_cancel(session->xdndserver);
        #endif
         if (has_drag != ui_active_within_get()) {
-            /* within stays the same */
+            /* within stays the same, notify leave of drag */
           PhxObject *obj = ui_active_within_get();
           _enter_leave_notices(iface, nvt, obj, 0);
+            /* Set topmost if within was outside window. */
+          if ( (obj == NULL) || (_window_for(obj) != _window_for(has_drag)) ) {
+            _window_stack_topmost(iface);
+            if (obj == NULL) {
+              DND_DEBUG_CURSOR("ui_cursor_set_named(NULL)  _drag_keyboard()");
+              ui_cursor_set_named(NULL, iface->window);
+            }
+          }
         }
+          /* Source now must do its clean up (NULL object). */
         has_drag->_event_cb(iface, nvt, NULL);
         DND_DEBUG_PUTS("ui_active_drag_set(NULL) _drag_keyboard()");
         ui_active_drag_set(NULL);
@@ -1141,7 +1150,7 @@ xdnd_drag_motion(xcb_xdndserver_t *dserv, xcb_motion_notify_event_t *motion) {
                                             motion->root_x,
                                             motion->root_y);
   if (target == 0) {
-    /*puts("old motion, rejecting");*/
+/*    puts("old motion, rejecting");*/
     return true;
   }
 

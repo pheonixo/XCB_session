@@ -2,11 +2,11 @@ TODO notes:
 
 Deal with Window Manager issues of oddities, include no WM also.
 
-WM TAKE focus need to understand
-XDND set topmost on dnd_cancel
-alt-drop retain focus?
-XDND focus shift on drop
+Re-test w/o cursor inherits on Xcursors only
+
+WM TAKE focus need to understand, XDND focus shift on drop
 Oustide app click, on no-wm shift to follow by mouse
+alt-drop retain focus?
 
 XXX figure out difference reason root and event dont match.
 Drag by root uses different increments then by event.
