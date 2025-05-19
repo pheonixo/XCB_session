@@ -598,6 +598,8 @@ _dnd_selection_event(xcb_generic_event_t *nvt) {
         PhxInterface *iface = _interface_for(cm->window);
         DND_DEBUG_INTERNAL("XCB_LEAVE_NOTIFY", ui_active_within_get());
         _enter_leave_notices(iface, nvt, ui_active_within_get(), 0);
+        DND_DEBUG_PUTS("ui_active_within_set(NULL) _dnd_selection_event()");
+        ui_active_within_set(NULL);
           /* Check if we own source. */
         if (_interface_for(cm->data.data32[0]) != NULL) {
           DND_DEBUG_PRINT("received XDND_LEAVE,", cm->window);
@@ -607,6 +609,15 @@ _dnd_selection_event(xcb_generic_event_t *nvt) {
       if (xdnd_process_message(session->xdndserver, cm)) {
           /* XdndFinished is when we end setting to no drag state */
         DND_DEBUG_PUTS("ui_active_drag_set(NULL) _dnd_selection_event()");
+          /* Base on drop accepted, set topmost */
+        if (ui_active_within_get() != NULL) {
+          PhxObject *within = ui_active_within_get();
+          if (_window_for(within) != cm->window)
+            _window_stack_topmost(_interface_for(_window_for(within)));
+        } else {
+          PhxObject *has_drag = ui_active_drag_get();
+          _window_stack_topmost(_interface_for(_window_for(has_drag)));  
+        }
         ui_cursor_set_named(NULL, cm->window);
         ui_active_drag_set(NULL);
       }
@@ -1130,7 +1141,7 @@ xdnd_drag_motion(xcb_xdndserver_t *dserv, xcb_motion_notify_event_t *motion) {
                                             motion->root_x,
                                             motion->root_y);
   if (target == 0) {
-    puts("old motion, rejecting");
+    /*puts("old motion, rejecting");*/
     return true;
   }
 
