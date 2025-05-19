@@ -59,6 +59,17 @@ struct _PhxTextAttr {
                          /* for cairo (0 = WEIGHT_NORMAL:SLANT_NORMAL) */
 };
 
+struct WMHints { /* 9 32s */
+ int32_t        flags;
+ uint32_t       input;
+ int32_t        initial_state;
+ xcb_pixmap_t   icon_pixmap;
+ xcb_window_t   icon_window;
+ int32_t        icon_x, icon_y;
+ xcb_pixmap_t   icon_mask;
+ xcb_window_t   window_group;
+};
+
 struct WMSizeHints { /* 18 32s */
  uint32_t flags;                           /* X has as long */
  int32_t  x, y;                            /* Obsolete */

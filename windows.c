@@ -92,6 +92,19 @@ ui_window_is_transient(xcb_window_t window) {
   return !!(_interface_for(window)->state & SBIT_TRANSIENT);
 }
 
+static void
+_window_input_set(xcb_window_t window) {
+
+  struct WMHints hints;
+  memset(&hints, 0, sizeof(struct WMHints));
+  hints.flags = 3;
+  hints.input = 1;
+  hints.initial_state = 1;
+  xcb_change_property(session->connection, XCB_PROP_MODE_REPLACE, window,
+                      XCB_ATOM_WM_HINTS, XCB_ATOM_WM_HINTS,
+                      32, sizeof(struct WMSizeHints) >> 2, &hints);
+}
+
 /* Use of int to match enum size. */
 void
 ui_attributes_set(PhxObject *obj,
@@ -551,8 +564,11 @@ _window_create(PhxRectangle configure) {
 
     /* When creating windows after xcb_main() running. */
   if (session->cursor_default != 0)
-    xcb_change_window_attributes(session->connection, window,
+    xcb_change_window_attributes(connection, window,
                                  XCB_CW_CURSOR, &session->cursor_default);
+
+    /* Set for WMs. twm does need this! */
+  _window_input_set(window);
 
   _window_event_delete(connection, window);
 /*  _window_event_focus(connection, window);*/
