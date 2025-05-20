@@ -218,9 +218,9 @@ _default_interface_meter(PhxInterface *iface,
   uint8_t response;
 
     /* We handle only == PHX_IFACE. Not its variants.
-      And must have focus. */
+      And must have focus (GNOME issue). */
   if ( (iface->type != PHX_IFACE)
-      || (session->has_focus == NULL) )  return true;
+      || (session->has_focus == NULL) )  return false;
 
   DEBUG_EVENTS("_default_interface_meter");
 
