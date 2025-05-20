@@ -268,15 +268,8 @@ _event_mouse(xcb_generic_event_t *nvt) {
   obj = _get_object_at_pointer(iface, x, y);
 
   if (session->has_WM == 0) {
-    if (focus == NULL)  goto rnf;
-    if (_window_for(focus) != mouse->event) {
-      const static uint32_t values[] = { XCB_STACK_MODE_ABOVE };
-  rnf:
-      xcb_configure_window(session->connection, mouse->event,
-                           XCB_CONFIG_WINDOW_STACK_MODE, values);
-      iface->state &= ~SBIT_CLICKS;
-      xcb_set_input_focus(session->connection, XCB_INPUT_FOCUS_POINTER_ROOT,
-                                         _window_for(obj), XCB_CURRENT_TIME);
+    if ( (focus == NULL)
+        || (_window_for(focus) != mouse->event) ) {
       _window_stack_topmost(_interface_for(_window_for(obj)));
       return true;
     }
@@ -810,10 +803,13 @@ _process_event(xcb_generic_event_t *nvt) {
 
       /* these 4 because of XCB_EVENT_MASK_STRUCTURE_NOTIFY */
     case XCB_UNMAP_NOTIFY: {      /* response_type 18 */
-      uint16_t     sdx = session->ncount - 1;
-      PhxInterface *iface = session->stack_order[sdx];
+        /* Do not assume umappping is that of the topmost! */
+      uint16_t sdx;
+      xcb_map_notify_event_t *map = (xcb_map_notify_event_t*)nvt;
+      PhxInterface *iface = _interface_for(map->event);
       iface->state &= ~SBIT_MAPPED;
-      if (sdx != 0) {
+      if ( ((sdx = session->ncount - 1) != 0)
+          && (!((session->stack_order[sdx])->state & SBIT_MAPPED)) ) {
         do {
           iface = session->stack_order[(--sdx)];
           if (!!(iface->state & SBIT_MAPPED))  break;

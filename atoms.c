@@ -13,6 +13,8 @@ xcb_atom_t STRING;
 xcb_atom_t TARGETS;
 xcb_atom_t TIMESTAMP;
 
+xcb_atom_t _NET_ACTIVE_WINDOW;
+
 #if (DND_INTERNAL_ON || DND_EXTERNAL_ON)
 xcb_atom_t XDND_ACTIONASK;
 xcb_atom_t XDND_ACTIONCOPY;
@@ -35,9 +37,10 @@ void
 ui_atoms_initialize(xcb_connection_t *connection) {
 
 #if (DND_INTERNAL_ON || DND_EXTERNAL_ON)
-  const uint16_t nAtoms = 26;
+  const uint16_t nAtoms = 27;
+  const uint16_t nBase  = 12;
 #else
-  const uint16_t nAtoms = 11;
+  const uint16_t nAtoms = 12;
 #endif
 
     /* for ISO C90 use max array size */
@@ -47,7 +50,7 @@ ui_atoms_initialize(xcb_connection_t *connection) {
     uint16_t nsz;
     xcb_intern_atom_cookie_t cookie;
     xcb_intern_atom_reply_t *reply;
-  } atoms[26] = {
+  } atoms[27] = {
 
     { "WM_PROTOCOLS",     12, {0}, NULL },
     { "WM_DELETE_WINDOW", 16, {0}, NULL },
@@ -57,6 +60,8 @@ ui_atoms_initialize(xcb_connection_t *connection) {
     { "XCBD_DATA", 9, {0}, NULL }, { "ATOM_PAIR",    9, {0}, NULL },
     { "MULTIPLE",  8, {0}, NULL }, { "STRING",       6, {0}, NULL },
     { "TARGETS",   7, {0}, NULL }, { "TIMESTAMP",    9, {0}, NULL },
+
+    { "_NET_ACTIVE_WINDOW",    18, {0}, NULL },
 
     { "XdndActionAsk",     13, {0}, NULL },
     { "XdndActionCopy",    14, {0}, NULL },
@@ -98,21 +103,38 @@ ui_atoms_initialize(xcb_connection_t *connection) {
   TARGETS         = atoms[ 9].reply->atom;  free(atoms[ 9].reply);
   TIMESTAMP       = atoms[10].reply->atom;  free(atoms[10].reply);
 
+  _NET_ACTIVE_WINDOW = atoms[11].reply->atom;  free(atoms[11].reply);
+
 #if (DND_INTERNAL_ON || DND_EXTERNAL_ON)
-  XDND_ACTIONASK     = atoms[11].reply->atom;  free(atoms[11].reply);
-  XDND_ACTIONCOPY    = atoms[12].reply->atom;  free(atoms[12].reply);
-  XDND_ACTIONLINK    = atoms[13].reply->atom;  free(atoms[13].reply);
-  XDND_ACTIONLIST    = atoms[14].reply->atom;  free(atoms[14].reply);
-  XDND_ACTIONMOVE    = atoms[15].reply->atom;  free(atoms[15].reply);
-  XDND_ACTIONPRIVATE = atoms[16].reply->atom;  free(atoms[16].reply);
-  XDND_AWARE         = atoms[17].reply->atom;  free(atoms[17].reply);
-  XDND_DROP          = atoms[18].reply->atom;  free(atoms[18].reply);
-  XDND_ENTER         = atoms[19].reply->atom;  free(atoms[19].reply);
-  XDND_FINISHED      = atoms[20].reply->atom;  free(atoms[20].reply);
-  XDND_LEAVE         = atoms[21].reply->atom;  free(atoms[21].reply);
-  XDND_POSITION      = atoms[22].reply->atom;  free(atoms[22].reply);
-  XDND_SELECTION     = atoms[23].reply->atom;  free(atoms[23].reply);
-  XDND_STATUS        = atoms[24].reply->atom;  free(atoms[24].reply);
-  XDND_TYPELIST      = atoms[25].reply->atom;  free(atoms[25].reply);
+  XDND_ACTIONASK     = atoms[(nBase +  0)].reply->atom;
+                  free(atoms[(nBase +  0)].reply);
+  XDND_ACTIONCOPY    = atoms[(nBase +  1)].reply->atom;
+                  free(atoms[(nBase +  1)].reply);
+  XDND_ACTIONLINK    = atoms[(nBase +  2)].reply->atom;
+                  free(atoms[(nBase +  2)].reply);
+  XDND_ACTIONLIST    = atoms[(nBase +  3)].reply->atom;
+                  free(atoms[(nBase +  3)].reply);
+  XDND_ACTIONMOVE    = atoms[(nBase +  4)].reply->atom;
+                  free(atoms[(nBase +  4)].reply);
+  XDND_ACTIONPRIVATE = atoms[(nBase +  5)].reply->atom;
+                  free(atoms[(nBase +  5)].reply);
+  XDND_AWARE         = atoms[(nBase +  6)].reply->atom;
+                  free(atoms[(nBase +  6)].reply);
+  XDND_DROP          = atoms[(nBase +  7)].reply->atom;
+                  free(atoms[(nBase +  7)].reply);
+  XDND_ENTER         = atoms[(nBase +  8)].reply->atom;
+                  free(atoms[(nBase +  8)].reply);
+  XDND_FINISHED      = atoms[(nBase +  9)].reply->atom;
+                  free(atoms[(nBase +  9)].reply);
+  XDND_LEAVE         = atoms[(nBase + 10)].reply->atom;
+                  free(atoms[(nBase + 10)].reply);
+  XDND_POSITION      = atoms[(nBase + 11)].reply->atom;
+                  free(atoms[(nBase + 11)].reply);
+  XDND_SELECTION     = atoms[(nBase + 12)].reply->atom;
+                  free(atoms[(nBase + 12)].reply);
+  XDND_STATUS        = atoms[(nBase + 13)].reply->atom;
+                  free(atoms[(nBase + 13)].reply);
+  XDND_TYPELIST      = atoms[(nBase + 14)].reply->atom;
+                  free(atoms[(nBase + 14)].reply);
 #endif
 }

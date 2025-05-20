@@ -162,8 +162,10 @@ _window_stack_topmost(PhxInterface *iface) {
   uint16_t idx;
 
   if (session->ncount > 1) {
+
     xcb_window_t was_window
       = session->stack_order[(session->ncount - 1)]->window;
+
     for (idx = 0; idx < session->ncount; idx++)
       if (iface == session->stack_order[idx])  break;
     for (; idx < session->ncount; idx++)
@@ -174,17 +176,15 @@ _window_stack_topmost(PhxInterface *iface) {
       xcb_connection_t *connection = session->connection;
       xcb_screen_t *screen
         = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
-      xcb_intern_atom_cookie_t c0;
-      xcb_intern_atom_reply_t *r0;
       xcb_client_message_event_t *message;
-      c0 = xcb_intern_atom(connection, 0, 18, "_NET_ACTIVE_WINDOW");
-      r0 = xcb_intern_atom_reply(connection, c0, NULL);
+
+      /* If has focus, don't set active */
+
       message = calloc(32, 1);
       message->response_type  = XCB_CLIENT_MESSAGE;
       message->format         = 32;
       message->window         = iface->window;
-      message->type           = r0->atom;
-      free(r0);
+      message->type           = _NET_ACTIVE_WINDOW;
       message->data.data32[0] = 1;
       message->data.data32[1] = XCB_CURRENT_TIME;
       message->data.data32[2] = was_window;
@@ -217,8 +217,10 @@ _default_interface_meter(PhxInterface *iface,
                          PhxObject *obj) {
   uint8_t response;
 
-    /* We handle only == PHX_IFACE. Not its variants. */
-  if (iface->type != PHX_IFACE)  return true;
+    /* We handle only == PHX_IFACE. Not its variants.
+      And must have focus. */
+  if ( (iface->type != PHX_IFACE)
+      || (session->has_focus == NULL) )  return true;
 
   DEBUG_EVENTS("_default_interface_meter");
 

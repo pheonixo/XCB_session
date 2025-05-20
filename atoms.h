@@ -21,6 +21,8 @@ extern xcb_atom_t STRING;
 extern xcb_atom_t TARGETS;            /* ICCCM Required */
 extern xcb_atom_t TIMESTAMP;          /* ICCCM Required */
 
+extern xcb_atom_t _NET_ACTIVE_WINDOW;
+
 #if (DND_INTERNAL_ON || DND_EXTERNAL_ON)
  /* Used by dndx.c, some used by dndi.c */
  /* dndi.c includes textual.c usage. */

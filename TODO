@@ -1,5 +1,8 @@
 TODO notes:
 
+Found error under Comppiz... max, then min, restore... size wrong messed up cairo
+Check GNOME
+
 Deal with Window Manager issues of oddities, include no WM also.
 
 Re-test w/o cursor inherits on Xcursors only
