@@ -227,12 +227,14 @@ _event_keyboard(xcb_generic_event_t *nvt) {
 
     /* A single iface object can have NULL _event_cb.
       User may wish to add 'app' keys for override of do nothing. */
-    /* Address for case where focus follows pointer. Force do nothing. */
+    /* Address for case where focus follows pointer. */
   focus = ui_active_focus_get();
-  if ( (focus != NULL) && (focus->_event_cb != NULL) )
-    if (focus->_event_cb(iface, nvt, focus))
-      return true;
-  return _default_interface_meter(iface, nvt, focus);
+  DEBUG_ASSERT((focus == NULL), "SEGFAULT: no focus _event_keyboard().");
+  if ( (focus->_event_cb == NULL)
+      || !(focus->_event_cb(iface, nvt, focus)) )
+    if (focus != (PhxObject*)iface)
+      return _default_interface_meter(iface, nvt, focus);
+  return false;
 }
 
 /*#define DEBUG_BUTTON(a,b) \
@@ -282,8 +284,12 @@ _event_mouse(xcb_generic_event_t *nvt) {
       return true;
     }
   } else {
-    if (iface != session->stack_order[(session->ncount - 1)])
+    if (iface != session->stack_order[(session->ncount - 1)]) {
       _window_stack_topmost(iface);
+      ui_active_focus_set((PhxObject*)iface);
+      bptime = mouse->time;
+      return true;
+    }
   }
 
   if (!locus) {
@@ -551,6 +557,17 @@ _event_focus(xcb_generic_event_t *nvt) {
     iface->state &= ~SBIT_CLICKS;
       /* On non-dropdown windows, first content click focuses. */
     if ( (locus) && (!ui_window_is_transient(focus->event)) ) {
+      if (!!(iface->state & SBIT_MAPPED)) {
+        uint16_t idx;
+        const static uint32_t values[] = { XCB_STACK_MODE_ABOVE };
+        xcb_configure_window(session->connection, iface->window,
+                             XCB_CONFIG_WINDOW_STACK_MODE, values);
+        for (idx = 0; idx < session->ncount; idx++)
+          if (iface == session->stack_order[idx])  break;
+        for (; idx < session->ncount; idx++)
+          session->stack_order[idx] = session->stack_order[(idx + 1)];
+        session->stack_order[(session->ncount - 1)] = iface;
+      }
       iface->state |= (SBIT_FOCUS_CLICK | SBIT_CLICKS);
       DEBUG_BUTTON(focus->event, "FOCUS_CLICK set");
     }

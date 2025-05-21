@@ -183,8 +183,6 @@ _window_stack_topmost(PhxInterface *iface) {
         = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
       xcb_client_message_event_t *message;
 
-      /* If has focus, don't set active */
-
       message = calloc(32, 1);
       message->response_type  = XCB_CLIENT_MESSAGE;
       message->format         = 32;

@@ -155,9 +155,11 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
       test = _interface_for(focus->event);
       printf("window %"PRIu32", FOCUS_", test->window);
       if ((nvt->response_type & (uint8_t)0x7F) == XCB_FOCUS_IN) {
-        printf("IN. %s\n", caller);
+        printf("IN. detail=%"PRIu8" mode=%"PRIu8" %s\n",
+               focus->detail, focus->mode, caller);
       } else {
-        printf("OUT. %s\n", caller);
+        printf("OUT. detail=%"PRIu8" mode=%"PRIu8" %s\n",
+               focus->detail, focus->mode, caller);
       }
       break;
     }
