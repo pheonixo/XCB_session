@@ -162,6 +162,14 @@ _enter_leave_notices(PhxInterface *iface,
   notify.response_type = (type) ? XCB_ENTER_NOTIFY : XCB_LEAVE_NOTIFY;
   notify.event = imount->window;
 
+#if DND_EXTERNAL_ON
+  if ( (ui_active_drag_get() != NULL)
+      || (xdndActivated_get(session->xdndserver)) )
+#else
+  if (ui_active_drag_get() != NULL)
+#endif
+    notify.mode = XCB_NOTIFY_MODE_WHILE_GRABBED;
+
     /* Explicitly converted to generic for debug. */
   nvt = (xcb_generic_event_t*)&notify;
   DEBUG_EVENTS("_enter_leave_notices");
@@ -431,8 +439,9 @@ _event_motion(xcb_generic_event_t *nvt) {
     /* User/default for object given chance to respond. */
   if (imount->_event_cb != NULL) {
     handled = imount->_event_cb(iface, nvt, obj);
-    if (!handled && (imount == iface) && (obj->type == PHX_GFUSE))
-      handled = obj->_event_cb(iface, nvt, obj);
+    if (!handled && (imount == iface) && (obj != NULL)) 
+      if (obj->type == PHX_GFUSE)
+        handled = obj->_event_cb(iface, nvt, obj);
   }
     /* default action of unhandled start of 'drag motion' */
   if (bp && !handled)
@@ -479,8 +488,18 @@ _event_enter(xcb_generic_event_t *nvt) {
 
   imount = (PhxInterface*)obj;
   if (!IS_IFACE_TYPE(obj))  imount = obj->i_mount;
-  if (imount->_event_cb != NULL)
+  if (imount->_event_cb != NULL) {
+      /* Need to check if WM or Xserver, set mode. */
+  #if DND_EXTERNAL_ON
+    if ( (ui_active_drag_get() != NULL)
+        || (xdndActivated_get(session->xdndserver)) )
+  #else
+    if (ui_active_drag_get() != NULL)
+  #endif
+      xing->mode = XCB_NOTIFY_MODE_WHILE_GRABBED;
+
     imount->_event_cb(iface, nvt, obj);
+  }
   ui_active_within_set(obj);
 
   return true;

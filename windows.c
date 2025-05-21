@@ -89,7 +89,10 @@ ui_window_maximum_get(xcb_window_t window, uint16_t *x, uint16_t *y) {
 
 bool
 ui_window_is_transient(xcb_window_t window) {
-  return !!(_interface_for(window)->state & SBIT_TRANSIENT);
+  PhxInterface *iface = _interface_for(window);
+  if ( (iface == NULL) || (!(iface->state & SBIT_TRANSIENT)) )
+    return false;
+  return true;
 }
 
 static void
@@ -160,6 +163,8 @@ void
 _window_stack_topmost(PhxInterface *iface) {
 
   uint16_t idx;
+
+  if (iface == NULL)  return;
 
   if (session->ncount > 1) {
 
@@ -253,6 +258,14 @@ _default_interface_meter(PhxInterface *iface,
         return true;
       }
     }
+  }
+  if (response == XCB_ENTER_NOTIFY) {
+    xcb_enter_notify_event_t *xing;
+    xing = (xcb_enter_notify_event_t*)nvt;
+    if (xing->mode == XCB_NOTIFY_MODE_WHILE_GRABBED)
+          ui_cursor_set_named("dnd-no-drop", xing->event);
+    else  ui_cursor_set_named(NULL, xing->event);
+    return true;
   }
   return false;
 }
@@ -494,7 +507,8 @@ _interface_create(xcb_connection_t *connection,
 
 void
 ui_window_undecorate_set(xcb_window_t window) {
-  _interface_for(window)->state |= SBIT_UNDECORATED;
+  PhxInterface *iface = _interface_for(window);
+  if (iface != NULL)  iface->state |= SBIT_UNDECORATED;
 }
 
 static void

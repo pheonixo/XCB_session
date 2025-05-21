@@ -1,7 +1,6 @@
 TODO notes:
 
-Found error under Comppiz... max, then min, restore... size wrong messed up cairo
-Check GNOME
+Still to address bank ddl positioning near display edges
 
 Deal with Window Manager issues of oddities, include no WM also.
 

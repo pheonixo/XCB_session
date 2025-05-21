@@ -446,7 +446,7 @@ _send_dnd_event(xcb_idndserver_t *iserv,
   } else if (iserv->within != ui_active_within_get()) {
 set_within:
     DND_DEBUG_INTERNAL("XDND_ENTER", ui_active_within_get());
-    iserv->within  = ui_active_within_get();
+    iserv->within = ui_active_within_get();
       /* atom to signal MUST set within_type */
     iserv->within_type = XDND_ENTER;
   }
@@ -516,8 +516,9 @@ xdnd_status_event(xcb_window_t window, xcb_client_message_data_t *param) {
   if (ui_active_within_get() != obj)
     _within_event(iface, (xcb_generic_event_t*)&motion, obj);
 
-  if (IS_IFACE_TYPE(obj)) {
-      /* At this time, interfaces aren't dragable receivers. */
+  if ( (obj == NULL) || (IS_IFACE_TYPE(obj)) )  {
+      /* If left the window (no wm, no leave notify) or
+        at this time, interfaces aren't dragable receivers. */
       /* no type, no acceptance and no action */
       /* Can ignore other entries */
     return;
@@ -623,7 +624,7 @@ _dnd_selection_event(xcb_generic_event_t *nvt) {
           PhxObject *within = ui_active_within_get();
           if (_window_for(within) != cm->window)
             _window_stack_topmost(_interface_for(_window_for(within)));
-        } else {
+        } else if (ui_active_drag_get() != NULL) {
           PhxObject *has_drag = ui_active_drag_get();
           _window_stack_topmost(_interface_for(_window_for(has_drag)));  
         }
@@ -759,7 +760,7 @@ xdnd_window_awareness(xcb_connection_t *connection, xcb_window_t window) {
 }
 
     /* Viewable drop code. */
-/* The connection c and the window win are supposed to be defined*/
+/* Verified 'GNOME Shell' wm elects not to honor request. */
 static void
 _raise_target_window(xcb_connection_t *connection, xcb_window_t window) {
   const static uint32_t values[] = { XCB_STACK_MODE_ABOVE };
@@ -1160,7 +1161,10 @@ xdnd_drag_motion(xcb_xdndserver_t *dserv, xcb_motion_notify_event_t *motion) {
     if (dserv->xdndState.target == target)  return true;
       /* Filter case where we returned to ourself, target NULL can't happen */
     if (owner == target) {
-      if (xdndActivated_get(dserv))  xdnd_selection_clear(dserv);
+      if (xdndActivated_get(dserv)) {
+        _raise_target_window(dserv->connection, owner);
+        xdnd_selection_clear(dserv);
+      }
       return true;
     }
     dserv->xdndSource.source = owner;
@@ -1597,7 +1601,9 @@ xdnd_process_message(xcb_xdndserver_t *dserv,
     /* Only if window can't accept can we short circut process */
 
     /* Viewable drop code. */
-  if (xdndDropable_get(dserv) && !xdndRaised_get(dserv)) {
+    /* Entry may be in a no drop zone of a sliver of the window.
+      Raise to see full content. */
+  if (!xdndRaised_get(dserv)) {
     xdndRaised_set(dserv, true);
     _raise_target_window(dserv->connection, dserv->xdndState.target);
   }

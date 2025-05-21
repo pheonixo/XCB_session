@@ -135,16 +135,18 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
       xcb_enter_notify_event_t *xing = (xcb_enter_notify_event_t*)nvt;
       test = _interface_for(xing->event);
       printf("window %"PRIu32", ENTER_NOTIFY."
-             " (%"PRIi16",%"PRIi16")  %s\n",
-             test->window, xing->event_x, xing->event_y, caller);
+             " (%"PRIi16",%"PRIi16") detail=%"PRIu8" mode=%"PRIu8" %s\n",
+             test->window, xing->event_x, xing->event_y,
+             xing->detail, xing->mode, caller);
       break;
     }
     case XCB_LEAVE_NOTIFY: {      /* response_type 8 */
       xcb_enter_notify_event_t *xing = (xcb_enter_notify_event_t*)nvt;
       test = _interface_for(xing->event);
       printf("window %"PRIu32", LEAVE_NOTIFY."
-             " (%"PRIi16",%"PRIi16")  %s\n",
-             test->window, xing->event_x, xing->event_y, caller);
+             " (%"PRIi16",%"PRIi16") detail=%"PRIu8" mode=%"PRIu8" %s\n",
+             test->window, xing->event_x, xing->event_y,
+             xing->detail, xing->mode, caller);
       break;
     }
     case XCB_FOCUS_IN:            /* response_type 9 */
