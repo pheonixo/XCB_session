@@ -277,6 +277,16 @@ _event_mouse(xcb_generic_event_t *nvt) {
   iface = _interface_for(mouse->event);
   obj = _get_object_at_pointer(iface, x, y);
 
+    /* Scroll wheel doesn't deal with focus, is 'within' based.
+      More than likely, all buttons other than 1. */
+  if ((mouse->detail >= 4) && (mouse->detail <= 7)) {
+    PhxObject *within = ui_active_within_get();
+    DEBUG_ASSERT(( (within == NULL) || (obj != within) ),
+                              "failure: no within _event_mouse().");
+    if (within->_event_cb != NULL)  within->_event_cb(iface, nvt, obj);
+    return true;
+  }
+
   if (session->has_WM == 0) {
     if ( (focus == NULL)
         || (_window_for(focus) != mouse->event) ) {
@@ -372,11 +382,6 @@ _event_mouse(xcb_generic_event_t *nvt) {
     handled = imount->_event_cb(iface, nvt, obj);
 
   focus = ui_active_focus_get();
-    /* Special case of mouse scrolling. */
-  if ( (focus == NULL)
-      && ((mouse->detail >= 4) && (mouse->detail <= 7)) )
-    return true;
-
   if ( !handled && (ui_active_within_get() != focus) )
     ui_active_focus_set((PhxObject*)iface);
 
