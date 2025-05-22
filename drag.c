@@ -57,40 +57,27 @@ _drag_keyboard(PhxInterface *iface, xcb_generic_event_t *nvt) {
   PhxObject *has_drag = ui_active_drag_get();
 
   if (keyval == 0xFF1B) {
-    if (has_drag != NULL) {
-      iface->state |= SBIT_RELEASE_IGNORE;
-      if (!locus) {
-       #if DND_EXTERNAL_ON
-        if (xdndActivated_get(session->xdndserver))
-          xdnd_drag_cancel(session->xdndserver);
-       #endif
-        if (has_drag != ui_active_within_get()) {
-            /* within stays the same, notify leave of drag */
-          PhxObject *obj = ui_active_within_get();
-          _enter_leave_notices(iface, nvt, obj, 0);
-            /* Set topmost if within was outside window. */
-          if ( (obj == NULL) || (_window_for(obj) != _window_for(has_drag)) ) {
-            _window_stack_topmost(iface);
-            if (obj == NULL) {
-              DND_DEBUG_CURSOR("ui_cursor_set_named(NULL)  _drag_keyboard()");
-              ui_cursor_set_named(NULL, iface->window);
-            }
-          }
-        }
-          /* Source now must do its clean up (NULL object). */
-        has_drag->_event_cb(iface, nvt, NULL);
-        DND_DEBUG_PUTS("ui_active_drag_set(NULL) _drag_keyboard()");
-        ui_active_drag_set(NULL);
-      }
-      return true;
-    }
+    if (has_drag == NULL)  return false;
+      /* We respond on key release, but acknowledge it's ours. */
+    if (locus)  return true;
    #if DND_EXTERNAL_ON
+      /* Check if we were outside of source's window. */
     if (xdndActivated_get(session->xdndserver)) {
-      if (!locus)  xdnd_drag_cancel(session->xdndserver);
-      return true;
+      xdnd_drag_cancel(session->xdndserver);
+        /* Ignore cursor reset, or unspoken leave notify. */
+        /* However we still retain focus, make sure we look like it. */
+      _window_stack_topmost(iface);
     }
    #endif
-    return false;
+      /* Was a internal window cancel. */
+      /* Send enter/leave notices after has_drag cleans up itself. */
+    has_drag->_event_cb(iface, nvt, NULL);
+      /* Sets cursor to 'within', even when a 'topmost' change. */
+    _within_event(iface, nvt, ui_active_within_get());
+    DND_DEBUG_PUTS("ui_active_drag_set(NULL) _drag_keyboard()");
+    ui_active_drag_set(NULL);
+
+    return true;
   }
 
   if (   (keyval != 0x0ffe3)                       /* XK_Control_L */
