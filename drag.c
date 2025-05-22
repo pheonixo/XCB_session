@@ -578,7 +578,12 @@ _dnd_selection_event(xcb_generic_event_t *nvt) {
       xcb_selection_notify_event_t *notify
         = (xcb_selection_notify_event_t*)nvt;
       if (notify->property == XDND_SELECTION) {
+        PhxInterface *iface;
         xdnd_process_selection(session->xdndserver, NULL);
+          /* As receiver, check if we contained source in server.
+            If not shutdown server. */
+        iface = _interface_for(session->xdndserver->xdndSource.source);
+        if (iface == NULL)  xdnd_selection_clear(session->xdndserver);
         return true;
       }
       break;
@@ -611,11 +616,10 @@ _dnd_selection_event(xcb_generic_event_t *nvt) {
           PhxObject *within = ui_active_within_get();
           if (_window_for(within) != cm->window)
             _window_stack_topmost(_interface_for(_window_for(within)));
-        } else if (ui_active_drag_get() != NULL) {
-          PhxObject *has_drag = ui_active_drag_get();
-          _window_stack_topmost(_interface_for(_window_for(has_drag)));  
+        } else {
+          _window_stack_topmost(_interface_for(cm->window));  
+          ui_cursor_set_named(NULL, cm->window);
         }
-        ui_cursor_set_named(NULL, cm->window);
         ui_active_drag_set(NULL);
       }
       return true;
