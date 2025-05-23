@@ -177,7 +177,7 @@ _enter_leave_notices(PhxInterface *iface,
   if (imount->_event_cb == NULL) {
     DEBUG_ASSERT((!IS_WINDOW_TYPE(imount)),
                       "error: no _event_cb for interface.");
-    ui_cursor_set_named(NULL, iface->window);
+    if (type == 1)  ui_cursor_set_named(NULL, iface->window);
     return false;
   }
   return imount->_event_cb(iface, nvt, obj);
@@ -494,7 +494,7 @@ _event_enter(xcb_generic_event_t *nvt) {
                         "failure: entered NULL object.");
     return false;
   }
-    /* Need basic on entry, objects set to thier desire. */
+    /* Need basic on entry, objects set to their desire. */
   ui_cursor_set_named("left_ptr", xing->event);
 
   imount = (PhxInterface*)obj;
@@ -507,7 +507,8 @@ _event_enter(xcb_generic_event_t *nvt) {
   #else
     if (ui_active_drag_get() != NULL)
   #endif
-      xing->mode = XCB_NOTIFY_MODE_WHILE_GRABBED;
+      if (xing->mode == XCB_NOTIFY_MODE_NORMAL)
+        xing->mode = XCB_NOTIFY_MODE_WHILE_GRABBED;
 
     imount->_event_cb(iface, nvt, obj);
   }

@@ -95,6 +95,7 @@ _textview_drag_cancel(PhxInterface *iface,
   if ((obj = ui_active_drag_get()) == NULL)  return false;
 
   if ((within = ui_active_within_get()) != NULL) {
+/* Should be according to actual object, not generic. */
     if (within->type == PHX_TEXTVIEW) {
       within->state &= ~(OBIT_DND_CARET | OBIT_DND_COPY | OBIT_DND);
       ui_cursor_set_named("text", iface->window);
@@ -106,8 +107,23 @@ _textview_drag_cancel(PhxInterface *iface,
     /* This is has_drag, cursor is in 'within'. */
   obj->state &= ~(OBIT_DND_CARET | OBIT_DND_COPY | OBIT_DND);
   tbuf = (PhxTextbuffer*)obj->exclusive;
-    /* this is auto_scroll */
+    /* This is auto_scroll */
   tbuf->bin = tbuf->drag_sbin;
+    /* Set focus to within's window (cursor's position).
+      Since different windows, used DNDX. */
+  if (_window_for(within) != _window_for(obj)) {
+    iface = _interface_for(_window_for(within));
+    iface->state &= ~SBIT_CLICKS;
+    xcb_set_input_focus(session->connection,
+                        XCB_INPUT_FOCUS_PARENT,
+                        iface->window, XCB_CURRENT_TIME);
+    ui_active_focus_set((PhxObject*)iface);
+ #if DND_EXTERNAL_ON
+    if (xdndActivated_get(session->xdndserver))
+      xdnd_selection_clear(session->xdndserver);
+ #endif
+  }
+    /* Finished with has_drag. */
   DND_DEBUG_PUTS("ui_active_drag_set(NULL) _textview_drag_cancel()");
   ui_active_drag_set(NULL);
   ui_invalidate_object(obj);

@@ -2,7 +2,11 @@ TODO notes:
 
 Still to address bank ddl positioning near display edges
 
+Because of focus/cursor/topmost adjustments, internal dnd should
+push things out of objects to default behaviors?
+
 Deal with Window Manager issues of oddities, include no WM also.
+GNOME Shell blocks raise window, dnd, on others not within application.
 
 Re-test w/o cursor inherits on Xcursors only
 
