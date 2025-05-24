@@ -1,4 +1,4 @@
-#include "textviews.h"
+#include "textviews_drag.h"
 
 #define DND_DEBUG 0
 #if DND_DEBUG
@@ -112,7 +112,8 @@ _textview_drag_cancel(PhxInterface *iface,
     /* Set focus to within's window (cursor's position).
       Since different windows, used DNDX. */
   if (_window_for(within) != _window_for(obj)) {
-    iface = _interface_for(_window_for(within));
+    iface = (within != NULL) ? _interface_for(_window_for(within))
+                             : _interface_for(_window_for(obj));
     iface->state &= ~SBIT_CLICKS;
     xcb_set_input_focus(session->connection,
                         XCB_INPUT_FOCUS_PARENT,
@@ -147,7 +148,7 @@ _textview_drag_keyboard(PhxInterface *iface,
   if (keyval == 0x0ff1b)
     return _textview_drag_cancel(iface, nvt, obj);
 
-  return false;
+  return _drag_keyboard(iface, nvt);
 }
 
 #pragma mark *** Mouse ***

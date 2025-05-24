@@ -55,9 +55,9 @@ _drag_keyboard(PhxInterface *iface, xcb_generic_event_t *nvt) {
   const char *cursor;
 
   PhxObject *has_drag = ui_active_drag_get();
+  if (has_drag == NULL)  return false;
 
   if (keyval == 0xFF1B) {
-    if (has_drag == NULL)  return false;
       /* We respond on key release, but acknowledge it's ours. */
     if (locus)  return true;
    #if DND_EXTERNAL_ON
@@ -83,8 +83,6 @@ _drag_keyboard(PhxInterface *iface, xcb_generic_event_t *nvt) {
   if (   (keyval != 0x0ffe3)                       /* XK_Control_L */
       && (keyval != 0x0ffe4) )                     /* XK_Control_R */
     return false;
-
-  if (has_drag == NULL)  return false;
 
   cursor = ui_cursor_get_named();
   if ( (cursor == NULL) || (strcmp(cursor, "dnd-no-drop") == 0) )
@@ -616,9 +614,10 @@ _dnd_selection_event(xcb_generic_event_t *nvt) {
           PhxObject *within = ui_active_within_get();
           if (_window_for(within) != cm->window)
             _window_stack_topmost(_interface_for(_window_for(within)));
-        } else {
-          _window_stack_topmost(_interface_for(cm->window));  
-          ui_cursor_set_named(NULL, cm->window);
+        } else if (cm->type == XDND_FINISHED) {
+          xcb_set_input_focus(session->connection,
+                              XCB_INPUT_FOCUS_PARENT,
+                              cm->data.data32[0], XCB_CURRENT_TIME);
         }
         ui_active_drag_set(NULL);
       }
@@ -896,7 +895,14 @@ xdnd_quirk_dst_load(xcb_xdndserver_t *dserv,
       /* Attempt to drop on self. Revert to internal handling. */
       /* Viewable drop code. */
     _raise_target_window(dserv->connection, owner);
-
+      /* Set owner's cursor back to type of drag. */
+    if ((dserv->xdndSource.source_state & XCB_MOD_MASK_CONTROL) == 0) {
+      DND_DEBUG_CURSOR("ui_cursor_set_named(dnd-move) xdnd_cursor_event()");
+      ui_cursor_set_named("dnd-move", owner);
+    } else {
+      DND_DEBUG_CURSOR("ui_cursor_set_named(dnd-copy) xdnd_cursor_event()");
+      ui_cursor_set_named("dnd-copy", owner);
+    }
     _xdnd_shutdown(dserv);
     return true;
   }
@@ -1141,10 +1147,9 @@ xdnd_drag_motion(xcb_xdndserver_t *dserv, xcb_motion_notify_event_t *motion) {
                                             motion->root,
                                             motion->root_x,
                                             motion->root_y);
-  if (target == 0) {
-/*    puts("old motion, rejecting");*/
-    return true;
-  }
+
+    /* Test if return states "old motion, rejecting". */
+  if (target == 0)  return true;
 
   if (!xdndExchanges_get(dserv)) {
       /* Filter case where target did not reply to XdndAware
@@ -1152,6 +1157,7 @@ xdnd_drag_motion(xcb_xdndserver_t *dserv, xcb_motion_notify_event_t *motion) {
     if (dserv->xdndState.target == target)  return true;
       /* Filter case where we returned to ourself, target NULL can't happen */
     if (owner == target) {
+/* Verify case can happen. quirk load destination occurs before this? */
       if (xdndActivated_get(dserv)) {
         _raise_target_window(dserv->connection, owner);
         xdnd_selection_clear(dserv);
@@ -1161,7 +1167,7 @@ xdnd_drag_motion(xcb_xdndserver_t *dserv, xcb_motion_notify_event_t *motion) {
     dserv->xdndSource.source = owner;
     if ( (dserv->_xdnd_status_cb == NULL)
         || (dserv->xdnddata_in == NULL) ) {
-      fprintf(stderr, "Missing handlers for XDNDServer... Aborting\n");
+      DEBUG_ASSERT(true, "Missing handlers for XDNDServer... Aborting!");
       return false;
     }
     xcb_set_selection_owner(dserv->connection, owner,
@@ -1411,6 +1417,8 @@ _get_source_typelist(xcb_xdndserver_t *dserv,
 
 /* When we are the target: XdndEnter, XdndPosition, XdndDrop, XdndLeave. */
 /* When we are the source: XdndStatus, XdndFinished. */
+/* As source, order raise of application' window to view for drop location. */
+/* As target, assume source does not order raise. */
 /* Returns true if XdndLeave or XdndFinished received. Signals
    application that target/source dnd finished. */
 bool
@@ -1478,6 +1486,13 @@ xdnd_process_message(xcb_xdndserver_t *dserv,
                     request->window, dserv->xdndSource.source);
    #endif
     dserv->xdndState.target  = request->window;
+      /* Viewable drop code. */
+      /* Entry may be in a no drop zone of a sliver of the window.
+        Raise to see full content. */
+    if (!xdndRaised_get(dserv)) {
+      xdndRaised_set(dserv, true);
+      _raise_target_window(dserv->connection, dserv->xdndState.target);
+    }
     return false;
   }
 

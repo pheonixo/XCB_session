@@ -6,7 +6,13 @@ Because of focus/cursor/topmost adjustments, internal dnd should
 push things out of objects to default behaviors?
 
 Deal with Window Manager issues of oddities, include no WM also.
-GNOME Shell blocks raise window, dnd, on others not within application.
+Compiz behaves well. Focus retained by source. Raises windows underneath pointer.
+On drop, leaves raised/focus of window. On cancel, raised/focus on source.
+twm behaves well.    Focus retained by source. Raises windows underneath pointer.
+Drop/Cancel, raised/focus to window underneath pointer (focus by pointer).
+GNOME Shell blocks raise window, dnd. Only allows within a multi-window app.
+Otherwise enforces raise by focus only. Can not see drops, forced to pre-arrange
+windows.
 
 Re-test w/o cursor inherits on Xcursors only
 
