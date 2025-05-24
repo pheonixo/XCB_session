@@ -6,7 +6,7 @@ user_textstring(void) {
   char *string;
   size_t rdSz;
   long filesize;
-  FILE *rh = fopen("./libctype/locale/rwSystems/numbers.c", "r");
+  FILE *rh = fopen("/home/steven/Development/Projects/XCB_session/libctype/locale/rwSystems/numbers.c", "r");
   if (rh == NULL) {  puts("file not found"); return NULL;  }
   fseek(rh, 0 , SEEK_END);
   filesize = ftell(rh);
@@ -68,6 +68,9 @@ main(int argc, char *argv[]) {
   debug_flags &= ~((uint64_t)1 << XCB_CONFIGURE_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_EXPOSE);
   debug_flags &= ~((uint64_t)1 << XCB_VISIBILITY_NOTIFY);
+  debug_flags &= ~((uint64_t)1 << XCB_ENTER_NOTIFY);
+  debug_flags &= ~((uint64_t)1 << XCB_LEAVE_NOTIFY);
+  debug_flags &= ~((uint64_t)1 << XCB_CLIENT_MESSAGE);
 #endif
 
     /* A 'topmost' decorated window */
@@ -77,6 +80,17 @@ main(int argc, char *argv[]) {
   nexus_configure_layout(session->iface[0]);
     /* Map the window on the screen */
   xcb_map_window(session->connection, window);
+
+
+  configure.x += 300;
+  configure.y += 150;
+  window = ui_window_create(configure);
+  if (window == 0)  exit(EXIT_FAILURE);
+    /* Since one window... instead of _interface_for() */
+  nexus_configure_layout(session->iface[1]);
+    /* Map the window on the screen */
+  xcb_map_window(session->connection, window);
+
 
     /* Run event loop */
   xcb_main();

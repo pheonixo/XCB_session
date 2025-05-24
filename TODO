@@ -2,12 +2,11 @@ TODO notes:
 
 Still to address bank ddl positioning near display edges
 
-Because of focus/cursor/topmost adjustments, internal dnd should
-push things out of objects to default behaviors?
-
 Deal with Window Manager issues of oddities, include no WM also.
+
 Compiz behaves well. Focus retained by source. Raises windows underneath pointer.
 On drop, leaves raised/focus of window. On cancel, raised/focus on source.
+no wm behaves well. same as Compiz.
 twm behaves well.    Focus retained by source. Raises windows underneath pointer.
 Drop/Cancel, raised/focus to window underneath pointer (focus by pointer).
 GNOME Shell blocks raise window, dnd. Only allows within a multi-window app.
@@ -15,13 +14,6 @@ Otherwise enforces raise by focus only. Can not see drops, forced to pre-arrange
 windows.
 
 Re-test w/o cursor inherits on Xcursors only
-
-WM TAKE focus need to understand, XDND focus shift on drop
-Oustide app click, on no-wm shift to follow by mouse
-alt-drop retain focus?
-
-XXX figure out difference reason root and event dont match.
-Drag by root uses different increments then by event.
 
 need to go thru textuals.c to increase offsets from int to unsigned size ???
 
