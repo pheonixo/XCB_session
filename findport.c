@@ -1113,9 +1113,11 @@ _findport_create(PhxInterface *iface, PhxRectangle configure) {
 }
 
 /* Creates invisible nexus at '0,0' of textview's mete_box. */
+/* XXX findport limited to top of textview */
 PhxFindport *
 ui_findport_create(PhxInterface *iface, PhxObjectTextview *otxt) {
 
+  PhxInterface *mount;
   PhxRectangle configure;
 
   configure = otxt->i_mount->mete_box;
@@ -1123,6 +1125,9 @@ ui_findport_create(PhxInterface *iface, PhxObjectTextview *otxt) {
   configure.h += (configure.h < 16) ? 5 : 7;
   configure.h *= 2;
 
-  return _findport_create(iface, configure);
+  mount = (PhxInterface*)otxt;
+  while (OBJECT_BASE_TYPE((mount = mount->i_mount)) >= PHX_NEXUS) ;
+
+  return _findport_create(mount, configure);
 }
 
