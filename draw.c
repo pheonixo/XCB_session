@@ -182,6 +182,8 @@ ui_invalidate_rectangle(PhxInterface *iface, PhxRectangle dirty) {
 
   rect_u.rect = dirty;
 
+  while (!IS_WINDOW_TYPE(iface))  iface = iface->i_mount;
+
   tmr = ui_timer_get(iface, "frame");
   if (tmr == NULL) {
     struct timespec ts = { 0, 16000000 };
