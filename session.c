@@ -1,5 +1,6 @@
 #include "session.h"
 #include "windows.h"
+#include "objects.h"
 
 PhxSession *session = NULL;
 
@@ -10,8 +11,38 @@ ui_active_focus_get(void) {
   return session->has_focus;
 }
 
+/* When changing focus between objects, send in/out for them to respond. */
 void
 ui_active_focus_set(PhxObject *obj) {
+
+  xcb_focus_in_event_t nvt = { 0 };
+  PhxInterface *iface;
+  PhxObject *focused;
+
+  nvt.detail = XCB_NOTIFY_DETAIL_NONE;
+#if DND_EXTERNAL_ON
+  if ( (ui_active_drag_get() != NULL)
+      || (xdndActivated_get(session->xdndserver)) )
+#else
+  if (ui_active_drag_get() != NULL)
+#endif
+    nvt.mode = XCB_NOTIFY_MODE_WHILE_GRABBED;
+  if ((focused = session->has_focus) != NULL) {
+    DEBUG_ASSERT((focused->_event_cb == NULL),
+                 "SEGFAULT: undefined _event_cb... ui_active_focus_set()");
+    nvt.response_type = XCB_FOCUS_OUT;
+    nvt.event = _window_for(focused);
+    iface = _interface_for(nvt.event);
+    focused->_event_cb(iface, (xcb_generic_event_t*)&nvt, focused);
+  }
+  if (obj != NULL) {
+    DEBUG_ASSERT((obj->_event_cb == NULL),
+                 "SEGFAULT: undefined _event_cb... ui_active_focus_set()");
+    nvt.response_type = XCB_FOCUS_IN;
+    nvt.event = _window_for(obj);
+    iface = _interface_for(nvt.event);
+    obj->_event_cb(iface, (xcb_generic_event_t*)&nvt, obj);
+  }
   session->has_focus = obj;
 }
 

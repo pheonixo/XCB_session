@@ -948,6 +948,8 @@ _findport_layout(PhxNexus *nexus) {
   obj->state &= ~(HXPD_MSK | VXPD_MSK);
   ui_button_label_create(obj, button_labels[0], (HJST_CTR | VJST_CTR));
   ui_button_label_create(obj, button_labels[1], (HJST_CTR | VJST_CTR));
+    /* Creates '_event_cb' which designer responds to added objects
+      thru 'result_cb'. Basically multiple '_event_cb's. */
   ui_bank_add_result_cb(obj, result_cb);
 
                    /* replace_all_box 0,1 [1] */

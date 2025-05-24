@@ -57,7 +57,7 @@ _textview_draw(PhxObject *b, cairo_t *cr) {
 static bool
 _textview_keyboard(PhxInterface *iface,
                    xcb_generic_event_t *nvt,
-                   PhxObject *obj)  {
+                   PhxObject *obj) {
 
   PhxTextbuffer *tbuf;
   xcb_key_press_event_t *kp;
@@ -237,7 +237,7 @@ sbit:
 static bool
 _textview_mouse(PhxInterface *iface,
                 xcb_generic_event_t *nvt,
-                PhxObject *obj)  {
+                PhxObject *obj) {
 
   xcb_button_press_event_t *bp;
   bool shift_click, locus;
@@ -333,7 +333,7 @@ redraw:
 static bool
 _textview_motion(PhxInterface *iface,
                  xcb_generic_event_t *nvt,
-                 PhxObject *obj)  {
+                 PhxObject *obj) {
 
   xcb_motion_notify_event_t *motion;
   PhxObjectTextview *otxt;
@@ -383,7 +383,7 @@ _textview_motion(PhxInterface *iface,
 static bool
 _textview_crossing(PhxInterface *iface,
                    xcb_generic_event_t *nvt,
-                   PhxObject *obj)  {
+                   PhxObject *obj) {
 
   if (_textview_drag_crossing(iface, nvt, obj))
     return true;
@@ -396,9 +396,27 @@ _textview_crossing(PhxInterface *iface,
 }
 
 static bool
+_textview_focus(PhxInterface *iface,
+                   xcb_generic_event_t *nvt,
+                   PhxObject *obj) {
+
+  if ((nvt->response_type & (uint8_t)0x7F) == XCB_FOCUS_OUT) {
+    PhxObjectTextview *otxt;
+    PhxTextbuffer     *tbuf;
+    otxt = (PhxObjectTextview*)obj;
+    if ((tbuf = (PhxTextbuffer*)otxt->exclusive) == NULL) {
+      DEBUG_ASSERT(true, "textview has no textbuffer. _textview_focus().");
+      return true;
+    }
+    _textbuffer_flush(tbuf);
+  }
+  return true;
+}
+
+static bool
 _textview_configure(PhxInterface *iface,
                     xcb_generic_event_t *nvt,
-                    PhxObject *obj)  {
+                    PhxObject *obj) {
 
   xcb_configure_notify_event_t *configure;
   int16_t wD, hD;
@@ -437,7 +455,7 @@ _textview_configure(PhxInterface *iface,
 static bool
 _textview_selection(PhxInterface *iface,
                     xcb_generic_event_t *nvt,
-                    PhxObject *obj)  {
+                    PhxObject *obj) {
 
   uint8_t response_type;
 
@@ -506,6 +524,8 @@ _default_textview_meter(PhxInterface *iface,
 
     case XCB_FOCUS_IN:            /* response_type 9 */
     case XCB_FOCUS_OUT:           /* response_type 10 */
+      return _textview_focus(iface, nvt, obj);
+
     case XCB_EXPOSE: {            /* response_type 12 */
       break;
     }
