@@ -175,14 +175,16 @@ ui_invalidate_rectangle(PhxInterface *iface, PhxRectangle dirty) {
   union rectangle_endianess rect_u;
   struct _sigtimer *tmr;
 
+  while (!IS_WINDOW_TYPE(iface)) {
+    dirty.x += iface->mete_box.x;
+    dirty.y += iface->mete_box.y;
+    iface = iface->i_mount;
+  }
   dirty.w += dirty.x, dirty.h += dirty.y;
   if ((dirty.w <= 0) || (dirty.w <= 0))  return;
   if (dirty.x < 0)  dirty.x = 0;
   if (dirty.y < 0)  dirty.y = 0;
-
   rect_u.rect = dirty;
-
-  while (!IS_WINDOW_TYPE(iface))  iface = iface->i_mount;
 
   tmr = ui_timer_get(iface, "frame");
   if (tmr == NULL) {
