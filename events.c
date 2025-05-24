@@ -137,75 +137,6 @@ _coordinates_for_object(PhxInterface *iface, xcb_generic_event_t *nvt,
   return rMount;
 }
 
-bool
-_enter_leave_notices(PhxInterface *iface,
-                     xcb_generic_event_t *nvt,
-                     PhxObject *obj,
-                     bool type) {
-
-  xcb_enter_notify_event_t notify = { 0 };
-  PhxInterface *imount;
-
-  if (((nvt->response_type & (uint8_t)0x7F) - (uint8_t)XCB_BUTTON_PRESS) >
-        (uint8_t)(XCB_MOTION_NOTIFY - XCB_BUTTON_PRESS)) {
-      /* Verified data works with XCB_CLIENT_MESSAGE leave */
-    if ((nvt->response_type & (uint8_t)0x7F) != XCB_CLIENT_MESSAGE)
-      DEBUG_ASSERT(true, "error: wrong event type _enter_leave_notices.");
-  }
-
-    /* Convert nvt to mount with coordinates.*/
-  notify.root_x = ((xcb_motion_notify_event_t*)nvt)->root_x;
-  notify.root_y = ((xcb_motion_notify_event_t*)nvt)->root_y;
-  imount = _coordinates_for_object(iface, nvt, obj,
-                                    &notify.event_x, &notify.event_y);
-
-  notify.response_type = (type) ? XCB_ENTER_NOTIFY : XCB_LEAVE_NOTIFY;
-  notify.event = imount->window;
-
-#if DND_EXTERNAL_ON
-  if ( (ui_active_drag_get() != NULL)
-      || (xdndActivated_get(session->xdndserver)) )
-#else
-  if (ui_active_drag_get() != NULL)
-#endif
-    notify.mode = XCB_NOTIFY_MODE_WHILE_GRABBED;
-
-    /* Explicitly converted to generic for debug. */
-  nvt = (xcb_generic_event_t*)&notify;
-  DEBUG_EVENTS("_enter_leave_notices");
-
-  if (imount->_event_cb == NULL) {
-    DEBUG_ASSERT((!IS_WINDOW_TYPE(imount)),
-                      "error: no _event_cb for interface.");
-    if (type == 1)  ui_cursor_set_named(NULL, iface->window);
-    return false;
-  }
-  return imount->_event_cb(iface, nvt, obj);
-}
-
-bool
-_within_event(PhxInterface *iface,
-              xcb_generic_event_t *nvt,
-              PhxObject *obj) {
-
-  bool handled = false;
-
-  PhxObject *without = ui_active_within_get();
-  if (without != NULL) {
-    handled = _enter_leave_notices(iface, nvt, without, 0);
-    DEBUG_ASSERT(((!handled) && (!IS_IFACE_TYPE(without))),
-                      "false returned on leave notice handler.");
-  }
-  ui_active_within_set(obj);
-  if (obj != NULL) {
-      /* Inform object within */
-    handled = _enter_leave_notices(iface, nvt, obj, 1);
-    DEBUG_ASSERT(((!handled) && (!IS_IFACE_TYPE(obj))),
-                      "false returned on enter notice handler.");
-  }
-  return handled;
-}
-
 #pragma mark *** Communication ***
 
 /* Needed for muliple clicks, and determining drag_begin start up. */
@@ -441,7 +372,7 @@ _event_motion(xcb_generic_event_t *nvt) {
 
     /* Drag selection is still possiblity. Send locus notices if changed. */
   if (ui_active_within_get() != obj)
-    _within_event(iface, nvt, obj);
+    ui_active_within_set(obj);
 
     /* Find/set for mount under pointer. */
   imount = _coordinates_for_object(iface, nvt, obj, xPtr, yPtr);
@@ -467,7 +398,7 @@ motion_exit:
 static bool
 _event_enter(xcb_generic_event_t *nvt) {
 
-  PhxInterface *iface, *imount;
+  PhxInterface *iface;
   PhxObject *obj;
   int16_t x, y;
   xcb_enter_notify_event_t *xing;
@@ -496,22 +427,6 @@ _event_enter(xcb_generic_event_t *nvt) {
   }
     /* Need basic on entry, objects set to their desire. */
   ui_cursor_set_named("left_ptr", xing->event);
-
-  imount = (PhxInterface*)obj;
-  if (!IS_IFACE_TYPE(obj))  imount = obj->i_mount;
-  if (imount->_event_cb != NULL) {
-      /* Need to check if WM or Xserver, set mode. */
-  #if DND_EXTERNAL_ON
-    if ( (ui_active_drag_get() != NULL)
-        || (xdndActivated_get(session->xdndserver)) )
-  #else
-    if (ui_active_drag_get() != NULL)
-  #endif
-      if (xing->mode == XCB_NOTIFY_MODE_NORMAL)
-        xing->mode = XCB_NOTIFY_MODE_WHILE_GRABBED;
-
-    imount->_event_cb(iface, nvt, obj);
-  }
   ui_active_within_set(obj);
 
   return true;
@@ -521,32 +436,9 @@ _event_enter(xcb_generic_event_t *nvt) {
 static bool
 _event_leave(xcb_generic_event_t *nvt) {
 
-  PhxObject *obj;
-
-  if ((obj = ui_active_within_get()) != NULL) {
-    xcb_enter_notify_event_t *xing = (xcb_enter_notify_event_t*)nvt;
-    if (xing->mode == XCB_NOTIFY_MODE_NORMAL) {
-      PhxInterface *iface, *imount;
- /*mode_normal:*/
-      iface = _interface_for(xing->event);
-        /* Inform interface of object leaving, or itself. */
-      imount = (PhxInterface*)obj;
-      if (!IS_IFACE_TYPE(obj))  imount = obj->i_mount;
-      if (imount->_event_cb != NULL)
-        imount->_event_cb(iface, nvt, obj);
-        /* Don't know current whereabouts at this point. */
-      ui_active_within_set(NULL);
-    } else {
-        /* A Window Manager on a XCB_FOCUS_IN event sends
-          XCB_LEAVE_NOTIFY when mouse press in content area.
-          XCB_LEAVE_NOTIFY will be followed by:
-             XCB_FOCUS_IN then XCB_ENTER_NOTIFY.  */
-      if (xing->mode == XCB_NOTIFY_MODE_GRAB) {
-          /* force this as XCB_NOTIFY_MODE_NORMAL
-        goto mode_normal; */
-      }
-    }
-  }
+  xcb_enter_notify_event_t *xing = (xcb_enter_notify_event_t*)nvt;
+  if (xing->mode == XCB_NOTIFY_MODE_NORMAL)
+    ui_active_within_set(NULL);
   return true;
 }
 

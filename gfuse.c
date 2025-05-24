@@ -13,10 +13,6 @@
  #define DND_DEBUG_CURSOR(a)
 #endif
 
-bool             _within_event(PhxInterface *iface,
-                               xcb_generic_event_t *nvt,
-                               PhxObject *obj);
-
 #pragma mark *** Drawing ***
 
 void
@@ -625,10 +621,9 @@ _default_gfuse_meter(PhxInterface *iface,
     case XCB_BUTTON_RELEASE: {   /* response_type 5 */
       PhxObject *has_drag = ui_active_drag_get();
       if (has_drag != NULL) {
-        if (has_drag != obj) {
-            /* now leaving drag state, inform both of position. */
-          _within_event(iface, nvt, obj);
-        }
+        if (has_drag != obj)
+          ui_active_within_set(obj);
+        DND_DEBUG_PUTS("ui_active_within_set(obj) _default_gfuse_meter()");
         DND_DEBUG_PUTS("ui_active_drag_set(NULL) _default_gfuse_meter()");
         ui_active_drag_set(NULL);
         return true;

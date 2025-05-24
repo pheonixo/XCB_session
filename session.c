@@ -15,33 +15,33 @@ ui_active_focus_get(void) {
 void
 ui_active_focus_set(PhxObject *obj) {
 
-  xcb_focus_in_event_t nvt = { 0 };
+  xcb_focus_in_event_t notify = { 0 };
   PhxInterface *iface;
   PhxObject *focused;
 
-  nvt.detail = XCB_NOTIFY_DETAIL_NONE;
+  notify.detail = XCB_NOTIFY_DETAIL_NONE;
 #if DND_EXTERNAL_ON
   if ( (ui_active_drag_get() != NULL)
       || (xdndActivated_get(session->xdndserver)) )
 #else
   if (ui_active_drag_get() != NULL)
 #endif
-    nvt.mode = XCB_NOTIFY_MODE_WHILE_GRABBED;
+    notify.mode = XCB_NOTIFY_MODE_WHILE_GRABBED;
   if ((focused = session->has_focus) != NULL) {
     DEBUG_ASSERT((focused->_event_cb == NULL),
                  "SEGFAULT: undefined _event_cb... ui_active_focus_set()");
-    nvt.response_type = XCB_FOCUS_OUT;
-    nvt.event = _window_for(focused);
-    iface = _interface_for(nvt.event);
-    focused->_event_cb(iface, (xcb_generic_event_t*)&nvt, focused);
+    notify.response_type = XCB_FOCUS_OUT;
+    notify.event = _window_for(focused);
+    iface = _interface_for(notify.event);
+    focused->_event_cb(iface, (xcb_generic_event_t*)&notify, focused);
   }
   if (obj != NULL) {
     DEBUG_ASSERT((obj->_event_cb == NULL),
                  "SEGFAULT: undefined _event_cb... ui_active_focus_set()");
-    nvt.response_type = XCB_FOCUS_IN;
-    nvt.event = _window_for(obj);
-    iface = _interface_for(nvt.event);
-    obj->_event_cb(iface, (xcb_generic_event_t*)&nvt, obj);
+    notify.response_type = XCB_FOCUS_IN;
+    notify.event = _window_for(obj);
+    iface = _interface_for(notify.event);
+    obj->_event_cb(iface, (xcb_generic_event_t*)&notify, obj);
   }
   session->has_focus = obj;
 }
@@ -51,8 +51,69 @@ ui_active_within_get(void) {
   return session->obj_within;
 }
 
+/* Used to know active object.
+  Similar to a focus event, but mouse related. Detail will be 
+  XCB_NOTIFY_DETAIL_NONE. This signals object only being informed we've
+  entered or left the object. Any detailed information of entry should be
+  gleaned from mouse motion event handling. Allows adjustments such as
+  highlite, text prep/reset, etc if object needs it.
+  Mode will indicate if in drag. */
 void
 ui_active_within_set(PhxObject *obj) {
+
+  xcb_enter_notify_event_t notify = { 0 };
+  PhxInterface *iface;
+  PhxObject *within;
+
+  notify.detail = XCB_NOTIFY_DETAIL_NONE;
+#if DND_EXTERNAL_ON
+  if ( (ui_active_drag_get() != NULL)
+      || (xdndActivated_get(session->xdndserver)) )
+#else
+  if (ui_active_drag_get() != NULL)
+#endif
+    notify.mode = XCB_NOTIFY_MODE_WHILE_GRABBED;
+  if ( ((within = session->obj_within) != NULL)
+      && (within != obj) ) {
+      /* We can be in an object that doesn't deal with mouse events.
+        More than likely is handled farther up the chain. */
+    PhxInterface *imount = (PhxInterface*)within;
+    if (!IS_WINDOW_TYPE(within)) {
+      while (imount->_event_cb == NULL) {
+        imount = imount->i_mount;
+        if (IS_WINDOW_TYPE(imount))  break;
+      }
+    }
+    if (imount->_event_cb != NULL) {
+      notify.response_type = XCB_LEAVE_NOTIFY;
+      notify.event = _window_for((PhxObject*)imount);
+      iface = _interface_for(notify.event);
+      imount->_event_cb(iface,
+                        (xcb_generic_event_t*)&notify,
+                        (PhxObject*)imount);
+    }
+  }
+  if (obj != NULL) {
+    bool handled = false;
+    PhxInterface *imount = (PhxInterface*)obj;
+    if (!IS_WINDOW_TYPE(obj)) {
+      while (imount->_event_cb == NULL) {
+        imount = imount->i_mount;
+        if (IS_WINDOW_TYPE(imount))  break;
+      }
+    }
+    if (imount->_event_cb != NULL) {
+      notify.response_type = XCB_ENTER_NOTIFY;
+      notify.event = _window_for((PhxObject*)imount);
+      iface = _interface_for(notify.event);
+      handled = imount->_event_cb(iface,
+                                  (xcb_generic_event_t*)&notify,
+                                  (PhxObject*)imount);
+    }
+    if (!handled)
+      ui_cursor_set_named(NULL, _window_for((PhxObject*)imount));
+    obj = (PhxObject*)imount;
+  }
   session->obj_within = obj;
 }
 

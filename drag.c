@@ -31,13 +31,6 @@ PhxInterface *   _coordinates_for_object(PhxInterface *iface,
                                          PhxObject *obj,
                                          int16_t *xPtr,
                                          int16_t *yPtr);
-bool             _enter_leave_notices(PhxInterface *iface,
-                                      xcb_generic_event_t *nvt,
-                                      PhxObject *obj,
-                                      bool type);
-bool             _within_event(PhxInterface *iface,
-                               xcb_generic_event_t *nvt,
-                               PhxObject *obj);
 
 #pragma mark *** Drawing ***
 
@@ -73,7 +66,7 @@ _drag_keyboard(PhxInterface *iface, xcb_generic_event_t *nvt) {
       /* Send enter/leave notices after has_drag cleans up itself. */
     has_drag->_event_cb(iface, nvt, NULL);
       /* Sets cursor to 'within', even when a 'topmost' change. */
-    _within_event(iface, nvt, ui_active_within_get());
+    ui_active_within_set(ui_active_within_get());
     DND_DEBUG_PUTS("ui_active_drag_set(NULL) _drag_keyboard()");
     ui_active_drag_set(NULL);
 
@@ -190,7 +183,7 @@ _drag_motion(PhxInterface *iface, xcb_generic_event_t *nvt, PhxObject *obj) {
   }
     /* Even if drag, objects need to be informed of enter/leave */
   if (ui_active_within_get() != obj)
-    _within_event(iface, nvt, obj);
+    ui_active_within_set(obj);
     /* Case: drag cancel
       has_drag == NULL, SBIT_RELEASE_IGNORE is set
       want within updates, and exit jump to setting points. */
@@ -380,9 +373,7 @@ _dnd_status(xcb_dnd_notify_event_t *dnd) {
 void
 _dnd_drop(xcb_dnd_notify_event_t *dnd) {
 
-  PhxInterface *iface;
   xcb_selection_data_t sdata = { 0 };
-  xcb_motion_notify_event_t motion = { 0 };
 
     /* request last status update */
   _dnd_status(dnd);
@@ -403,13 +394,8 @@ _dnd_drop(xcb_dnd_notify_event_t *dnd) {
 
   dnd->within->state &= ~(OBIT_DND_CARET | OBIT_DND_COPY | OBIT_DND);
   ui_invalidate_object(dnd->within);
-
     /* resend an ENTER to reset cursor/state (window coordinates) */
-  motion.event_x = dnd->within_x + dnd->within->i_mount->mete_box.x;
-  motion.event_y = dnd->within_y + dnd->within->i_mount->mete_box.y;
-
-  iface = _interface_for((dnd->within->i_mount)->window);
-  _enter_leave_notices(iface, (xcb_generic_event_t*)&motion, dnd->within, 1);
+  ui_active_within_set(dnd->within);
 }
 
 bool
@@ -499,7 +485,7 @@ xdnd_status_event(xcb_window_t window, xcb_client_message_data_t *param) {
   obj = _get_object_at_pointer(iface, x, y);
 
   if (ui_active_within_get() != obj)
-    _within_event(iface, (xcb_generic_event_t*)&motion, obj);
+    ui_active_within_set(obj);
 
   if ( (obj == NULL) || (IS_IFACE_TYPE(obj)) )  {
       /* If left the window (no wm, no leave notify) or
@@ -595,9 +581,7 @@ _dnd_selection_event(xcb_generic_event_t *nvt) {
          application, XdndLeave is the exiting of a target. */
       if (cm->type == XDND_LEAVE) {
           /* send an XCB_LEAVE_NOTIFY to 'within' */
-        PhxInterface *iface = _interface_for(cm->window);
         DND_DEBUG_INTERNAL("XCB_LEAVE_NOTIFY", ui_active_within_get());
-        _enter_leave_notices(iface, nvt, ui_active_within_get(), 0);
         DND_DEBUG_PUTS("ui_active_within_set(NULL) _dnd_selection_event()");
         ui_active_within_set(NULL);
           /* Check if we own source. */
