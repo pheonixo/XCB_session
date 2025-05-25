@@ -410,6 +410,8 @@ _textview_focus(PhxInterface *iface,
     }
     _textbuffer_flush(tbuf);
   }
+    /* Want textview to display draw changes in focus. */
+  ui_invalidate_object(obj);
   return true;
 }
 
