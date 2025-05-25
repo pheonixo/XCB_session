@@ -106,10 +106,15 @@ main(int argc, char *argv[]) {
 #if DEBUG_EVENTS_ON
     /* turn off XCB_MOTION_NOTIFY reporting */
   debug_flags &= ~((uint64_t)1 << XCB_MOTION_NOTIFY);
-  debug_flags &= ~((uint64_t)1 << XCB_PROPERTY_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_CONFIGURE_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_EXPOSE);
   debug_flags &= ~((uint64_t)1 << XCB_VISIBILITY_NOTIFY);
+/*
+  debug_flags &= ~((uint64_t)1 << XCB_PROPERTY_NOTIFY);
+  debug_flags &= ~((uint64_t)1 << XCB_ENTER_NOTIFY);
+  debug_flags &= ~((uint64_t)1 << XCB_LEAVE_NOTIFY);
+  debug_flags &= ~((uint64_t)1 << XCB_CLIENT_MESSAGE);
+*/
 #endif
 
     /* A 'topmost' decorated window */

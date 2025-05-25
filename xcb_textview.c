@@ -7,7 +7,7 @@ user_textstring(void) {
   char *string;
   size_t rdSz;
   long filesize;
-  FILE *rh = fopen("/home/steven/Development/Projects/XCB_session/libctype/locale/rwSystems/numbers.c", "r");
+  FILE *rh = fopen("./libctype/locale/rwSystems/numbers.c", "r");
   if (rh == NULL) {  puts("file not found"); return NULL;  }
   fseek(rh, 0 , SEEK_END);
   filesize = ftell(rh);
@@ -286,13 +286,15 @@ main(int argc, char *argv[]) {
 #if DEBUG_EVENTS_ON
     /* turn off XCB_MOTION_NOTIFY reporting */
   debug_flags &= ~((uint64_t)1 << XCB_MOTION_NOTIFY);
-  debug_flags &= ~((uint64_t)1 << XCB_PROPERTY_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_CONFIGURE_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_EXPOSE);
   debug_flags &= ~((uint64_t)1 << XCB_VISIBILITY_NOTIFY);
+/*
+  debug_flags &= ~((uint64_t)1 << XCB_PROPERTY_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_ENTER_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_LEAVE_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_CLIENT_MESSAGE);
+*/
 #endif
 
     /* A 'topmost' decorated window */
