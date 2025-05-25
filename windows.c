@@ -203,7 +203,7 @@ _window_stack_topmost(PhxInterface *iface) {
                          XCB_CONFIG_WINDOW_STACK_MODE, values);
     iface->state &= ~SBIT_CLICKS;
     xcb_set_input_focus(session->connection,
-                        XCB_INPUT_FOCUS_PARENT,
+                        XCB_INPUT_FOCUS_NONE,
                         iface->window, XCB_CURRENT_TIME);
   }
 }

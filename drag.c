@@ -600,7 +600,7 @@ _dnd_selection_event(xcb_generic_event_t *nvt) {
             _window_stack_topmost(_interface_for(_window_for(within)));
         } else if (cm->type == XDND_FINISHED) {
           xcb_set_input_focus(session->connection,
-                              XCB_INPUT_FOCUS_PARENT,
+                              XCB_INPUT_FOCUS_NONE,
                               cm->data.data32[0], XCB_CURRENT_TIME);
         }
         ui_active_drag_set(NULL);

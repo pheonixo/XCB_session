@@ -1,15 +1,32 @@
 TODO notes:
 
+no wm test:
+/home/steven/Development/Projects/XCB_session/xxtv1 & \
+P1=$! /home/steven/Development/Projects/XCB_session/xxtxt & \
+P2=$! /home/steven/Development/Projects/XCB_session/xxgtx & \
+P3=$! wait $P1 $P2 $P3
+with output for wm tests
+/home/steven/Development/Projects/XCB_session/xxtv1 | tee ../xxtv1.ouput & \
+P1=$! /home/steven/Development/Projects/XCB_session/xxtxt | tee ../xxtxt.ouput & \
+P2=$! /home/steven/Development/Projects/XCB_session/xxgtx | tee ../xxgtx.ouput & \
+P3=$! wait $P1 $P2 $P3
+
 Still to address bank ddl positioning near display edges
 
 Deal with Window Manager issues of oddities, include no WM also.
-
+STACKING:
+Compiz behaves ok. More like follow by pointer. Raise position not neccessarily
+the focused window.
+no-wm and twm behaves perfectly. But no-wm uses focus on click between apps.
+GNOME Shell near perfect, but windows stack in order of first created as oppose
+to mapping order.
+DND:
 Compiz behaves well. Focus retained by source. Raises windows underneath pointer.
 On drop, leaves raised/focus of window. On cancel, raised/focus on source.
 no wm behaves well. same as Compiz.
 twm behaves well.    Focus retained by source. Raises windows underneath pointer.
 Drop/Cancel, raised/focus to window underneath pointer (focus by pointer).
-GNOME Shell blocks raise window, dnd. Only allows within a multi-window app.
+GNOME Shell blocks raise window, dnd. Only allows raise within a multi-window app.
 Otherwise enforces raise by focus only. Can not see drops, forced to pre-arrange
 windows.
 
@@ -96,3 +113,7 @@ left-clicked button (free): owner button, user defined position
 
 Work clipboard, feel like missing something
 
+/home/steven/Development/Projects/XCB_session/xxtv1 & \
+P1=$! /home/steven/Development/Projects/XCB_session/xxtxt & \
+P2=$! /home/steven/Development/Projects/XCB_session/xxgtx & \
+P3=$! wait $P1 $P2 $P3
