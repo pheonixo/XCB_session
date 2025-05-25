@@ -158,13 +158,13 @@ _event_keyboard(xcb_generic_event_t *nvt) {
 
     /* A single iface object can have NULL _event_cb.
       User may wish to add 'app' keys for override of do nothing. */
-    /* Address for case where focus follows pointer. */
-  focus = ui_active_focus_get();
-  DEBUG_ASSERT((focus == NULL), "SEGFAULT: no focus _event_keyboard().");
-  if ( (focus->_event_cb == NULL)
-      || !(focus->_event_cb(iface, nvt, focus)) )
-    if (focus != (PhxObject*)iface)
-      return _default_interface_meter(iface, nvt, focus);
+    /* Address for case where focus follows pointer. no-wm */
+  if ((focus = ui_active_focus_get()) != NULL) {
+    if ( (focus->_event_cb == NULL)
+        || !(focus->_event_cb(iface, nvt, focus)) )
+      if (focus != (PhxObject*)iface)
+        return _default_interface_meter(iface, nvt, focus);
+  }
   return false;
 }
 
