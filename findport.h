@@ -22,7 +22,7 @@ typedef struct phx_fsearch_t {
   PhxMarkData *pairs;      /* the selection offsets of search */
   uint32_t    ncount;      /* count of _results.pair */
  } _results;
- uint32_t    state;        /* (pad) */
+ uint32_t    state;        /* bit 0 (changed) */
    /* basically a spelled out exclusive */
  char        *string;      /* string found or seaching for */
  PhxFindport *findbar;     /* findbar for attached textview */

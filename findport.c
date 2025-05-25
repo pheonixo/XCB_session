@@ -281,6 +281,7 @@ _fsearch_entry_update(char *tbuf,
 static void
 _fsearch_reset(phx_fsearch_t *fdata) {
 
+  fdata->state &= ~1;
   if (fdata->string != NULL)
     free(fdata->string), fdata->string = NULL;
   if (fdata->file != NULL)
@@ -401,7 +402,8 @@ result_cb(PhxBank *ibank) {
   if ( (stxt->string != NULL) || (*stxt->string != 0) ) {
     phx_fsearch_t *fdata = _fsearch_for_findport(findbar);
     if ( (fdata->string == NULL) || (*fdata->string == 0)
-        || (strcmp(stxt->string, fdata->string) != 0) ) {
+        || (strcmp(stxt->string, fdata->string) != 0)
+        || ((fdata->state & 1) != 0) ) {
       PhxTextbuffer *tbuf = (PhxTextbuffer*)fdata->otxt->exclusive;
       if (fdata->string != NULL)
         free(fdata->string);
@@ -680,6 +682,7 @@ _findport_search_from(char *tbuf,
 
     /* Shouldn't need because of current 'focus'. */
   _textbuffer_flush(sbuf);
+  fdata->state &= ~1; /* searched */
   fdata->string = strdup(sbuf->string);
   key_len = sbuf->str_nil;
   mdPtr = fdata->_results.pairs;
@@ -829,9 +832,9 @@ ui_findport_keyboard(PhxObjectTextview *otxt, uint8_t key) {
       if (visible_get((PhxObject*)findbar)) {
           /* active visible to be only one that gets fdata string updated? */
         phx_fsearch_t *fdata = _fsearch_for_findport(findbar);
+        fdata->state |= 1; /* changed/not-searched */
         if (fdata->string != NULL)  free(fdata->string);
         fdata->string = strdup(*dataPtr);
-          /* search? */
         ui_invalidate_object((PhxObject*)findbar);
       }
     } while (ndx != 0);
