@@ -145,26 +145,32 @@ _event_invalidate(struct _sigtimer *tmr) {
 
   xcb_expose_event_t *expose;
   union rectangle_endianess *rect_u;
+  PhxInterface *iface;
 
   if (strcmp(tmr->id, "frame") != 0)  return;
-    /* Could send direct to expose, but then need an interupt
-      signal for event loop to wake on rare instances of
-      direct expose occurs when server is idle. During idle
-      xcb_aux_sync() does not wake server, leaving direct drawn
-      not being displayed until some unrelated event occurs. */
-  expose = calloc(32, 1);
-  expose->response_type = XCB_EXPOSE;
-  expose->window = tmr->iface->window;
-  rect_u = (union rectangle_endianess*)&tmr->data;
-  rect_u->rect.w -= rect_u->rect.x,
-  rect_u->rect.h -= rect_u->rect.y;
-  expose->x = rect_u->rect.x;
-  expose->y = rect_u->rect.y;
-  expose->width = rect_u->rect.w;
-  expose->height = rect_u->rect.h;
-  xcb_send_event(session->connection, false, tmr->iface->window,
-                         XCB_EVENT_MASK_EXPOSURE, (char *)expose);
-  xcb_flush(session->connection);
+
+    /* Because of server lag, verify iface wasn't deleted. */
+  iface = (_interface_for(tmr->iface->window));
+  if (iface != NULL) {
+      /* Could send direct to expose, but then need an interupt
+        signal for event loop to wake on rare instances of
+        direct expose occurs when server is idle. During idle
+        xcb_aux_sync() does not wake server, leaving direct drawn
+        not being displayed until some unrelated event occurs. */
+    expose = calloc(32, 1);
+    expose->response_type = XCB_EXPOSE;
+    expose->window = tmr->iface->window;
+    rect_u = (union rectangle_endianess*)&tmr->data;
+    rect_u->rect.w -= rect_u->rect.x,
+    rect_u->rect.h -= rect_u->rect.y;
+    expose->x = rect_u->rect.x;
+    expose->y = rect_u->rect.y;
+    expose->width = rect_u->rect.w;
+    expose->height = rect_u->rect.h;
+    xcb_send_event(session->connection, false, tmr->iface->window,
+                           XCB_EVENT_MASK_EXPOSURE, (char *)expose);
+    xcb_flush(session->connection);
+  }
   ui_timer_delete(tmr);
 }
 
