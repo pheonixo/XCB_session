@@ -32,8 +32,9 @@ ui_active_focus_set(PhxObject *obj) {
                  "SEGFAULT: undefined _event_cb... ui_active_focus_set()");
     notify.response_type = XCB_FOCUS_OUT;
     notify.event = _window_for(focused);
-    iface = _interface_for(notify.event);
-    focused->_event_cb(iface, (xcb_generic_event_t*)&notify, focused);
+      /* Window may have been destroyed. */
+    if ((iface = _interface_for(notify.event)) != NULL)
+      focused->_event_cb(iface, (xcb_generic_event_t*)&notify, focused);
   }
   if (obj != NULL) {
     DEBUG_ASSERT((obj->_event_cb == NULL),
