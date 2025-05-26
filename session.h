@@ -114,7 +114,6 @@ typedef struct _PhxSession {
  PhxObject            *has_drag;       /* object that intiated a dnd grab */
  xcb_clipboard_t      *xclipboard;     /* session-wide clipboard */
  phx_findboard_t      *xfindboard;     /* session-wide findboard */
- PhxRectangle         frame;           /* WM window frame */
  xcb_cursor_t         cursor_default;  /* cursor id of "NULL" */
  xcb_cursor_t         cursor_id;       /* cursor id of named */
  uint8_t              sym_stride;
@@ -130,6 +129,7 @@ typedef struct _PhxSession {
 #endif
   /* addressment of WM issues. */
  PhxInterface         **stack_order;
+ PhxRectangle         max_swap;        /* use for no wm maximize. */
  uint16_t             has_WM;
 } PhxSession;
 
