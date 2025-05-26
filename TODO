@@ -1,6 +1,20 @@
 TODO notes:
 
-Still to address bank ddl positioning near display edges
+headerbars:
+xxhb0: close btn
+xxhb1: min btn
+xxhb2: max btn
+xxhb3: mov/rsz btn
+
+no wm test:
+cd /home/steven/Development/Projects/XCB_session
+,/xxtv1 & P1=$! ./xxtxt & P2=$! ./xxgtx & P3=$! wait $P1 $P2 $P3
+
+with output for wm tests
+/home/steven/Development/Projects/XCB_session/xxtv1 | tee ../xxtv1.ouput & \
+P1=$! /home/steven/Development/Projects/XCB_session/xxtxt | tee ../xxtxt.ouput & \
+P2=$! /home/steven/Development/Projects/XCB_session/xxgtx | tee ../xxgtx.ouput & \
+P3=$! wait $P1 $P2 $P3
 
 Deal with Window Manager issues of oddities, include no WM also.
 
@@ -96,3 +110,6 @@ left-clicked button (free): owner button, user defined position
 
 Work clipboard, feel like missing something
 
+Repeated here from above for 'cat' when running twm
+cd /home/steven/Development/Projects/XCB_session
+,/xxtv1 & P1=$! ./xxtxt & P2=$! ./xxgtx & P3=$! wait $P1 $P2 $P3
