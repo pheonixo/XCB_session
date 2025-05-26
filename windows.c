@@ -220,16 +220,20 @@ _default_interface_meter(PhxInterface *iface,
                          PhxObject *obj) {
   uint8_t response;
 
-    /* We handle only == PHX_IFACE. Not its variants.
-      And must have focus (GNOME issue). */
-  if ( (iface->type != PHX_IFACE)
-      || (session->has_focus == NULL) )  return false;
+    /* We handle only == PHX_IFACE. Not its variants. */
+  if (iface->type != PHX_IFACE)  return false;
 
   DEBUG_EVENTS("_default_interface_meter");
 
   response = nvt->response_type & (uint8_t)0x7F;
-  if (response == XCB_KEY_RELEASE) {
 
+    /* Must have focus to respond to other events. */
+  if (session->has_focus == NULL) {
+    if (response == XCB_FOCUS_IN)  goto focus_set;
+    return false;
+  }
+
+  if (response == XCB_KEY_RELEASE) {
     xcb_key_press_event_t *kp;
     xcb_keysym_t keyval;
     uint16_t state;
@@ -257,6 +261,7 @@ _default_interface_meter(PhxInterface *iface,
       }
     }
   }
+
   if (response == XCB_ENTER_NOTIFY) {
     xcb_enter_notify_event_t *xing;
     xing = (xcb_enter_notify_event_t*)nvt;
@@ -265,6 +270,20 @@ _default_interface_meter(PhxInterface *iface,
     else  ui_cursor_set_named(NULL, xing->event);
     return true;
   }
+
+    /* On focus, PHX_HEADERBAR acts as if one with iface. */
+  if ( (response == XCB_FOCUS_IN)
+      || (response == XCB_FOCUS_OUT) ) {
+focus_set:
+    if ((iface->state & SBIT_UNDECORATED) != 0) {
+        /* Get PHX_HEADERBAR for this iface. */
+      PhxNexus *inspect;
+      uint16_t idx = 0;
+      while ((inspect = iface->nexus[idx])->type != PHX_HEADERBAR) idx++;
+      return inspect->_event_cb(iface, nvt, (PhxObject*)inspect);
+    }
+  }
+
   return false;
 }
 
@@ -503,6 +522,7 @@ _interface_create(xcb_connection_t *connection,
   return iface;
 }
 
+/* Sets flag used during XCB_REPARENT_NOTIFY to undecorate. */
 void
 ui_window_undecorate_set(xcb_window_t window) {
   PhxInterface *iface = _interface_for(window);

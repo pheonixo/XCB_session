@@ -769,9 +769,15 @@ _process_event(xcb_generic_event_t *nvt) {
       xcb_reparent_notify_event_t *rp
         = (xcb_reparent_notify_event_t*)nvt;
       PhxInterface *iface = _interface_for(rp->window);
-      uint32_t values[2];
 
-      if ((iface->state & SBIT_UNDECORATED) != 0) {
+      uint32_t values[2];
+      values[0] = iface->mete_box.x;
+      values[1] = iface->mete_box.y;
+      xcb_configure_window(session->connection, iface->window,
+                   XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, values);
+
+      if ( (session->has_WM != 0)
+          && ((iface->state & SBIT_UNDECORATED) != 0) ) {
         struct MWMHints {
           uint32_t   flags, functions, decorations, input_mode, status;
         } hints = { 2, 0, 0, 0, 0 };
@@ -780,16 +786,11 @@ _process_event(xcb_generic_event_t *nvt) {
         xcb_intern_atom_reply_t *r0;
         c0 = xcb_intern_atom(session->connection, 0, 15, "_MOTIF_WM_HINTS");
         r0 = xcb_intern_atom_reply(session->connection, c0, NULL);
-        xcb_change_property(session->connection, XCB_PROP_MODE_REPLACE, rp->window,
-                            r0->atom, r0->atom, 32, sizeof(hints) >> 2,
-                            &hints);
+        xcb_change_property(session->connection, XCB_PROP_MODE_REPLACE,
+                            rp->window, r0->atom, r0->atom, 32,
+                            sizeof(hints) >> 2, &hints);
         free(r0);
       }
-
-      values[0] = iface->mete_box.x;
-      values[1] = iface->mete_box.y;
-      xcb_configure_window(session->connection, iface->window,
-                   XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, values);
       break;
     }
     case XCB_CONFIGURE_NOTIFY: {  /* response_type 22 */
