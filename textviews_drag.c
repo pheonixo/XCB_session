@@ -116,7 +116,7 @@ _textview_drag_cancel(PhxInterface *iface,
                              : _interface_for(_window_for(obj));
     iface->state &= ~SBIT_CLICKS;
     xcb_set_input_focus(session->connection,
-                        XCB_INPUT_FOCUS_NONE,
+                        XCB_INPUT_FOCUS_PARENT,
                         iface->window, XCB_CURRENT_TIME);
     ui_active_focus_set((PhxObject*)iface);
  #if DND_EXTERNAL_ON
