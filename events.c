@@ -809,34 +809,9 @@ _process_event(xcb_generic_event_t *nvt) {
     case XCB_PROPERTY_NOTIFY: {   /* response_type 28 */
       xcb_property_notify_event_t *prop
         = (xcb_property_notify_event_t*)nvt;
-
       if (prop->atom == CLIPBOARD) {
         if (prop->state == 0)
           _xclb_set_ownership(session->xclipboard, prop->window, prop->time);
-      } else if (session->frame.h == 0) {
-        xcb_intern_atom_cookie_t c0;
-        xcb_intern_atom_reply_t *r0;
-        xcb_connection_t *connection = session->connection;
-        c0 = xcb_intern_atom(connection, 1, 18, "_NET_FRAME_EXTENTS");
-        r0 = xcb_intern_atom_reply(connection, c0, NULL);
-        if (prop->atom == r0->atom) {
-            /* Ubuntu sends property notify of frame on deleted window */
-          PhxInterface *iface = _interface_for(prop->window);
-          if (iface != NULL) {
-            uint32_t *extents;
-            xcb_get_property_cookie_t c1;
-            xcb_get_property_reply_t *r1;
-            c1 = xcb_get_property(connection, 0, iface->window,
-                                  r0->atom, XCB_GET_PROPERTY_TYPE_ANY, 0, 4);
-            r1 = xcb_get_property_reply(connection, c1, NULL);
-            extents = xcb_get_property_value(r1);
-            session->frame.x = extents[0];
-            session->frame.y = extents[1];
-            session->frame.w = extents[2];
-            session->frame.h = extents[3];
-          }
-        }
-        free(r0);
       }
       break;
     }
