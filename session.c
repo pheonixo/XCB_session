@@ -107,9 +107,8 @@ ui_active_within_set(PhxObject *obj) {
       notify.response_type = XCB_ENTER_NOTIFY;
       notify.event = _window_for((PhxObject*)imount);
       iface = _interface_for(notify.event);
-      handled = imount->_event_cb(iface,
-                                  (xcb_generic_event_t*)&notify,
-                                  (PhxObject*)imount);
+      handled
+        = imount->_event_cb(iface, (xcb_generic_event_t*)&notify, obj);
     }
     if (!handled)
       ui_cursor_set_named(NULL, _window_for((PhxObject*)imount));
