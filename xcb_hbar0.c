@@ -1,0 +1,389 @@
+#include "textviews.h"
+#include "buttons.h"
+
+extern void  ext_cairo_blur_surface(cairo_surface_t *, int, int);
+
+#ifndef M_PI
+ #define M_PI 3.14159265358979323846
+#endif
+
+#define BTN_HEADER_CLOSE    ((PhxButtonStyle)8)
+#define BTN_HEADER_MINIMIZE ((PhxButtonStyle)9)
+#define BTN_HEADER_MAXIMIZE ((PhxButtonStyle)10)
+#define BTN_HEADER_MANAGER  ((PhxButtonStyle)11)
+
+#pragma mark *** Drawing ***
+
+static void
+_draw_symbol_close(PhxObject *b, cairo_t *cr) {
+
+  cairo_matrix_t matrix;
+  double xc, yc;
+
+  cairo_save(cr);
+
+  xc = b->mete_box.x + b->draw_box.x + (b->draw_box.w / 2);
+  yc = b->mete_box.y + b->draw_box.y + (b->draw_box.h / 2);
+
+  cairo_set_source_rgba(cr, 0, 0, 0, 1);
+
+  cairo_get_matrix(cr, &matrix);
+
+  cairo_translate(cr, xc, yc);
+  cairo_rotate(cr, M_PI/4);
+  cairo_translate(cr, -xc, -yc);
+
+  cairo_move_to(cr, b->mete_box.x + 3, yc);
+  cairo_line_to(cr, b->mete_box.x + b->draw_box.w - 3, yc);
+  cairo_set_line_width(cr, 1);
+  cairo_stroke(cr);
+
+  cairo_move_to(cr, xc, b->mete_box.y + 3);
+  cairo_line_to(cr, xc, b->mete_box.y + b->draw_box.h - 3);
+  cairo_set_line_width(cr, 1);
+  cairo_stroke(cr);
+
+  cairo_set_matrix(cr, &matrix);
+
+  cairo_restore(cr);
+}
+
+static void
+_draw_header_button(PhxObject *b, cairo_t *cr) {
+
+  double bottom, top, radius, xc, yc;
+  PhxAttr focus_out, *attrib;
+  PhxRGBA *c;
+
+  cairo_save(cr);
+
+  bottom = b->mete_box.y + b->draw_box.y + b->draw_box.h;
+  top = b->mete_box.y + b->draw_box.y;
+  radius = b->draw_box.h / 2;
+  xc = b->mete_box.x + b->draw_box.x + (b->draw_box.w / 2);
+  yc = b->mete_box.y + b->draw_box.y + (b->draw_box.h / 2);
+
+  cairo_new_sub_path(cr);
+  cairo_arc(cr, xc, yc, radius, 0, M_PI * 2);
+  cairo_clip_preserve(cr);
+
+  attrib = b->attrib;
+
+  if (!sensitive_get(b)) {
+    focus_out.bg_fill.r = 0.0;
+    focus_out.bg_fill.g = 0.0;
+    focus_out.bg_fill.b = 0.0;
+    focus_out.bg_fill.a = 0.0;
+    focus_out.fg_fill.r = 0.8;
+    focus_out.fg_fill.g = 0.8;
+    focus_out.fg_fill.b = 0.8;
+    focus_out.fg_fill.a = 1.0;
+    focus_out.fg_ink.r  = 0.3;
+    focus_out.fg_ink.g  = 0.3;
+    focus_out.fg_ink.b  = 0.3;
+    focus_out.fg_ink.a  = 1.0;
+    focus_out.stroke  = 0.5;
+    attrib = &focus_out;
+    if ((b->state & 1) != 0)
+     focus_out.fg_fill = b->attrib->fg_fill;
+  }
+
+    /* fill of button draw_box area */
+  if (attrib->bg_fill.a != 0) {
+    c = &attrib->bg_fill;
+    cairo_set_source_rgba(cr, c->r, c->g, c->b, c->a);
+    cairo_fill_preserve(cr);
+  }
+
+   /* fill in actual content */
+  if (attrib->fg_fill.a != 0) {
+    cairo_matrix_t matrix;
+    cairo_pattern_t *r1;
+
+    c = &attrib->fg_fill;
+    cairo_get_matrix(cr, &matrix);
+
+      /* fill in circle */
+    cairo_translate(cr, xc, bottom + 6.5);
+    cairo_scale(cr, 1, 0.7);
+    cairo_translate(cr, -xc, -(bottom + 6.5));
+    r1 = cairo_pattern_create_radial(xc, yc, 6,
+                                     xc, yc, (double)(b->draw_box.h + 8.0));
+    cairo_pattern_add_color_stop_rgba(r1, 0, c->r, c->g, c->b, c->a);
+    cairo_pattern_add_color_stop_rgba(r1, 1, (c->r - 0.45),
+                                             (c->g - 0.45),
+                                             (c->b - 0.45),
+                                             (c->a - 0.15));
+    cairo_set_source(cr, r1);
+    cairo_fill_preserve(cr);
+    cairo_pattern_destroy(r1);
+
+    cairo_set_matrix(cr, &matrix);
+
+    r1 = cairo_pattern_create_radial(xc - 0.7, top + 3.5, .35,
+                                     xc - 0.7, top + 3.5, 8);
+    cairo_pattern_add_color_stop_rgba(r1, 0, (c->r + 0.65),
+                                             (c->g + 0.65),
+                                             (c->b + 0.65),
+                                              c->a);
+
+    cairo_pattern_add_color_stop_rgba(r1, 1, c->r,  c->g,  c->b, .08);
+    cairo_set_source(cr, r1);
+    cairo_fill(cr);
+    cairo_pattern_destroy(r1);
+  }
+    /* colour of button border */
+  if (attrib->fg_fill.a != 0) {
+    if (frame_draw_get(b)) {
+      double lw;
+      c = &attrib->fg_fill;
+      cairo_set_source_rgba(cr, c->r, c->g, c->b, c->a);
+      lw = (attrib->stroke != 0.0) ? attrib->stroke : 0.5;
+      cairo_set_line_width(cr, lw);
+      cairo_stroke(cr);
+    }
+  }
+  cairo_restore(cr);
+}
+
+static void
+_draw_hdr_background(PhxObject *b, cairo_t *cr) {
+
+  cairo_surface_t *tmp;
+  cairo_t *cr_tmp;
+
+  cairo_rectangle(cr, b->mete_box.x, b->mete_box.y,
+                      b->mete_box.w, b->mete_box.h);
+  cairo_clip(cr);
+
+  tmp = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
+                                             b->mete_box.w, 10);
+  if (cairo_surface_status(tmp))  return;
+  cr_tmp = cairo_create(tmp);
+  cairo_move_to(cr_tmp, b->mete_box.x, 10);
+  cairo_line_to(cr_tmp, b->mete_box.w, 10);
+
+  cairo_set_source_rgba(cr_tmp, 0.2, 0.2, 0.2, 1);
+  cairo_set_line_width(cr_tmp, 1);
+  cairo_stroke(cr_tmp);
+
+  ext_cairo_blur_surface(tmp, 0, 8);
+
+  cairo_set_source_surface(cr, tmp, 0, b->mete_box.h - 9);
+  cairo_paint(cr);
+  cairo_destroy(cr_tmp);
+
+    /* clean up */
+  cairo_surface_destroy(tmp);
+}
+
+#pragma mark *** Events ***
+
+static bool
+_hbtn_close_event(PhxInterface *iface,
+                  xcb_generic_event_t *nvt,
+                  PhxObject *obj) {
+
+  uint8_t response = nvt->response_type & (uint8_t)0x7F;
+  if (response == XCB_BUTTON_RELEASE) {
+    xcb_button_press_event_t *bp = (xcb_button_press_event_t*)nvt;
+    xcb_client_message_event_t *message = calloc(32, 1);
+
+    message->response_type  = XCB_CLIENT_MESSAGE;
+    message->format         = 32;
+    message->window         = bp->event;
+    message->type           = WM_PROTOCOLS;
+    message->data.data32[0] = WM_DELETE_WINDOW;
+    message->data.data32[1] = bp->time;
+    xcb_send_event(session->connection, false, message->window,
+                       XCB_EVENT_MASK_NO_EVENT, (char*)message);
+    xcb_flush(session->connection);
+  } else if (response == XCB_ENTER_NOTIFY) {
+    sensitive_set(obj, true);
+    visible_set(obj->child, true);
+    ui_invalidate_object(obj);
+  } else if (response == XCB_LEAVE_NOTIFY) {
+    sensitive_set(obj, (ui_active_focus_get() != NULL));
+    visible_set(obj->child, false);
+    ui_invalidate_object(obj);
+  }
+  return _default_button_meter(iface, nvt, obj);
+}
+
+/*
+  When 'within' headerbar, focus clicks shouldn't apply. Additionally
+  keyboard can hold meaning to objects.
+*/
+static bool
+_default_headerbar_meter(PhxInterface *iface,
+                         xcb_generic_event_t *nvt,
+                         PhxObject *obj) {
+
+  uint8_t response;
+
+    /* We handle only == PHX_IFACE. Not its variants. */
+  if (iface->type != PHX_IFACE)  return false;
+
+  DEBUG_EVENTS("_default_headerbar_meter");
+
+  response = nvt->response_type & (uint8_t)0x7F;
+
+    /* Must have focus to respond to other events. */
+  if (session->has_focus == NULL) {
+    if (response == XCB_FOCUS_IN)  goto focus_set;
+    return false;
+  }
+
+  if ( (response == XCB_ENTER_NOTIFY)
+      || (response == XCB_LEAVE_NOTIFY) ) {
+    return _default_nexus_meter(iface, nvt, obj);
+  }
+
+  if ( (response == XCB_FOCUS_IN)
+      || (response == XCB_FOCUS_OUT) ) {
+    PhxNexus *hbar;
+    uint16_t ndx;
+focus_set:
+    hbar = (PhxNexus*)obj;
+    ndx = hbar->ncount;
+    while (ndx != 0) {
+      PhxObject *inspect = hbar->objects[(--ndx)];
+      sensitive_set(inspect, (response == XCB_FOCUS_IN));
+      ui_invalidate_object(inspect);
+    }
+    return false;
+  }
+
+  if ( (response == XCB_KEY_PRESS)
+      || (response == XCB_KEY_RELEASE) ) {
+    return _default_nexus_meter(iface, nvt, obj);
+  }
+
+  if (response == XCB_MOTION_NOTIFY) {
+    return _default_nexus_meter(iface, nvt, obj);
+  }
+
+  if (response == XCB_CONFIGURE_NOTIFY) {
+    int16_t wD;
+    xcb_configure_notify_event_t *configure
+      = (xcb_configure_notify_event_t*)nvt;
+
+    wD = configure->width - iface->mete_box.w;
+    if (wD != 0) {
+      uint16_t idx;
+      PhxNexus *hbar = (PhxNexus*)obj;
+      PhxObject *wm_button = NULL;
+      if ((idx = hbar->ncount) != 0)
+        do {
+          PhxObject *inspect = hbar->objects[(--idx)];
+          if (inspect->type == ((BTN_HEADER_MANAGER << 8) | PHX_BUTTON)) {
+            wm_button = inspect;
+            break;
+          }
+        } while (idx != 0);
+      if ( (wm_button != NULL) && ((wm_button->state & HXPD_LFT) != 0) ) {
+        wm_button->mete_box.x += wD;
+        ui_invalidate_object(obj);
+      }
+    }
+  }
+
+  return _default_nexus_meter(iface, nvt, obj);
+}
+
+#pragma mark *** Main ***
+
+PhxNexus *
+ui_headerbar_for(PhxInterface *iface) {
+
+  uint16_t idx;
+  if ((idx = iface->ncount) != 0)
+    do {
+      PhxNexus *inspect = iface->nexus[(--idx)];
+      if (inspect->type == PHX_HEADERBAR)  return inspect;
+    } while (idx != 0);
+  return NULL;
+}
+
+static PhxNexus *
+user_configure_layout(PhxInterface *iface) {
+
+  PhxRectangle nexus_box;
+  PhxNexus *hbar;
+  PhxObjectButton *obtn;
+  int16_t xpos, ypos, sz;
+  PhxRGBA none          = { 0, 0, 0, 0 };
+  PhxRGBA header_red    = { 1, .6, .6, 1 };
+  double  header_stroke = 0.5;
+
+    /* Remove wm decorations */
+  xcb_window_t window = iface->window;
+  ui_window_undecorate_set(window);
+
+    /* On an undecorated window, allow only 1 headerbar.
+      Do not restrict to being first nexus created. */
+  if ((iface->state & SBIT_HEADERBAR) != 0)
+    return ui_headerbar_for(iface);
+
+  RECTANGLE(nexus_box, 0, 0, 500, 14 + 10);
+  hbar = ui_nexus_create(iface, nexus_box);
+  hbar->state = HXPD_RGT;
+  hbar->type = PHX_HEADERBAR;
+  iface->state |= SBIT_HEADERBAR;
+  hbar->_draw_cb = _draw_hdr_background;
+  hbar->_event_cb = _default_headerbar_meter;
+
+    /* Creation of close button */
+  ypos = (int16_t)(((double)(14 + 10) * 0.208333) + 0.499999);
+  xpos = ypos + 3;
+  sz = (14 + 10) - (ypos << 1);
+  nexus_box.x = xpos;
+  nexus_box.y = ypos;
+  nexus_box.w = (nexus_box.h = sz);
+  obtn = ui_button_create(hbar, BTN_HEADER_CLOSE, nexus_box);
+  frame_remove(obtn);
+  obtn->_draw_cb = _draw_header_button;
+  obtn->_event_cb = _hbtn_close_event;
+  obtn->attrib->fg_ink = (obtn->attrib->bg_fill = none);
+  obtn->attrib->fg_fill = header_red;
+  obtn->attrib->fg_ink.a  = 1.0;
+  obtn->attrib->stroke  = header_stroke;
+  obtn->child = ui_object_child_create(obtn, PHX_DRAWING, NULL, nexus_box);
+  obtn->child->_draw_cb = _draw_symbol_close;
+  visible_set(obtn->child, false);
+
+  return hbar;
+}
+
+int
+main(int argc, char *argv[]) {
+
+  xcb_window_t window;
+
+    /* window size and position */
+  PhxRectangle configure = { 100, 100, 500, 500 };
+
+#if DEBUG_EVENTS_ON
+  debug_flags &= ~((uint64_t)1 << XCB_MOTION_NOTIFY);
+  debug_flags &= ~((uint64_t)1 << XCB_CONFIGURE_NOTIFY);
+  debug_flags &= ~((uint64_t)1 << XCB_ENTER_NOTIFY);
+  debug_flags &= ~((uint64_t)1 << XCB_LEAVE_NOTIFY);
+  debug_flags &= ~((uint64_t)1 << XCB_PROPERTY_NOTIFY);
+#endif
+
+    /* A 'topmost' decorated window */
+  window = ui_window_create(configure);
+  if (window == 0)  exit(EXIT_FAILURE);
+    /* Since one window... instead of _interface_for() */
+  user_configure_layout(session->iface[0]);
+    /* Map the window on the screen */
+  xcb_map_window(session->connection, window);
+
+    /* Run event loop */
+  xcb_main();
+
+    /* Clean up & disconnect from X server */
+  ui_session_shutdown();
+
+  return EXIT_SUCCESS;
+}

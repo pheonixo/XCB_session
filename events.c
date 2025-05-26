@@ -265,28 +265,30 @@ _event_mouse(xcb_generic_event_t *nvt) {
     DEBUG_ASSERT(( (focus != NULL) && (_window_for(focus) != mouse->event) ),
                          "failure: mouse_event bad window.");
 
-    if (focus != obj) {
-      iface->state &= ~SBIT_CLICKS;
-      ui_active_focus_set(obj);
-
-        /* Stop processing, was window being focused by click in content. */
-      if ((iface->state & SBIT_FOCUS_CLICK) != 0) {
-        DEBUG_BUTTON(iface->window, "FOCUS_CLICK ignore");
-        bptime = mouse->time;
-        return true;
-      }
-        /* Need both invalidates prior to next test for possible
-          behavioral updates to focus. */
-      if (focus != NULL)
-        ui_invalidate_object(focus);
-        /* if an object and wants FOCUS_ONCLICK, return */
-      if ( (!IS_IFACE_TYPE(obj))
-          && ((obj->state & OBIT_FOCUS_ONCLICK) != 0) ) {
-        puts("using as focus click");
-        bptime = mouse->time;
-          /* Some objects may draw different based on focus. */
-        ui_invalidate_object(obj);
-        return true;
+    if (obj->i_mount->type != PHX_HEADERBAR) {
+      if (focus != obj) {
+        iface->state &= ~SBIT_CLICKS;
+        ui_active_focus_set(obj);
+  
+          /* Stop processing, was window being focused by click in content. */
+        if ((iface->state & SBIT_FOCUS_CLICK) != 0) {
+          DEBUG_BUTTON(iface->window, "FOCUS_CLICK ignore");
+          bptime = mouse->time;
+          return true;
+        }
+          /* Need both invalidates prior to next test for possible
+            behavioral updates to focus. */
+        if (focus != NULL)
+          ui_invalidate_object(focus);
+          /* if an object and wants FOCUS_ONCLICK, return */
+        if ( (!IS_IFACE_TYPE(obj))
+            && ((obj->state & OBIT_FOCUS_ONCLICK) != 0) ) {
+          puts("using as focus click");
+          bptime = mouse->time;
+            /* Some objects may draw different based on focus. */
+          ui_invalidate_object(obj);
+          return true;
+        }
       }
     }
       /* Make available to all: single, double, triple button press count. */
@@ -303,8 +305,13 @@ _event_mouse(xcb_generic_event_t *nvt) {
                          "failure: mouse_event within object.");
 
   if ((iface->state & SBIT_FOCUS_CLICK) != 0) {
-    DEBUG_BUTTON(iface->window, "FOCUS_CLICK ignore");
-    return true;
+    if (obj->i_mount->type != PHX_HEADERBAR) {
+      DEBUG_BUTTON(iface->window, "FOCUS_CLICK ignore");
+      return true;
+    } else {
+      iface->state &= ~(SBIT_FOCUS_CLICK | SBIT_CLICKS);
+      DEBUG_BUTTON(iface->window, "FOCUS_CLICK reset");
+    }
   }
 
   handled = false;
