@@ -233,18 +233,33 @@ _default_interface_meter(PhxInterface *iface,
     return false;
   }
 
-  if (response == XCB_KEY_RELEASE) {
+  if ( (response == XCB_KEY_PRESS)
+      || (response == XCB_KEY_RELEASE) ) {
     xcb_key_press_event_t *kp;
     xcb_keysym_t keyval;
-    uint16_t state;
+    bool locus = (response == XCB_KEY_PRESS);
 
     kp     = (xcb_key_press_event_t*)nvt;
     keyval = _xcb_keysym_for(kp->detail, kp->state);
-    state = kp->state & (  XCB_MOD_MASK_1
-                         | XCB_MOD_MASK_CONTROL
-                         | XCB_MOD_MASK_SHIFT);
 
-    if ((state & XCB_MOD_MASK_CONTROL) != 0) {
+    if ( (keyval >= (uint16_t)0xffe1)
+       && (keyval <= (uint16_t)0xffee) ) {
+      PhxObject *within = ui_active_within_get();
+      if ( (within != NULL)
+          && (_window_for(within) == iface->window) ) {
+        if (!!(iface->state & SBIT_UNDECORATED)) {
+            /* Get PHX_HEADERBAR for this iface. */
+          PhxNexus *inspect;
+          uint16_t idx = 0;
+          while ((inspect = iface->nexus[idx])->type != PHX_HEADERBAR) idx++;
+          inspect->_event_cb(iface, nvt, within);
+        }
+      }
+      return true;
+    }
+
+    if ( (!locus)
+        && (!!(kp->state & XCB_MOD_MASK_CONTROL)) ) {
       if (keyval == 'q') {
         xcb_client_message_event_t *message;
         message = calloc(32, 1);
@@ -260,6 +275,7 @@ _default_interface_meter(PhxInterface *iface,
         return true;
       }
     }
+    return false;
   }
 
   if (response == XCB_ENTER_NOTIFY) {
