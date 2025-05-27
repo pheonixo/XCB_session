@@ -12,6 +12,8 @@ extern void  ext_cairo_blur_surface(cairo_surface_t *, int, int);
 #define BTN_HEADER_MAXIMIZE ((PhxButtonStyle)10)
 #define BTN_HEADER_MANAGER  ((PhxButtonStyle)11)
 
+uint16_t HEADER_HEIGHT;
+
 #pragma mark *** Drawing ***
 
 static void
@@ -44,6 +46,50 @@ _draw_symbol_close(PhxObject *b, cairo_t *cr) {
   cairo_stroke(cr);
 
   cairo_set_matrix(cr, &matrix);
+
+  cairo_restore(cr);
+}
+
+static void
+_draw_symbol_minimize(PhxObject *b, cairo_t *cr) {
+
+  double yc;
+
+  cairo_save(cr);
+
+  yc = b->mete_box.y + b->draw_box.y + (b->draw_box.h / 2);
+
+  cairo_set_source_rgba(cr, 0, 0, 0, 1);
+
+  cairo_move_to(cr, b->mete_box.x + 3, yc);
+  cairo_line_to(cr, b->mete_box.x + b->draw_box.w - 3, yc);
+  cairo_set_line_width(cr, 1);
+  cairo_stroke(cr);
+
+  cairo_restore(cr);
+}
+
+static void
+_draw_symbol_maximize(PhxObject *b, cairo_t *cr) {
+
+  double xc, yc;
+
+  cairo_save(cr);
+
+  xc = b->mete_box.x + b->draw_box.x + (b->draw_box.w / 2);
+  yc = b->mete_box.y + b->draw_box.y + (b->draw_box.h / 2);
+
+  cairo_set_source_rgba(cr, 0, 0, 0, 1);
+
+  cairo_move_to(cr, b->mete_box.x + 3, yc);
+  cairo_line_to(cr, b->mete_box.x + b->draw_box.w - 3, yc);
+  cairo_set_line_width(cr, 1);
+  cairo_stroke(cr);
+
+  cairo_move_to(cr, xc, b->mete_box.y + 3);
+  cairo_line_to(cr, xc, b->mete_box.y + b->draw_box.h - 3);
+  cairo_set_line_width(cr, 1);
+  cairo_stroke(cr);
 
   cairo_restore(cr);
 }
@@ -210,6 +256,143 @@ _hbtn_close_event(PhxInterface *iface,
   return _default_button_meter(iface, nvt, obj);
 }
 
+static bool
+_hbtn_minimize_event(PhxInterface *iface,
+                  xcb_generic_event_t *nvt,
+                  PhxObject *obj) {
+
+  uint8_t response = nvt->response_type & (uint8_t)0x7F;
+  if (response == XCB_BUTTON_RELEASE) {
+    if (session->has_WM != 0) {
+      xcb_button_press_event_t *bp = (xcb_button_press_event_t*)nvt;
+      xcb_screen_t *screen
+        = xcb_setup_roots_iterator(xcb_get_setup(session->connection)).data;
+      xcb_intern_atom_cookie_t c0;
+      xcb_intern_atom_reply_t *r0;
+      xcb_client_message_event_t *message = calloc(32, 1);
+      message->response_type  = XCB_CLIENT_MESSAGE;
+      message->format         = 32;
+      message->window         = bp->event;
+      c0 = xcb_intern_atom(session->connection, 0, 15, "WM_CHANGE_STATE");
+      r0 = xcb_intern_atom_reply(session->connection, c0, NULL);
+      message->type           = r0->atom;
+      message->data.data32[0] = 3;  /* IconicState */
+      xcb_send_event(session->connection, false, screen->root,
+                         XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT |
+                         XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY, (char*)message);
+      xcb_flush(session->connection);
+      free(r0);
+    } else {
+      uint32_t values[4];
+        /* For now, implement a window shade type of minimize. */
+      if (!!(iface->state & SBIT_MINIMIZED)) {
+        iface->state &= ~SBIT_MINIMIZED;
+        values[0] = iface->wmgr_box.x;
+        values[1] = iface->wmgr_box.y;
+        values[2] = iface->wmgr_box.w;
+        values[3] = iface->wmgr_box.h;
+        xcb_configure_window(session->connection, iface->window,
+                     XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y
+                   | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT,
+                     values);
+      } else {
+        iface->state |= SBIT_MINIMIZED;
+        iface->wmgr_box = iface->mete_box;
+        values[0] = iface->mete_box.x;
+        values[1] = iface->mete_box.y;
+        values[2] = iface->mete_box.w;
+        values[3] = HEADER_HEIGHT;
+      }
+      xcb_configure_window(session->connection, iface->window,
+                   XCB_CONFIG_WINDOW_X     | XCB_CONFIG_WINDOW_Y
+                 | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT,
+                   values);
+      xcb_flush(session->connection);
+    }
+  } else if (response == XCB_ENTER_NOTIFY) {
+    sensitive_set(obj, true);
+    visible_set(obj->child, true);
+    ui_invalidate_object(obj);
+  } else if (response == XCB_LEAVE_NOTIFY) {
+    sensitive_set(obj, (ui_active_focus_get() != NULL));
+    visible_set(obj->child, false);
+    ui_invalidate_object(obj);
+  }
+  return _default_button_meter(iface, nvt, obj);
+}
+
+static bool
+_hbtn_maximize_event(PhxInterface *iface,
+                  xcb_generic_event_t *nvt,
+                  PhxObject *obj) {
+
+  uint8_t response = nvt->response_type & (uint8_t)0x7F;
+  if (response == XCB_BUTTON_RELEASE) {
+    xcb_button_press_event_t *bp = (xcb_button_press_event_t*)nvt;
+    uint32_t mbit = !!(iface->state & SBIT_MAXIMIZED);
+    xcb_connection_t *connection = session->connection;
+    xcb_screen_t *screen
+      = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
+    if (session->has_WM != 0) {
+      xcb_intern_atom_cookie_t c0, c1, c2;
+      xcb_intern_atom_reply_t *r0, *r1, *r2;
+      xcb_client_message_event_t *message = calloc(32, 1);
+      message->response_type  = XCB_CLIENT_MESSAGE;
+      message->format         = 32;
+      message->window         = bp->event;
+      c0 = xcb_intern_atom(connection, 0, 13, "_NET_WM_STATE");
+      c1 = xcb_intern_atom(connection, 0, 28, "_NET_WM_STATE_MAXIMIZED_HORZ");
+      c2 = xcb_intern_atom(connection, 0, 28, "_NET_WM_STATE_MAXIMIZED_VERT");
+      r0 = xcb_intern_atom_reply(connection, c0, NULL);
+      r1 = xcb_intern_atom_reply(connection, c1, NULL);
+      r2 = xcb_intern_atom_reply(connection, c2, NULL);
+      message->type           = r0->atom;
+      message->data.data32[0] = !mbit;
+      iface->state ^= SBIT_MAXIMIZED;
+      message->data.data32[1] = r1->atom;
+      message->data.data32[2] = r2->atom;
+      xcb_send_event(connection, false, screen->root,
+                         XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT |
+                         XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY, (char*)message);
+      xcb_flush(connection);
+      free(r0);
+      free(r1);
+      free(r2);
+    } else {
+      uint32_t values[4];
+      if (mbit) {
+        iface->state &= ~SBIT_MAXIMIZED;
+        values[0] = iface->wmgr_box.x;
+        values[1] = iface->wmgr_box.y;
+        values[2] = iface->wmgr_box.w;
+        values[3] = iface->wmgr_box.h;
+      } else {
+          /* When button was pressed, window became topmost. */
+        iface->state |= SBIT_MAXIMIZED;
+        iface->wmgr_box = iface->mete_box;
+        values[0] = 0;
+        values[1] = 0;
+        values[2] = screen->width_in_pixels;
+        values[3] = screen->height_in_pixels;
+      }
+      xcb_configure_window(connection, iface->window,
+                   XCB_CONFIG_WINDOW_X     | XCB_CONFIG_WINDOW_Y
+                 | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT,
+                   values);
+      xcb_flush(connection);
+    }
+  } else if (response == XCB_ENTER_NOTIFY) {
+    sensitive_set(obj, true);
+    visible_set(obj->child, true);
+    ui_invalidate_object(obj);
+  } else if (response == XCB_LEAVE_NOTIFY) {
+    sensitive_set(obj, (ui_active_focus_get() != NULL));
+    visible_set(obj->child, false);
+    ui_invalidate_object(obj);
+  }
+  return _default_button_meter(iface, nvt, obj);
+}
+
 /*
   When 'within' headerbar, focus clicks shouldn't apply. Additionally
   keyboard can hold meaning to objects.
@@ -314,6 +497,8 @@ user_configure_layout(PhxInterface *iface) {
   int16_t xpos, ypos, sz;
   PhxRGBA none          = { 0, 0, 0, 0 };
   PhxRGBA header_red    = { 1, .6, .6, 1 };
+  PhxRGBA header_yellow = { .95, .95, 0, 1 };
+  PhxRGBA header_green  = { 0, 1, 0, 1 };
   double  header_stroke = 0.5;
 
     /* Remove wm decorations */
@@ -333,6 +518,8 @@ user_configure_layout(PhxInterface *iface) {
   hbar->_draw_cb = _draw_hdr_background;
   hbar->_event_cb = _default_headerbar_meter;
 
+  HEADER_HEIGHT = (14 + 10);
+
     /* Creation of close button */
   ypos = (int16_t)(((double)(14 + 10) * 0.208333) + 0.499999);
   xpos = ypos + 3;
@@ -350,6 +537,36 @@ user_configure_layout(PhxInterface *iface) {
   obtn->attrib->stroke  = header_stroke;
   obtn->child = ui_object_child_create(obtn, PHX_DRAWING, NULL, nexus_box);
   obtn->child->_draw_cb = _draw_symbol_close;
+  visible_set(obtn->child, false);
+
+    /* Creation of minimize button */
+  nexus_box.x = sz + (2 * xpos) - 1;
+  nexus_box.y = ypos;
+  obtn = ui_button_create(hbar, BTN_HEADER_MINIMIZE, nexus_box);
+  frame_remove(obtn);
+  obtn->_draw_cb = _draw_header_button;
+  obtn->_event_cb = _hbtn_minimize_event;
+  obtn->attrib->fg_ink = (obtn->attrib->bg_fill = none);
+  obtn->attrib->fg_fill = header_yellow;
+  obtn->attrib->fg_ink.a  = 1.0;
+  obtn->attrib->stroke  = header_stroke;
+  obtn->child = ui_object_child_create(obtn, PHX_DRAWING, NULL, nexus_box);
+  obtn->child->_draw_cb = _draw_symbol_minimize;
+  visible_set(obtn->child, false);
+
+    /* Creation of maximize button */
+  nexus_box.x = (2 * (sz - 1)) + (3 * xpos);
+  nexus_box.y = ypos;
+  obtn = ui_button_create(hbar, BTN_HEADER_MAXIMIZE, nexus_box);
+  frame_remove(obtn);
+  obtn->_draw_cb = _draw_header_button;
+  obtn->_event_cb = _hbtn_maximize_event;
+  obtn->attrib->fg_ink = (obtn->attrib->bg_fill = none);
+  obtn->attrib->fg_fill = header_green;
+  obtn->attrib->fg_ink.a  = 1.0;
+  obtn->attrib->stroke  = header_stroke;
+  obtn->child = ui_object_child_create(obtn, PHX_DRAWING, NULL, nexus_box);
+  obtn->child->_draw_cb = _draw_symbol_maximize;
   visible_set(obtn->child, false);
 
   return hbar;

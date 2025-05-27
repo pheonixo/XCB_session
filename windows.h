@@ -33,6 +33,7 @@ struct _PhxInterface {
  xcb_window_t       window;
   /* from here, differs from other iface */
  cairo_surface_t    *vid_buffer;
+ PhxRectangle       wmgr_box;        /* swap for min/max wmgr */
   /* Add on to make specialized interfaces */
  void               *exclusive;
 };

@@ -1,14 +1,12 @@
 TODO notes:
 
 headerbars:
-xxhb0: close btn
-xxhb1: min btn
-xxhb2: max btn
+xxhb0: close min max btn
 xxhb3: mov/rsz btn
 
 no wm test:
 cd /home/steven/Development/Projects/XCB_session
-,/xxtv1 & P1=$! ./xxtxt & P2=$! ./xxgtx & P3=$! wait $P1 $P2 $P3
+./xxtv1 & P1=$! ./xxtxt & P2=$! ./xxgtx & P3=$! wait $P1 $P2 $P3
 
 with output for wm tests
 /home/steven/Development/Projects/XCB_session/xxtv1 | tee ../xxtv1.ouput & \
@@ -120,4 +118,4 @@ Work clipboard, feel like missing something
 
 Repeated here from above for 'cat' when running twm
 cd /home/steven/Development/Projects/XCB_session
-,/xxtv1 & P1=$! ./xxtxt & P2=$! ./xxgtx & P3=$! wait $P1 $P2 $P3
+./xxtv1 & P1=$! ./xxtxt & P2=$! ./xxgtx & P3=$! wait $P1 $P2 $P3

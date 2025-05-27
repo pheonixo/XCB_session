@@ -15,7 +15,8 @@
 #define SBIT_UNDECORATED    (1 << 9)     /* For undecorated */
 #define SBIT_HEADERBAR      (1 << 10)    /* For undecorated, adds nexus */
 #define SBIT_HBR_DRAG       (1 << 11)    /* WM type funcs, move/resize */
-#define SBIT_MAXIMIZED      (1 << 12)    /* For undecorate/keyboard maximze */
+#define SBIT_MAXIMIZED      (1 << 12)    /* For WM, maximized */
+#define SBIT_MINIMIZED      (1 << 13)    /* For WM, minimized */
 
 /* specific to type of object, bits [0-7] */
   /* nexus: configure updating */  /* other objects not to use for persistant */

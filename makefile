@@ -147,15 +147,10 @@ xhbar: xcb_hbar.c $(SRC) $(XHDR) libctype.a makefile
 	@echo "  CC -o xhbar"
 	@gcc $(CFLAGS) -o xhbar xcb_hbar.c $(SRC) $(LIBS) -L./ -lctype
 
-# nexus hearderbar (close button)
+# nexus hearderbar (close, minimize, maximize button)
 xxhb0: xcb_hbar0.c $(SRC) $(XHDR) libctype.a makefile
 	@echo "  CC -o xxhb0"
 	@gcc $(CFLAGS) -o xxhb0 xcb_hbar0.c $(SRC) $(LIBS) -L./ -lctype
-
-# nexus hearderbar (close, minimize button)
-xxhb1: xcb_hbar1.c $(SRC) $(XHDR) libctype.a makefile
-	@echo "  CC -o xxhb1"
-	@gcc $(CFLAGS) -o xxhb1 xcb_hbar1.c $(SRC) $(LIBS) -L./ -lctype
 
 all: xxssn xxss2 xxnex xxgne xxfse xxbtn xxtv1 xxtxt xxgtx xxbnk xebar \
 xfbar xfbar2 xxhb0

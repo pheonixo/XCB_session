@@ -129,7 +129,6 @@ typedef struct _PhxSession {
 #endif
   /* addressment of WM issues. */
  PhxInterface         **stack_order;
- PhxRectangle         max_swap;        /* use for no wm maximize. */
  uint16_t             has_WM;
 } PhxSession;
 
