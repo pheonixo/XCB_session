@@ -127,8 +127,9 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
       xcb_motion_notify_event_t *motion = (xcb_motion_notify_event_t*)nvt;
       test = _interface_for(motion->event);
       printf("window %"PRIu32", MOTION_NOTIFY."
-             " (%"PRIi16",%"PRIi16")  %s\n",
-             test->window, motion->event_x, motion->event_y, caller);
+             " (%"PRIi16",%"PRIi16") state=%"PRIu16" %s\n",
+             test->window, motion->event_x, motion->event_y,
+             motion->state, caller);
       break;
     }
     case XCB_ENTER_NOTIFY: {      /* response_type 7 */
