@@ -21,8 +21,6 @@ user_textstring(void) {
   return string;
 }
 
-#pragma mark *** Window 2 ***
-
 static void
 nexus_configure_layout(PhxInterface *iface) {
 
