@@ -57,7 +57,7 @@ extern char *strdup(const char*);
 #if DEBUG_EVENTS_ON
  extern void _debug_event(xcb_generic_event_t *nvt, const char *caller);
 /* #define DEBUG_EVENTS(a)    _debug_event(nvt, (a))*/
-  #define DEBUG_EVENTS(a)    (void)(a)
+ #define DEBUG_EVENTS(a)    (void)(a)
    /* during debug, allowed to turn off/on specific events */
  extern uint64_t debug_flags;
  #define DEBUG_ASSERT(a, b) \

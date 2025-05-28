@@ -753,9 +753,11 @@ _process_event(xcb_generic_event_t *nvt) {
           && (!((session->stack_order[sdx])->state & SBIT_MAPPED)) ) {
         do {
           iface = session->stack_order[(--sdx)];
-          if (!!(iface->state & SBIT_MAPPED))  break;
+          if (!!(iface->state & SBIT_MAPPED)) {
+            _window_stack_topmost(iface);
+            break;
+          }
         } while (sdx != 0);
-        _window_stack_topmost(iface);
       }
       break;
     }
