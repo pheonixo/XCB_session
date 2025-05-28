@@ -269,7 +269,7 @@ _event_mouse(xcb_generic_event_t *nvt) {
       if (focus != obj) {
         iface->state &= ~SBIT_CLICKS;
         ui_active_focus_set(obj);
-  
+
           /* Stop processing, was window being focused by click in content. */
         if ((iface->state & SBIT_FOCUS_CLICK) != 0) {
           DEBUG_BUTTON(iface->window, "FOCUS_CLICK ignore");
@@ -388,7 +388,7 @@ _event_motion(xcb_generic_event_t *nvt) {
     /* User/default for object given chance to respond. */
   if (imount->_event_cb != NULL) {
     handled = imount->_event_cb(iface, nvt, obj);
-    if (!handled && (imount == iface) && (obj != NULL)) 
+    if (!handled && (imount == iface) && (obj != NULL))
       if (obj->type == PHX_GFUSE)
         handled = obj->_event_cb(iface, nvt, obj);
   }
@@ -784,19 +784,14 @@ _process_event(xcb_generic_event_t *nvt) {
                    XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, values);
 
       if ( (session->has_WM != 0)
-          && ((iface->state & SBIT_UNDECORATED) != 0) ) {
+          && ((iface->state & SBIT_UNDECORATED) != 0)
+          && (_MOTIF_WM_HINTS != XCB_ATOM_NONE) ) {
         struct MWMHints {
           uint32_t   flags, functions, decorations, input_mode, status;
         } hints = { 2, 0, 0, 0, 0 };
-
-        xcb_intern_atom_cookie_t c0;
-        xcb_intern_atom_reply_t *r0;
-        c0 = xcb_intern_atom(session->connection, 0, 15, "_MOTIF_WM_HINTS");
-        r0 = xcb_intern_atom_reply(session->connection, c0, NULL);
         xcb_change_property(session->connection, XCB_PROP_MODE_REPLACE,
-                            rp->window, r0->atom, r0->atom, 32,
+                            rp->window, _MOTIF_WM_HINTS, _MOTIF_WM_HINTS, 32,
                             sizeof(hints) >> 2, &hints);
-        free(r0);
       }
       break;
     }
@@ -861,7 +856,8 @@ xcb_main(void) {
     return;
   }
     /* Test if Window manager exists. Might even be us? */
-  if (session->has_WM == 0) {
+  if ( (session->has_WM == 0)
+      && (_MOTIF_WM_HINTS != XCB_ATOM_NONE) ) {
     xcb_screen_t *screen;
     xcb_get_window_attributes_cookie_t c0;
     xcb_get_window_attributes_reply_t *r0;
@@ -870,6 +866,7 @@ xcb_main(void) {
     r0 = xcb_get_window_attributes_reply(connection, c0, NULL);
     session->has_WM =
        !!(r0->all_event_masks & XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT);
+    free(r0);
   }
 
   if ( (CURSOR_DEFAULT != NULL) || (session->has_WM == 0) ) {

@@ -538,11 +538,20 @@ _interface_create(xcb_connection_t *connection,
   return iface;
 }
 
-/* Sets flag used during XCB_REPARENT_NOTIFY to undecorate. */
+/* Sets flag. If _MOTIF_WM_HINTS exists, use during XCB_REPARENT_NOTIFY
+  to undecorate. Otherwise set as OVERRIDE_REDIRECT. */
 void
 ui_window_undecorate_set(xcb_window_t window) {
+
   PhxInterface *iface = _interface_for(window);
-  if (iface != NULL)  iface->state |= SBIT_UNDECORATED;
+  if (iface != NULL) {
+    iface->state |= SBIT_UNDECORATED;
+    if (_MOTIF_WM_HINTS == XCB_ATOM_NONE) {
+      uint32_t values[] = { true };
+      xcb_change_window_attributes(session->connection, iface->window,
+                             XCB_CW_OVERRIDE_REDIRECT, values);
+    }
+  }
 }
 
 static void

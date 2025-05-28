@@ -14,6 +14,8 @@ xcb_atom_t TARGETS;
 xcb_atom_t TIMESTAMP;
 
 xcb_atom_t _NET_ACTIVE_WINDOW;
+/* Needed for undecorated windows. */
+xcb_atom_t _MOTIF_WM_HINTS;
 
 #if (DND_INTERNAL_ON || DND_EXTERNAL_ON)
 xcb_atom_t XDND_ACTIONASK;
@@ -104,6 +106,15 @@ ui_atoms_initialize(xcb_connection_t *connection) {
   TIMESTAMP       = atoms[10].reply->atom;  free(atoms[10].reply);
 
   _NET_ACTIVE_WINDOW = atoms[11].reply->atom;  free(atoms[11].reply);
+
+  {
+    xcb_intern_atom_cookie_t c0;
+    xcb_intern_atom_reply_t *r0;
+    c0 = xcb_intern_atom(session->connection, 1, 15, "_MOTIF_WM_HINTS");
+    r0 = xcb_intern_atom_reply(session->connection, c0, NULL);
+    _MOTIF_WM_HINTS = r0->atom;
+    free(r0);
+  }
 
 #if (DND_INTERNAL_ON || DND_EXTERNAL_ON)
   XDND_ACTIONASK     = atoms[(nBase +  0)].reply->atom;
