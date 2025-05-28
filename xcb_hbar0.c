@@ -488,6 +488,49 @@ ui_headerbar_for(PhxInterface *iface) {
   return NULL;
 }
 
+static char *
+user_textstring(void) {
+
+  char *string;
+  size_t rdSz;
+  long filesize;
+  FILE *rh = fopen("./libctype/locale/rwSystems/numbers.c", "r");
+  if (rh == NULL) {  puts("file not found"); return NULL;  }
+  fseek(rh, 0 , SEEK_END);
+  filesize = ftell(rh);
+  fseek(rh, 0 , SEEK_SET);
+  rdSz = (filesize + TGAP_ALLOC) & ~(TGAP_ALLOC - 1);
+  string = malloc(rdSz);
+  memset(&string[filesize], 0, (rdSz - filesize));
+  if (fread(string, filesize, 1, rh) == 0)
+    puts("error: reading file xcb_textview_drag.c");
+  fclose(rh);
+
+  return string;
+}
+
+static void
+user_add_text(PhxInterface *iface) {
+
+  PhxObjectTextview *otxt;
+  char *text;
+  PhxRectangle nexus_box;
+  PhxNexus *nexus;
+  PhxNexus *hbar = ui_headerbar_for(iface);
+
+  RECTANGLE(nexus_box, 0, hbar->mete_box.h,
+                          iface->mete_box.w,
+                          iface->mete_box.h - hbar->mete_box.h);
+  nexus = ui_nexus_create(iface, nexus_box);
+  nexus->state |= HXPD_RGT | VXPD_BTM;
+
+  nexus_box.y = 0;
+  otxt = ui_textview_create(nexus, nexus_box);
+  text = user_textstring();
+  ui_textview_buffer_set(otxt, text, HJST_LFT);
+  free(text);
+}
+
 static PhxNexus *
 user_configure_layout(PhxInterface *iface) {
 
@@ -593,6 +636,7 @@ main(int argc, char *argv[]) {
   if (window == 0)  exit(EXIT_FAILURE);
     /* Since one window... instead of _interface_for() */
   user_configure_layout(session->iface[0]);
+  user_add_text(session->iface[0]);
     /* Map the window on the screen */
   xcb_map_window(session->connection, window);
 
