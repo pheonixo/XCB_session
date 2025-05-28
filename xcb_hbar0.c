@@ -258,8 +258,8 @@ _hbtn_close_event(PhxInterface *iface,
 
 static bool
 _hbtn_minimize_event(PhxInterface *iface,
-                  xcb_generic_event_t *nvt,
-                  PhxObject *obj) {
+                     xcb_generic_event_t *nvt,
+                     PhxObject *obj) {
 
   uint8_t response = nvt->response_type & (uint8_t)0x7F;
   if (response == XCB_BUTTON_RELEASE) {
@@ -282,7 +282,7 @@ _hbtn_minimize_event(PhxInterface *iface,
                          XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY, (char*)message);
       xcb_flush(session->connection);
       free(r0);
-    } else {
+    } else if (!(iface->state & SBIT_MAXIMIZED)) {
       uint32_t values[4];
         /* For now, implement a window shade type of minimize. */
       if (!!(iface->state & SBIT_MINIMIZED)) {
@@ -323,8 +323,8 @@ _hbtn_minimize_event(PhxInterface *iface,
 
 static bool
 _hbtn_maximize_event(PhxInterface *iface,
-                  xcb_generic_event_t *nvt,
-                  PhxObject *obj) {
+                     xcb_generic_event_t *nvt,
+                     PhxObject *obj) {
 
   uint8_t response = nvt->response_type & (uint8_t)0x7F;
   if (response == XCB_BUTTON_RELEASE) {
@@ -358,7 +358,7 @@ _hbtn_maximize_event(PhxInterface *iface,
       free(r0);
       free(r1);
       free(r2);
-    } else {
+    } else if (!(iface->state & SBIT_MINIMIZED)) {
       uint32_t values[4];
       if (mbit) {
         iface->state &= ~SBIT_MAXIMIZED;
