@@ -65,6 +65,8 @@ _drag_keyboard(PhxInterface *iface, xcb_generic_event_t *nvt) {
       /* Was a internal window cancel. */
       /* Send enter/leave notices after has_drag cleans up itself. */
     has_drag->_event_cb(iface, nvt, NULL);
+      /* Ignore release of mouse button. */
+    iface->state |= SBIT_RELEASE_IGNORE;
       /* Sets cursor to 'within', even when a 'topmost' change. */
     ui_active_within_set(ui_active_within_get());
     DND_DEBUG_PUTS("ui_active_drag_set(NULL) _drag_keyboard()");
