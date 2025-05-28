@@ -33,8 +33,16 @@ ui_active_focus_set(PhxObject *obj) {
     notify.response_type = XCB_FOCUS_OUT;
     notify.event = _window_for(focused);
       /* Window may have been destroyed. */
-    if ((iface = _interface_for(notify.event)) != NULL)
-      focused->_event_cb(iface, (xcb_generic_event_t*)&notify, focused);
+    if ((iface = _interface_for(notify.event)) != NULL) {
+        /* Do not remove focus from iface, unless lost to another iface.
+          Attachment, such as headerbar, can be sensitive to 'window' focus.
+          Objects within iface do lose focus. */
+      if ( !IS_WINDOW_TYPE(focused)
+           && (focused->type != PHX_HEADERBAR) )
+        focused->_event_cb(iface, (xcb_generic_event_t*)&notify, focused);
+      if (obj == NULL)
+        iface->_event_cb(iface, (xcb_generic_event_t*)&notify, focused);
+    }
   }
   if (obj != NULL) {
     DEBUG_ASSERT((obj->_event_cb == NULL),
@@ -53,7 +61,7 @@ ui_active_within_get(void) {
 }
 
 /* Used to know active object.
-  Similar to a focus event, but mouse related. Detail will be 
+  Similar to a focus event, but mouse related. Detail will be
   XCB_NOTIFY_DETAIL_NONE. This signals object only being informed we've
   entered or left the object. Any detailed information of entry should be
   gleaned from mouse motion event handling. Allows adjustments such as
