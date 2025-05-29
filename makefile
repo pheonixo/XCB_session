@@ -17,6 +17,7 @@ LLIBS = -lxcb -lcairo $(LXTRA)
 # HDR/SCR: Pheonix code creation
 XHDR = \
   session.h \
+  statebits.h \
   atoms.h \
   windows.h \
   events.h \
@@ -151,6 +152,11 @@ xhbar: xcb_hbar.c $(SRC) $(XHDR) libctype.a makefile
 xxhb0: xcb_hbar0.c $(SRC) $(XHDR) libctype.a makefile
 	@echo "  CC -o xxhb0"
 	@gcc $(CFLAGS) -o xxhb0 xcb_hbar0.c $(SRC) $(LIBS) -L./ -lctype
+
+# nexus hearderbar (+ move/resize button)
+xxhb3: xcb_hbar3.c $(SRC) $(XHDR) libctype.a makefile
+	@echo "  CC -o xxhb3"
+	@gcc $(CFLAGS) -o xxhb3 xcb_hbar3.c $(SRC) $(LIBS) -L./ -lctype
 
 all: xxssn xxss2 xxnex xxgne xxfse xxbtn xxtv1 xxtxt xxgtx xxbnk xebar \
 xfbar xfbar2 xxhb0

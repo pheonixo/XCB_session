@@ -187,25 +187,11 @@ _event_mouse(xcb_generic_event_t *nvt) {
   session->last_event_x = x;
   session->last_event_y = y;
 
-  focus = ui_active_focus_get();
-
-    /* Transient, if focus is a transient. Want
-      even non-focused 'parent' events. */
-  if (focus != NULL) {
-    xcb_window_t window = _window_for(focus);
-    if (ui_window_is_transient(window)) {
-      iface = _interface_for(window);
-      obj = (PhxObject*)iface->nexus[0];
-        /* conversion to transient '->event'. */
-      _coordinates_for_object(iface, nvt, obj, xPtr, yPtr);
-        /* object relative to '->event' coordinates. */
-      obj = _get_object_at_pointer(iface, *xPtr, *yPtr);
-      iface->_event_cb(iface, nvt, obj);
-      return true;
-    }
-  }
-
   iface = _interface_for(mouse->event);
+  if (!!(iface->state & SBIT_RELEASE_IGNORE)) {
+    iface->state &= ~SBIT_RELEASE_IGNORE;
+    return true;
+  }
   obj = _get_object_at_pointer(iface, x, y);
 
     /* Scroll wheel doesn't deal with focus, is 'within' based.
@@ -218,42 +204,33 @@ _event_mouse(xcb_generic_event_t *nvt) {
     return true;
   }
 
-  if (session->has_WM == 0) {
-    if ( (focus == NULL)
-        || (_window_for(focus) != mouse->event) ) {
-      _window_stack_topmost(_interface_for(_window_for(obj)));
-      return true;
-    }
-  } else {
-    if (iface != session->stack_order[(session->ncount - 1)]) {
-      _window_stack_topmost(iface);
-      ui_active_focus_set((PhxObject*)iface);
-      bptime = mouse->time;
-      return true;
-    }
+  if ((focus = ui_active_focus_get()) == NULL) {
+      /* obj can't be NULL on 'press'. release will have a focus. */
+    ui_active_focus_set(obj);
+    iface = _interface_for(_window_for(obj));
+    iface->state |= SBIT_RELEASE_IGNORE;
+    _window_stack_topmost(iface);
+    bptime = mouse->time;
+    return true;
+  }
+
+    /* Transient, if focus is a transient. Want
+      even non-focused 'parent' events. */
+  if (ui_window_is_transient(_window_for(focus))) {
+    xcb_window_t window = _window_for(focus);
+    iface = _interface_for(window);
+    obj = (PhxObject*)iface->nexus[0];
+      /* conversion to transient '->event'. */
+    _coordinates_for_object(iface, nvt, obj, xPtr, yPtr);
+      /* object relative to '->event' coordinates. */
+    obj = _get_object_at_pointer(iface, *xPtr, *yPtr);
+    iface->_event_cb(iface, nvt, obj);
+    return true;
   }
 
   if (!locus) {
     if (ui_active_drag_get() != NULL)
       return _drag_finish(iface, nvt, obj);
-      /* first click in unfocused window used to bring ABOVE and focus */
-    if ((iface->state & SBIT_FOCUS_CLICK) != 0) {
-      iface->state &= ~(SBIT_FOCUS_CLICK | SBIT_CLICKS);
-      DEBUG_BUTTON(iface->window, "FOCUS_CLICK reset");
-      return true;
-    }
-    if ((iface->state & SBIT_RELEASE_IGNORE) != 0) {
-        /* On creation of popup, we ignore button release.
-          However, when created SBIT_FOCUS_CLICK set on its iface.
-          has_focus will be that window, not the window of release. */
-      if (IS_WINDOW_TYPE(focus)) {
-        focus->state &= ~(SBIT_FOCUS_CLICK | SBIT_CLICKS);
-        DEBUG_BUTTON(_window_for(focus), "FOCUS_CLICK reset");
-      }
-      iface->state &= ~SBIT_RELEASE_IGNORE;
-      DEBUG_BUTTON(iface->window, "RELEASE_IGNORE reset");
-      return true;
-    }
     if ((iface->state & SBIT_SELECTING) != 0) {
       iface->state &= ~SBIT_SELECTING;
       return true;
@@ -269,13 +246,6 @@ _event_mouse(xcb_generic_event_t *nvt) {
       if (focus != obj) {
         iface->state &= ~SBIT_CLICKS;
         ui_active_focus_set(obj);
-
-          /* Stop processing, was window being focused by click in content. */
-        if ((iface->state & SBIT_FOCUS_CLICK) != 0) {
-          DEBUG_BUTTON(iface->window, "FOCUS_CLICK ignore");
-          bptime = mouse->time;
-          return true;
-        }
           /* Need both invalidates prior to next test for possible
             behavioral updates to focus. */
         if (focus != NULL)
@@ -303,16 +273,6 @@ _event_mouse(xcb_generic_event_t *nvt) {
 
   DEBUG_ASSERT((ui_active_within_get() != obj),
                          "failure: mouse_event within object.");
-
-  if ((iface->state & SBIT_FOCUS_CLICK) != 0) {
-    if (obj->i_mount->type != PHX_HEADERBAR) {
-      DEBUG_BUTTON(iface->window, "FOCUS_CLICK ignore");
-      return true;
-    } else {
-      iface->state &= ~(SBIT_FOCUS_CLICK | SBIT_CLICKS);
-      DEBUG_BUTTON(iface->window, "FOCUS_CLICK reset");
-    }
-  }
 
   handled = false;
   imount = _coordinates_for_object(iface, nvt, obj, xPtr, yPtr);
@@ -405,17 +365,22 @@ motion_exit:
 static bool
 _event_enter(xcb_generic_event_t *nvt) {
 
+  xcb_enter_notify_event_t *xing
+    = (xcb_enter_notify_event_t*)nvt;
   PhxInterface *iface;
   PhxObject *obj;
-  int16_t x, y;
-  xcb_enter_notify_event_t *xing;
 
-  xing = (xcb_enter_notify_event_t*)nvt;
   iface = _interface_for(xing->event);
-  x = xing->event_x;
-  y = xing->event_y;
-  obj = _get_object_at_pointer(iface, x, y);
-
+    /* Using WM's _NET_WM_MOVERESIZE this is only means of determining
+      _NET_WM_MOVERESIZE_CANCEL. We regain focus even after we had to
+      call ungrab_pointer() to start drag. */
+  if (!!(iface->state & SBIT_HBR_DRAG)) {
+    if (xing->mode == XCB_NOTIFY_MODE_UNGRAB) {
+      puts(" finished drag XCB_ENTER_NOTIFY");
+      iface->state &= ~SBIT_HBR_DRAG;
+      ui_active_drag_set(NULL);
+    }
+  }
 #if DND_EXTERNAL_ON
   if ( (ui_active_within_get() != NULL)
       && (session->xdndserver->xdndSource.source == 0) )
@@ -423,10 +388,10 @@ _event_enter(xcb_generic_event_t *nvt) {
   if (ui_active_within_get() != NULL)
 #endif
     DEBUG_ASSERT(( (ui_active_within_get() == ui_active_focus_get())
-                   && ((iface->state & SBIT_FOCUS_CLICK) == 0)
                     && ((iface->state & SBIT_HBR_DRAG) == 0) ),
                          "failure: within already set.");
 
+  obj = _get_object_at_pointer(iface, xing->event_x, xing->event_y);
   if (obj == NULL) {
     DEBUG_ASSERT((!ui_window_is_transient(iface->window)),
                         "failure: entered NULL object.");
@@ -462,6 +427,10 @@ _event_focus(xcb_generic_event_t *nvt) {
     iface->state &= ~SBIT_CLICKS;
       /* On non-dropdown windows, first content click focuses. */
     if ( (locus) && (!ui_window_is_transient(focus->event)) ) {
+#if 0
+      if (!!(iface->state & SBIT_MAPPED))
+        _window_stack_topmost(iface);
+#else
       if (!!(iface->state & SBIT_MAPPED)) {
         uint16_t idx;
         const static uint32_t values[] = { XCB_STACK_MODE_ABOVE };
@@ -473,13 +442,11 @@ _event_focus(xcb_generic_event_t *nvt) {
           session->stack_order[idx] = session->stack_order[(idx + 1)];
         session->stack_order[(session->ncount - 1)] = iface;
       }
-      iface->state |= (SBIT_FOCUS_CLICK | SBIT_CLICKS);
-      DEBUG_BUTTON(focus->event, "FOCUS_CLICK set");
+#endif
     }
   }
   if (!locus) {
-    iface->state &= ~(SBIT_FOCUS_CLICK | SBIT_CLICKS);
-    DEBUG_BUTTON(focus->event, "FOCUS_CLICK reset");
+    iface->state &= ~SBIT_CLICKS;
     iface = NULL;
   }
   ui_active_focus_set((PhxObject*)iface);

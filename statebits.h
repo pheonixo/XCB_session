@@ -8,7 +8,7 @@
 #define SBIT_TRANSIENT      (1 << 3)     /* Special window type */
 #define SBIT_MAPPED         (1 << 4)     /* Same as Object's visible */
 #define SBIT_SENSITIVE      (1 << 5)     /* Alignment with objects */
-#define SBIT_FOCUS_CLICK    (1 << 6)     /* Button used to make topmost */
+
 #define SBIT_RELEASE_IGNORE (1 << 7)     /* Button/key release ignore */
 #define SBIT_SELECTING      (1 << 8)     /* Drag selection of content */
 
