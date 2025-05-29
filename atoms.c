@@ -2,7 +2,6 @@
 
 xcb_atom_t WM_PROTOCOLS;
 xcb_atom_t WM_DELETE_WINDOW;
-xcb_atom_t WM_TAKE_FOCUS;
 
 xcb_atom_t CLIPBOARD;
 xcb_atom_t UTF8_STRING;
@@ -13,9 +12,11 @@ xcb_atom_t STRING;
 xcb_atom_t TARGETS;
 xcb_atom_t TIMESTAMP;
 
+/* Window Manager atoms */
+xcb_atom_t WM_TAKE_FOCUS;
 xcb_atom_t _NET_ACTIVE_WINDOW;
-/* Needed for undecorated windows. */
 xcb_atom_t _MOTIF_WM_HINTS;
+char *     _NET_WM_STRING = NULL;
 
 #if (DND_INTERNAL_ON || DND_EXTERNAL_ON)
 xcb_atom_t XDND_ACTIONASK;
@@ -35,14 +36,87 @@ xcb_atom_t XDND_STATUS;
 xcb_atom_t XDND_TYPELIST;
 #endif
 
+/* These we do not create an atom if doesn't exist. */
+static void
+_atoms_window_managers(xcb_connection_t *connection) {
+
+  const uint16_t nAtoms = 5;
+  xcb_atom_t _NET_SUPPORTING_WM_CHECK;
+  xcb_atom_t _NET_WM_NAME;
+
+  uint16_t adx;
+  struct _acr {
+    char *name;
+    uint16_t nsz;
+    xcb_intern_atom_cookie_t cookie;
+    xcb_intern_atom_reply_t *reply;
+  } atoms[5] = {
+    { "WM_TAKE_FOCUS",            13, {0}, NULL },  /* currently unused */
+    { "_NET_ACTIVE_WINDOW",       18, {0}, NULL },
+    { "_MOTIF_WM_HINTS",          15, {0}, NULL },
+    { "_NET_SUPPORTING_WM_CHECK", 24, {0}, NULL },
+    { "_NET_WM_NAME",             12, {0}, NULL }
+  };
+
+  for (adx = 0; adx < nAtoms; adx++)
+    atoms[adx].cookie = xcb_intern_atom(connection, 1,
+                                        atoms[adx].nsz, atoms[adx].name);
+  xcb_flush(connection);
+
+  for (adx = 0; adx < nAtoms; adx++)
+    atoms[adx].reply = xcb_intern_atom_reply(connection,
+                                             atoms[adx].cookie, NULL);
+  xcb_flush(connection);
+
+  WM_TAKE_FOCUS      = atoms[ 0].reply->atom;  free(atoms[ 0].reply);
+  _NET_ACTIVE_WINDOW = atoms[ 1].reply->atom;  free(atoms[ 1].reply);
+  _MOTIF_WM_HINTS    = atoms[ 2].reply->atom;  free(atoms[ 2].reply);
+
+  _NET_SUPPORTING_WM_CHECK  = atoms[ 3].reply->atom;
+  _NET_WM_NAME              = atoms[ 4].reply->atom;
+
+
+  if ( (_NET_SUPPORTING_WM_CHECK != XCB_ATOM_NONE)
+      && (_NET_WM_NAME != XCB_ATOM_NONE) ) {
+    xcb_screen_t *screen
+      = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
+    xcb_get_property_cookie_t c0
+      = xcb_get_property(connection, 0, screen->root,
+                         _NET_SUPPORTING_WM_CHECK,
+                         XCB_GET_PROPERTY_TYPE_ANY, 0, UINT_MAX/4);
+    xcb_get_property_reply_t *r0
+      = xcb_get_property_reply(connection, c0, NULL);
+    if (r0 != NULL) {
+      if (r0->value_len > 0) {
+        xcb_window_t cWindow = *((xcb_window_t*)xcb_get_property_value(r0));
+        xcb_get_property_cookie_t c1
+          = xcb_get_property(connection, 0, cWindow, _NET_WM_NAME,
+                          XCB_GET_PROPERTY_TYPE_ANY, 0, UINT_MAX/4);
+        xcb_get_property_reply_t *r1
+          = xcb_get_property_reply(connection, c1, NULL);
+        if (r1 != NULL) {
+          if ( (r1->value_len > 0)
+               && ( (r1->type == XCB_ATOM_STRING)
+                   || (r1->type == UTF8_STRING) )  )
+            _NET_WM_STRING = strdup((char *)xcb_get_property_value(r1));
+          free(r1);
+        }
+      }
+      free(r0);
+    }
+  }
+  free(atoms[3].reply);
+  free(atoms[4].reply);
+}
+
 void
 ui_atoms_initialize(xcb_connection_t *connection) {
 
 #if (DND_INTERNAL_ON || DND_EXTERNAL_ON)
-  const uint16_t nAtoms = 27;
-  const uint16_t nBase  = 12;
+  const uint16_t nAtoms = 25;
+  const uint16_t nBase  = 10;
 #else
-  const uint16_t nAtoms = 12;
+  const uint16_t nAtoms = 10;
 #endif
 
     /* for ISO C90 use max array size */
@@ -52,18 +126,15 @@ ui_atoms_initialize(xcb_connection_t *connection) {
     uint16_t nsz;
     xcb_intern_atom_cookie_t cookie;
     xcb_intern_atom_reply_t *reply;
-  } atoms[27] = {
+  } atoms[25] = {
 
     { "WM_PROTOCOLS",     12, {0}, NULL },
     { "WM_DELETE_WINDOW", 16, {0}, NULL },
-    { "WM_TAKE_FOCUS",    13, {0}, NULL },
 
     { "CLIPBOARD", 9, {0}, NULL }, { "UTF8_STRING", 11, {0}, NULL },
     { "XCBD_DATA", 9, {0}, NULL }, { "ATOM_PAIR",    9, {0}, NULL },
     { "MULTIPLE",  8, {0}, NULL }, { "STRING",       6, {0}, NULL },
     { "TARGETS",   7, {0}, NULL }, { "TIMESTAMP",    9, {0}, NULL },
-
-    { "_NET_ACTIVE_WINDOW",    18, {0}, NULL },
 
     { "XdndActionAsk",     13, {0}, NULL },
     { "XdndActionCopy",    14, {0}, NULL },
@@ -93,28 +164,19 @@ ui_atoms_initialize(xcb_connection_t *connection) {
                                              atoms[adx].cookie, NULL);
   xcb_flush(connection);
 
-  WM_PROTOCOLS     = atoms[0].reply->atom;  free(atoms[ 0].reply);
+  WM_PROTOCOLS    = atoms[ 0].reply->atom;  free(atoms[ 0].reply);
   WM_DELETE_WINDOW = atoms[1].reply->atom;  free(atoms[ 1].reply);
-  WM_TAKE_FOCUS    = atoms[2].reply->atom;  free(atoms[ 2].reply);
-  CLIPBOARD       = atoms[ 3].reply->atom;  free(atoms[ 3].reply);
-  UTF8_STRING     = atoms[ 4].reply->atom;  free(atoms[ 4].reply);
-  XCBD_DATA       = atoms[ 5].reply->atom;  free(atoms[ 5].reply);
-  ATOM_PAIR       = atoms[ 6].reply->atom;  free(atoms[ 6].reply);
-  MULTIPLE        = atoms[ 7].reply->atom;  free(atoms[ 7].reply);
-  STRING          = atoms[ 8].reply->atom;  free(atoms[ 8].reply);
-  TARGETS         = atoms[ 9].reply->atom;  free(atoms[ 9].reply);
-  TIMESTAMP       = atoms[10].reply->atom;  free(atoms[10].reply);
+  CLIPBOARD       = atoms[ 2].reply->atom;  free(atoms[ 2].reply);
+  UTF8_STRING     = atoms[ 3].reply->atom;  free(atoms[ 3].reply);
+  XCBD_DATA       = atoms[ 4].reply->atom;  free(atoms[ 4].reply);
+  ATOM_PAIR       = atoms[ 5].reply->atom;  free(atoms[ 5].reply);
+  MULTIPLE        = atoms[ 6].reply->atom;  free(atoms[ 6].reply);
+  STRING          = atoms[ 7].reply->atom;  free(atoms[ 7].reply);
+  TARGETS         = atoms[ 8].reply->atom;  free(atoms[ 8].reply);
+  TIMESTAMP       = atoms[ 9].reply->atom;  free(atoms[ 9].reply);
 
-  _NET_ACTIVE_WINDOW = atoms[11].reply->atom;  free(atoms[11].reply);
-
-  {
-    xcb_intern_atom_cookie_t c0;
-    xcb_intern_atom_reply_t *r0;
-    c0 = xcb_intern_atom(session->connection, 1, 15, "_MOTIF_WM_HINTS");
-    r0 = xcb_intern_atom_reply(session->connection, c0, NULL);
-    _MOTIF_WM_HINTS = r0->atom;
-    free(r0);
-  }
+    /* uses above atoms */
+  _atoms_window_managers(connection);
 
 #if (DND_INTERNAL_ON || DND_EXTERNAL_ON)
   XDND_ACTIONASK     = atoms[(nBase +  0)].reply->atom;

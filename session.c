@@ -479,6 +479,8 @@ _interface_remove_for(xcb_window_t window) {
 void
 ui_session_shutdown(void) {
   xcb_disconnect(session->connection);
+  if (_NET_WM_STRING != NULL)
+    free(_NET_WM_STRING);
 #if DND_EXTERNAL_ON
   if (session->xdndserver != NULL)
     free(session->xdndserver);

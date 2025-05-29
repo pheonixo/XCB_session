@@ -23,6 +23,7 @@ extern xcb_atom_t TIMESTAMP;          /* ICCCM Required */
 
 extern xcb_atom_t _NET_ACTIVE_WINDOW;
 extern xcb_atom_t _MOTIF_WM_HINTS;
+extern char *     _NET_WM_STRING;     /* Used to determine features. */
 
 #if (DND_INTERNAL_ON || DND_EXTERNAL_ON)
  /* Used by dndx.c, some used by dndi.c */
