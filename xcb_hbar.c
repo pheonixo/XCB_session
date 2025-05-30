@@ -95,6 +95,129 @@ _draw_symbol_maximize(PhxObject *b, cairo_t *cr) {
 }
 
 static void
+_draw_symbol_move(PhxObject *b, cairo_t *cr) {
+
+  double xc, yc;
+
+  cairo_save(cr);
+
+  cairo_set_source_rgba(cr, 0, 0, 0, 1);
+  cairo_set_line_width(cr, 0.5);
+
+  xc = b->mete_box.x + b->draw_box.x + (b->draw_box.w / 2);
+  yc = b->mete_box.y + b->draw_box.y + (b->draw_box.h / 2);
+
+    /* horizontal */
+  cairo_move_to(cr, b->mete_box.x + 4, yc);
+  cairo_line_to(cr, b->mete_box.x + b->draw_box.w - 4, yc);
+  cairo_stroke(cr);
+    /* right */
+  cairo_move_to(cr, b->mete_box.x + b->draw_box.w - 2, yc + 0.25);
+  cairo_line_to(cr, b->mete_box.x + b->draw_box.w - 4.5, yc + 1.75);
+  cairo_stroke(cr);
+  cairo_move_to(cr, b->mete_box.x + b->draw_box.w - 2, yc + 0.25);
+  cairo_line_to(cr, b->mete_box.x + b->draw_box.w - 4.5, yc - 1.75);
+  cairo_stroke(cr);
+    /* left */
+  cairo_move_to(cr, b->mete_box.x + 2, yc + 0.25);
+  cairo_line_to(cr, b->mete_box.x + 4.5, yc + 2.25);
+  cairo_stroke(cr);
+  cairo_move_to(cr, b->mete_box.x + 2, yc + 0.25);
+  cairo_line_to(cr, b->mete_box.x + 4, yc - 2.25);
+  cairo_stroke(cr);
+
+    /* vertical */
+  cairo_move_to(cr, xc, b->mete_box.y + 4);
+  cairo_line_to(cr, xc, b->mete_box.y + b->draw_box.h - 4);
+  cairo_stroke(cr);
+    /* top */
+  cairo_move_to(cr, xc, b->mete_box.y + 2);
+  cairo_line_to(cr, xc + 1.5, b->mete_box.y + 4);
+  cairo_stroke(cr);
+  cairo_move_to(cr, xc, b->mete_box.y + 2);
+  cairo_line_to(cr, xc - 1.5, b->mete_box.y + 4);
+  cairo_stroke(cr);
+    /* bottom */
+  cairo_move_to(cr, xc, b->mete_box.y + b->draw_box.h - 2);
+  cairo_line_to(cr, xc - 1.5, b->mete_box.y + b->draw_box.h - 4);
+  cairo_stroke(cr);
+  cairo_move_to(cr, xc, b->mete_box.y + b->draw_box.h - 2);
+  cairo_line_to(cr, xc + 1.5, b->mete_box.y + b->draw_box.h - 4);
+  cairo_stroke(cr);
+
+  cairo_restore(cr);
+}
+
+static void
+_draw_symbol_resize(PhxObject *b, cairo_t *cr) {
+
+  double xc, yc;
+  cairo_matrix_t matrix;
+
+  cairo_save(cr);
+
+  cairo_set_source_rgba(cr, 0, 0, 0, 1);
+  cairo_set_line_width(cr, 0.5);
+
+  xc = b->mete_box.x + b->draw_box.x + (b->draw_box.w / 2);
+  yc = b->mete_box.y + b->draw_box.y + (b->draw_box.h / 2);
+
+  cairo_get_matrix(cr, &matrix);
+
+  cairo_translate(cr, xc, yc);
+  cairo_rotate(cr, M_PI/4);
+  cairo_translate(cr, -xc, -yc);
+
+    /* horizontal */
+  cairo_move_to(cr, b->mete_box.x + 3, yc);
+  cairo_line_to(cr, xc - 1.5, yc);
+  cairo_stroke(cr);
+  cairo_move_to(cr, xc + 1.5, yc);
+  cairo_line_to(cr, b->mete_box.x + b->draw_box.w -3, yc);
+  cairo_stroke(cr);
+    /* right */
+  cairo_move_to(cr, b->mete_box.x + b->draw_box.w - 2, yc + 0.25);
+  cairo_line_to(cr, b->mete_box.x + b->draw_box.w - 4.5, yc + 1.75);
+  cairo_stroke(cr);
+  cairo_move_to(cr, b->mete_box.x + b->draw_box.w - 2, yc + 0.25);
+  cairo_line_to(cr, b->mete_box.x + b->draw_box.w - 4.5, yc - 1.75);
+  cairo_stroke(cr);
+    /* left */
+  cairo_move_to(cr, b->mete_box.x + 2, yc + 0.25);
+  cairo_line_to(cr, b->mete_box.x + 4.5, yc + 2.25);
+  cairo_stroke(cr);
+  cairo_move_to(cr, b->mete_box.x + 2, yc + 0.25);
+  cairo_line_to(cr, b->mete_box.x + 4, yc - 2.25);
+  cairo_stroke(cr);
+
+    /* vertical */
+  cairo_move_to(cr, xc, b->mete_box.y + 3);
+  cairo_line_to(cr, xc, yc - 1.5);
+  cairo_stroke(cr);
+  cairo_move_to(cr, xc, yc + 1.5);
+  cairo_line_to(cr, xc, b->mete_box.y + b->draw_box.h - 3);
+  cairo_stroke(cr);
+    /* top */
+  cairo_move_to(cr, xc, b->mete_box.y + 2);
+  cairo_line_to(cr, xc + 1.5, b->mete_box.y + 4);
+  cairo_stroke(cr);
+  cairo_move_to(cr, xc, b->mete_box.y + 2);
+  cairo_line_to(cr, xc - 1.5, b->mete_box.y + 4);
+  cairo_stroke(cr);
+    /* bottom */
+  cairo_move_to(cr, xc, b->mete_box.y + b->draw_box.h - 2);
+  cairo_line_to(cr, xc - 1.5, b->mete_box.y + b->draw_box.h - 4);
+  cairo_stroke(cr);
+  cairo_move_to(cr, xc, b->mete_box.y + b->draw_box.h - 2);
+  cairo_line_to(cr, xc + 1.5, b->mete_box.y + b->draw_box.h - 4);
+  cairo_stroke(cr);
+
+  cairo_get_matrix(cr, &matrix);
+
+  cairo_restore(cr);
+}
+
+static void
 _draw_header_button(PhxObject *b, cairo_t *cr) {
 
   double bottom, top, radius, xc, yc;
@@ -221,6 +344,98 @@ _draw_hdr_background(PhxObject *b, cairo_t *cr) {
 
     /* clean up */
   cairo_surface_destroy(tmp);
+}
+
+#pragma mark *** WM functions ***
+
+static int16_t xroot, yroot;
+
+static bool
+_movesize_message(xcb_motion_notify_event_t *motion) {
+
+  xcb_connection_t *connection = session->connection;
+  xcb_screen_t *screen
+    = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
+  xcb_intern_atom_cookie_t c0;
+  xcb_intern_atom_reply_t *r0;
+  xcb_client_message_event_t *message;
+
+  c0 = xcb_intern_atom(connection, 1, 18, "_NET_WM_MOVERESIZE");
+  r0 = xcb_intern_atom_reply(connection, c0, NULL);
+
+  xcb_ungrab_pointer(connection, motion->time);
+  xcb_flush(connection);
+
+  message = calloc(32, 1);
+  message->response_type  = XCB_CLIENT_MESSAGE;
+  message->format         = 32;
+  message->window         = motion->event;
+  message->type           = r0->atom;
+  message->data.data32[0] = motion->root_x;
+  message->data.data32[1] = motion->root_y;
+  message->data.data32[2] = 8; /* movement only */
+  message->data.data32[3] = XCB_BUTTON_MASK_1;
+  message->data.data32[4] = 1; /* source indication normal application */
+  xcb_send_event(connection, false, screen->root,
+                     XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT |
+                     XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY, (char*)message);
+  xcb_flush(connection);
+  free(r0);
+  return true;
+}
+
+static bool
+_drag_motion_hbtn(PhxInterface *iface,
+                  xcb_motion_notify_event_t *motion) {
+  uint32_t values[2];
+  xcb_query_pointer_cookie_t c0
+    = xcb_query_pointer(session->connection, iface->window);
+  xcb_query_pointer_reply_t *r0
+    = xcb_query_pointer_reply(session->connection, c0, NULL);
+  xcb_flush(session->connection);
+  values[0] = (iface->mete_box.x += (r0->root_x - xroot));
+  values[1] = (iface->mete_box.y += (r0->root_y - yroot));
+  xroot = r0->root_x;
+  yroot = r0->root_y;
+  free(r0);
+  xcb_configure_window(session->connection, motion->event,
+               XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, values);
+  xcb_flush(session->connection);
+  return true;
+}
+
+static bool
+_drag_begin_hbtn(PhxInterface *iface,
+                 xcb_motion_notify_event_t *motion) {
+
+  const char *named;
+  puts(" start drag XCB_MOTION_NOTIFY");
+  if (!!(motion->state & XCB_MOD_MASK_CONTROL))
+        named = "top_right_corner";
+  else  named = "move";
+  ui_cursor_set_named(named, motion->event);
+/* During testing, block resize for now. */
+if (!(motion->state & XCB_MOD_MASK_CONTROL)) {
+  if ( (_NET_WM_STRING != NULL)
+      && (strcmp(_NET_WM_STRING, "Compiz") == 0) ) {
+    return _movesize_message(motion);
+  } else {
+    xcb_grab_pointer_cookie_t c0;
+    xcb_grab_pointer_reply_t *r0;
+    c0 = xcb_grab_pointer(session->connection, 1, motion->event,
+        XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE
+           | XCB_EVENT_MASK_POINTER_MOTION,
+        XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC,
+        XCB_NONE, XCB_NONE, motion->time);
+    r0 = xcb_grab_pointer_reply(session->connection, c0, NULL);
+    if ((r0 == NULL) || (r0->status != XCB_GRAB_STATUS_SUCCESS)) {
+      puts("grab failed");
+      return false;
+    }
+    return true;
+  }
+}
+  return true;
 }
 
 #pragma mark *** Events ***
@@ -393,6 +608,51 @@ _hbtn_maximize_event(PhxInterface *iface,
   return _default_button_meter(iface, nvt, obj);
 }
 
+static bool
+_hbtn_manager_event(PhxInterface *iface,
+                    xcb_generic_event_t *nvt,
+                    PhxObject *obj) {
+
+  uint8_t response = nvt->response_type & (uint8_t)0x7F;
+
+  if ( (response == XCB_KEY_PRESS)
+      || (response == XCB_KEY_RELEASE) ) {
+      /* Allow modifier keys to alter functionality when no drag. */
+    if (ui_active_drag_get() == NULL) {
+      xcb_key_press_event_t *kp = (xcb_key_press_event_t*)nvt;
+      if (response == XCB_KEY_PRESS) {
+        xcb_keysym_t keyval = _xcb_keysym_for(kp->detail, kp->state);
+        if (   (keyval == 0x0ffe3)                       /* XK_Control_L */
+            || (keyval == 0x0ffe4) ) {                   /* XK_Control_R */
+          obj->child->_draw_cb = _draw_symbol_resize;
+          ui_invalidate_object(obj);
+          return true;
+        }
+        return false;
+      }
+      if (!!(kp->state & XCB_MOD_MASK_CONTROL)) {
+        obj->child->_draw_cb = _draw_symbol_move;
+        ui_invalidate_object(obj);
+        return true;
+      }
+    }
+      /* Even thou we respond to modifier, pass false to allow
+        key combinations '^q' to exist. */
+    return false;
+  }
+
+  if (response == XCB_ENTER_NOTIFY) {
+    sensitive_set(obj, true);
+    visible_set(obj->child, true);
+    ui_invalidate_object(obj);
+  } else if (response == XCB_LEAVE_NOTIFY) {
+    sensitive_set(obj, (ui_active_focus_get() != NULL));
+    visible_set(obj->child, false);
+    ui_invalidate_object(obj);
+  }
+  return _default_button_meter(iface, nvt, obj);
+}
+
 /*
   When 'within' headerbar, focus clicks shouldn't apply. Additionally
   keyboard can hold meaning to objects.
@@ -439,22 +699,66 @@ focus_set:
 
   if ( (response == XCB_KEY_PRESS)
       || (response == XCB_KEY_RELEASE) ) {
+    if (obj->type == ((BTN_HEADER_MANAGER << 8) | PHX_BUTTON))
+      return _hbtn_manager_event(iface, nvt, obj);
+    return _default_nexus_meter(iface, nvt, obj);
+  }
+
+  if (response == XCB_BUTTON_PRESS) {
+    xcb_button_press_event_t *mouse
+      = (xcb_button_press_event_t*)nvt;
+    xroot = mouse->root_x;
+    yroot = mouse->root_y;
+    return _default_nexus_meter(iface, nvt, obj);
+  }
+
+    /* Compiz semi-notifies exits thru process_events()' xing events.
+      _drag_motion_hbtn() exits thru here. */
+  if (response == XCB_BUTTON_RELEASE) {
+    if (!!(iface->state & SBIT_HBR_DRAG)) {
+      xcb_button_press_event_t *mouse
+        = (xcb_button_press_event_t*)nvt;
+      xcb_ungrab_pointer(session->connection, mouse->time);
+      xcb_flush(session->connection);
+      puts(" finished drag XCB_BUTTON_RELEASE");
+      iface->state &= ~SBIT_HBR_DRAG;
+      ui_active_drag_set(NULL);
+      ui_active_within_set(obj);
+      return true;
+    }
     return _default_nexus_meter(iface, nvt, obj);
   }
 
   if (response == XCB_MOTION_NOTIFY) {
+    xcb_motion_notify_event_t *motion
+      = (xcb_motion_notify_event_t*)nvt;
+
+    if (!!(iface->state & SBIT_HBR_DRAG))
+      return _drag_motion_hbtn(iface, motion);
+
+    if (!!(motion->state & XCB_BUTTON_MASK_1)) {
+        /* 'obj' != NULL at this point. */
+      if (obj->type == ((BTN_HEADER_MANAGER << 8) | PHX_BUTTON)) {
+          /* Not returning normally from drag, so kill
+            button default of release. */
+        obj->state &= ~OBIT_BTN_PRESS;
+        iface->state |= SBIT_HBR_DRAG;
+        ui_active_drag_set((PhxObject*)obj->i_mount);
+        return _drag_begin_hbtn(iface, motion);
+      }
+      return false;
+    }
     return _default_nexus_meter(iface, nvt, obj);
   }
 
   if (response == XCB_CONFIGURE_NOTIFY) {
-    int16_t wD;
     xcb_configure_notify_event_t *configure
       = (xcb_configure_notify_event_t*)nvt;
 
-    wD = configure->width - iface->mete_box.w;
+    PhxNexus *hbar = (PhxNexus*)obj;
+    int16_t wD = configure->width - hbar->mete_box.w;
     if (wD != 0) {
       uint16_t idx;
-      PhxNexus *hbar = (PhxNexus*)obj;
       PhxObject *wm_button = NULL;
       if ((idx = hbar->ncount) != 0)
         do {
@@ -464,7 +768,7 @@ focus_set:
             break;
           }
         } while (idx != 0);
-      if ( (wm_button != NULL) && ((wm_button->state & HXPD_LFT) != 0) ) {
+      if (wm_button != NULL) {
         wm_button->mete_box.x += wD;
         ui_invalidate_object(obj);
       }
@@ -542,6 +846,7 @@ user_configure_layout(PhxInterface *iface) {
   PhxRGBA header_red    = { 1, .6, .6, 1 };
   PhxRGBA header_yellow = { .95, .95, 0, 1 };
   PhxRGBA header_green  = { 0, 1, 0, 1 };
+  PhxRGBA header_blue   = { 0.6, 0.58, 1, 1 };
   double  header_stroke = 0.5;
 
     /* Remove wm decorations */
@@ -610,6 +915,23 @@ user_configure_layout(PhxInterface *iface) {
   obtn->attrib->stroke  = header_stroke;
   obtn->child = ui_object_child_create(obtn, PHX_DRAWING, NULL, nexus_box);
   obtn->child->_draw_cb = _draw_symbol_maximize;
+  visible_set(obtn->child, false);
+
+    /* Creation of move/resize button */
+  nexus_box.x = iface->mete_box.w - (sz + 1 + xpos);
+  nexus_box.y = ypos;
+  obtn = ui_button_create(hbar, BTN_HEADER_MANAGER, nexus_box);
+  frame_remove(obtn);
+  obtn->state = (obtn->state & ~HJST_MSK) | HJST_RGT;
+  obtn->_draw_cb = _draw_header_button;
+  obtn->_event_cb = _hbtn_manager_event;
+  obtn->attrib->fg_ink = (obtn->attrib->bg_fill = none);
+  obtn->attrib->fg_fill = header_blue;
+  obtn->attrib->fg_ink.a  = 1.0;
+  obtn->attrib->stroke  = header_stroke;
+  obtn->child = ui_object_child_create(obtn, PHX_DRAWING, NULL, nexus_box);
+    /* default state is to move, keyboard alters to allow resize. */
+  obtn->child->_draw_cb = _draw_symbol_move;
   visible_set(obtn->child, false);
 
   return hbar;

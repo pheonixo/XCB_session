@@ -144,19 +144,9 @@ xfbar2: xcb_fbar2.c  xcb_fbar.h $(SRC) $(XHDR) libctype.a makefile
 
 #  Design of Headerport
 # nexus hearderbar (textview add on)
-xhbar: xcb_hbar.c $(SRC) $(XHDR) libctype.a makefile
-	@echo "  CC -o xhbar"
+xxhbr: xcb_hbar.c $(SRC) $(XHDR) libctype.a makefile
+	@echo "  CC -o xxhbr"
 	@gcc $(CFLAGS) -o xhbar xcb_hbar.c $(SRC) $(LIBS) -L./ -lctype
 
-# nexus hearderbar (close, minimize, maximize button)
-xxhb0: xcb_hbar0.c $(SRC) $(XHDR) libctype.a makefile
-	@echo "  CC -o xxhb0"
-	@gcc $(CFLAGS) -o xxhb0 xcb_hbar0.c $(SRC) $(LIBS) -L./ -lctype
-
-# nexus hearderbar (+ move/resize button)
-xxhb3: xcb_hbar3.c $(SRC) $(XHDR) libctype.a makefile
-	@echo "  CC -o xxhb3"
-	@gcc $(CFLAGS) -o xxhb3 xcb_hbar3.c $(SRC) $(LIBS) -L./ -lctype
-
 all: xxssn xxss2 xxnex xxgne xxfse xxbtn xxtv1 xxtxt xxgtx xxbnk xebar \
-xfbar xfbar2 xxhb0
+xfbar xfbar2 xxhbr
