@@ -146,7 +146,7 @@ xfbar2: xcb_fbar2.c  xcb_fbar.h $(SRC) $(XHDR) libctype.a makefile
 # nexus hearderbar (textview add on)
 xxhbr: xcb_hbar.c $(SRC) $(XHDR) libctype.a makefile
 	@echo "  CC -o xxhbr"
-	@gcc $(CFLAGS) -o xhbar xcb_hbar.c $(SRC) $(LIBS) -L./ -lctype
+	@gcc $(CFLAGS) -o xxhbr xcb_hbar.c $(SRC) $(LIBS) -L./ -lctype
 
 all: xxssn xxss2 xxnex xxgne xxfse xxbtn xxtv1 xxtxt xxgtx xxbnk xebar \
 xfbar xfbar2 xxhbr
