@@ -1,7 +1,15 @@
 #ifndef __SESS_APPLICATION_H__
 #define __SESS_APPLICATION_H__
 
-#include <xcb/xcb.h>
+#define USE_XLIB 0
+#if USE_XLIB
+#include <X11/Xlib-xcb.h>   /* -lxcb -lX11 -lX11-xcb */
+extern Display *display;
+#else
+#include <xcb/xcb.h>        /* -lxcb */
+#endif
+
+/*#include <xcb/xcb.h>*/
 #include <cairo/cairo-xcb.h>
 #include <stdio.h>
 #include <stdlib.h>

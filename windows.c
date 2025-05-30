@@ -1,6 +1,10 @@
 #include "windows.h"
 #include "nexus.h" /* For default '_raze_cb' */
 
+#if USE_XLIB
+Display *display;
+#endif
+
 #pragma mark *** Utilities ***
 
 /* For reference:
@@ -583,7 +587,12 @@ _window_create(PhxRectangle configure) {
   uint32_t values[2];
 
   if (session == NULL) {
+#if USE_XLIB
+    display = XOpenDisplay(NULL);
+    connection = XGetXCBConnection(display);
+#else
     connection = xcb_connect(NULL, NULL);
+#endif
     if (xcb_connection_has_error(connection)) {
       DEBUG_ASSERT(true, "Could not connect to X11 server");
       return 0;

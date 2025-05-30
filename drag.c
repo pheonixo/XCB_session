@@ -130,7 +130,6 @@ _drag_selection_box(PhxInterface *iface, xcb_generic_event_t *nvt) {
 
   /* Setup do nothing for now, assign has_drag.
    Reminder to use root_xy, window values changed. */
-puts("_drag_selection_box");
   ui_active_drag_set((PhxObject*)iface);
   return true;
 }

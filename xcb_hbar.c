@@ -387,7 +387,7 @@ _movesize_message(xcb_motion_notify_event_t *motion) {
 static bool
 _drag_motion_hbtn(PhxInterface *iface,
                   xcb_motion_notify_event_t *motion) {
-  uint32_t values[2];
+  int32_t values[2];
   xcb_query_pointer_cookie_t c0
     = xcb_query_pointer(session->connection, iface->window);
   xcb_query_pointer_reply_t *r0
@@ -398,8 +398,12 @@ _drag_motion_hbtn(PhxInterface *iface,
   xroot = r0->root_x;
   yroot = r0->root_y;
   free(r0);
+#if USE_XLIB
+  XMoveWindow(display, motion->event, values[0], values[1]);
+#else
   xcb_configure_window(session->connection, motion->event,
                XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, values);
+#endif
   xcb_flush(session->connection);
   return true;
 }
