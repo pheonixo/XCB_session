@@ -13,6 +13,12 @@ P3=$! wait $P1 $P2 $P3
 Still to address bank ddl positioning near display edges
 
 Deal with Window Manager issues of oddities, include no WM also.
+MOVING, MAXIMIZE:
+Can not use _NET_WM_MOVERESIZE on a override-redirect. WM must own window, so
+must have _MOTIF_WM_HINTS to create an undecorated window, which will allow WM
+control, allowing _NET_WM_MOVERESIZE.
+MINIMIZE:
+This is a wildcard. Still needs work as default of shading might not be solution.
 STACKING:
 Compiz behaves ok. More like follow by pointer. Raise position not neccessarily
 the focused window.

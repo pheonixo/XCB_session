@@ -376,6 +376,9 @@ _event_enter(xcb_generic_event_t *nvt) {
       call ungrab_pointer() to start drag. */
   if (!!(iface->state & SBIT_HBR_DRAG)) {
     if (xing->mode == XCB_NOTIFY_MODE_UNGRAB) {
+      if ( (_NET_WM_STRING == NULL)
+          || (strcmp(_NET_WM_STRING, "Compiz") != 0) )
+        return true;
       puts(" finished drag XCB_ENTER_NOTIFY");
       iface->state &= ~SBIT_HBR_DRAG;
       ui_active_drag_set(NULL);
@@ -752,9 +755,8 @@ _process_event(xcb_generic_event_t *nvt) {
       xcb_configure_window(session->connection, iface->window,
                    XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, values);
 
-      if ( (session->has_WM != 0)
-          && ((iface->state & SBIT_UNDECORATED) != 0)
-          && (_MOTIF_WM_HINTS != XCB_ATOM_NONE) ) {
+      if ( (!!session->has_WM)
+          && (!!(iface->state & SBIT_UNDECORATED)) ) {
         struct MWMHints {
           uint32_t   flags, functions, decorations, input_mode, status;
         } hints = { 2, 0, 0, 0, 0 };

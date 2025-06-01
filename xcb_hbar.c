@@ -398,12 +398,8 @@ _drag_motion_hbtn(PhxInterface *iface,
   xroot = r0->root_x;
   yroot = r0->root_y;
   free(r0);
-#if USE_XLIB
-  XMoveWindow(display, motion->event, values[0], values[1]);
-#else
   xcb_configure_window(session->connection, motion->event,
                XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, values);
-#endif
   xcb_flush(session->connection);
   return true;
 }
@@ -420,10 +416,9 @@ _drag_begin_hbtn(PhxInterface *iface,
   ui_cursor_set_named(named, motion->event);
 /* During testing, block resize for now. */
 if (!(motion->state & XCB_MOD_MASK_CONTROL)) {
-  if ( (_NET_WM_STRING != NULL)
-      && (strcmp(_NET_WM_STRING, "Compiz") == 0) ) {
+  if (!!session->has_WM)
     return _movesize_message(motion);
-  } else {
+  else {
     xcb_grab_pointer_cookie_t c0;
     xcb_grab_pointer_reply_t *r0;
     c0 = xcb_grab_pointer(session->connection, 1, motion->event,
@@ -750,7 +745,6 @@ focus_set:
         ui_active_drag_set((PhxObject*)obj->i_mount);
         return _drag_begin_hbtn(iface, motion);
       }
-      return false;
     }
     return _default_nexus_meter(iface, nvt, obj);
   }
