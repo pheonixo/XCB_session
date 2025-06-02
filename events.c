@@ -525,36 +525,18 @@ _event_configure(xcb_generic_event_t *nvt) {
 
   xcb_configure_notify_event_t *configure
     = (xcb_configure_notify_event_t*)nvt;
-  xcb_window_t window = configure->event;
-  PhxInterface *iface = _interface_for(window);
-  int16_t hD, vD;
 
-  if ( (iface->mete_box.x == configure->x)
-      && (iface->mete_box.y == configure->y)
-      && (iface->mete_box.w == configure->width)
-      && (iface->mete_box.h == configure->height) )
-    return true;
-
-  hD = configure->width - iface->mete_box.w;
-  vD = configure->height - iface->mete_box.h;
+  PhxInterface *iface = _interface_for(configure->event);
+  int16_t hD = configure->width - iface->mete_box.w;
+  int16_t vD = configure->height - iface->mete_box.h;
   if ((hD != 0) || (vD != 0))
     _interface_configure(iface, hD, vD);
 
   if ((configure->x | configure->y) != 0) {
     if ( (iface->mete_box.x != configure->x)
         || (iface->mete_box.y != configure->y) ) {
-        /* Needed, if want accurate positioning. WM is unreliable.
-          Use separingly, causes severe delays. */
-      xcb_connection_t *connection = session->connection;
-      xcb_screen_t *screen
-        = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
-      xcb_translate_coordinates_reply_t *cfg
-        = xcb_translate_coordinates_reply(connection,
-                          xcb_translate_coordinates(connection,
-                                      window, screen->root, 0, 0), NULL);
-      iface->mete_box.x = cfg->dst_x;
-      iface->mete_box.y = cfg->dst_y;
-      free(cfg);
+      iface->mete_box.x = configure->x;
+      iface->mete_box.y = configure->y;
     }
   }
   return true;
