@@ -604,6 +604,9 @@ _window_create(PhxRectangle configure) {
   uint32_t mask;
   uint32_t values[2];
 
+  if (!!((configure.w | configure.h) & 0x8000))
+    return 0;
+
   if (session == NULL) {
 #if USE_XLIB
     display = XOpenDisplay(NULL);
