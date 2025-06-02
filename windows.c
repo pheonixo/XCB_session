@@ -604,7 +604,7 @@ _window_create(PhxRectangle configure) {
   uint32_t mask;
   uint32_t values[2];
 
-  if (!!((configure.w | configure.h) & 0x8000))
+  if ( (configure.w <= 0) || (configure.h <= 0) )
     return 0;
 
   if (session == NULL) {
