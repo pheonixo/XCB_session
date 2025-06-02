@@ -73,9 +73,14 @@ _xcb_size_hints_get(xcb_window_t window,
 
 void
 ui_window_minimum_set(xcb_window_t window, uint16_t x, uint16_t y) {
+
+  PhxInterface *iface;
   if (!!(x & 0x8000))  x = 1;
   if (!!(y & 0x8000))  y = 1;
   _xcb_size_hints_set(window, x, y, 4);
+  iface = _interface_for(window);
+  iface->szhints.x = x;
+  iface->szhints.y = y;
 }
 
 bool
@@ -85,7 +90,12 @@ ui_window_minimum_get(xcb_window_t window, uint16_t *x, uint16_t *y) {
 
 void
 ui_window_maximum_set(xcb_window_t window, uint16_t x, uint16_t y) {
+
+  PhxInterface *iface;
   _xcb_size_hints_set(window, x, y, 5);
+  iface = _interface_for(window);
+  iface->szhints.w = x;
+  iface->szhints.h = y;
 }
 
 bool
@@ -485,10 +495,16 @@ _interface_create(xcb_connection_t *connection,
   iface->draw_box.y = 0;
   iface->draw_box.w = configure.w;
   iface->draw_box.h = configure.h;
+    /* rays for configuring */
   iface->min_max.x = -INT16_MAX;
   iface->min_max.y = -INT16_MAX;
   iface->min_max.w = INT16_MAX;
   iface->min_max.h = INT16_MAX;
+    /* size hints for window resize limits */
+  iface->szhints.x = 1;
+  iface->szhints.y = 1;
+  iface->szhints.w = INT16_MAX;
+  iface->szhints.h = INT16_MAX;
 
     /* Do not set default handlers here.
       Should be set at ui_<variation>_create() level. */
