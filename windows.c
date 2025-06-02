@@ -73,6 +73,8 @@ _xcb_size_hints_get(xcb_window_t window,
 
 void
 ui_window_minimum_set(xcb_window_t window, uint16_t x, uint16_t y) {
+  if (!!(x & 0x8000))  x = 1;
+  if (!!(y & 0x8000))  y = 1;
   _xcb_size_hints_set(window, x, y, 4);
 }
 
