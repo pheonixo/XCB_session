@@ -450,7 +450,12 @@ _event_focus(xcb_generic_event_t *nvt) {
   }
   if (!locus) {
     iface->state &= ~SBIT_CLICKS;
-    iface = NULL;
+      /* On Ubuntu, it will focus out on move/resize.
+        Some events use focus to determine if it's an active window.
+        It is additional test to verify not unmapped nor destroyed.
+        Prevent focus loss on grab. */
+    if (focus->mode == XCB_NOTIFY_MODE_NORMAL)
+      iface = NULL;
   }
   ui_active_focus_set((PhxObject*)iface);
   return true;
