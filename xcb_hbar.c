@@ -347,11 +347,17 @@ _draw_hdr_background(PhxObject *b, cairo_t *cr) {
 }
 
 #pragma mark *** WM functions ***
-
+  /* postion move/resize starts */
 static int16_t xroot, yroot;
+  /* offset applied if decorated. */
+static int16_t xdelta, ydelta;
+  /* iface's expected/updated values during drag. */
+static PhxRectangle mete_box;
+  /* locked in type of drag on motion start. */
+static bool ctrl_pressed;
 
 static bool
-_movesize_message(xcb_motion_notify_event_t *motion) {
+_move_message(xcb_motion_notify_event_t *motion) {
 
   xcb_connection_t *connection = session->connection;
   xcb_screen_t *screen
@@ -387,20 +393,86 @@ _movesize_message(xcb_motion_notify_event_t *motion) {
 static bool
 _drag_motion_hbtn(PhxInterface *iface,
                   xcb_motion_notify_event_t *motion) {
-  int32_t values[2];
+
+  xcb_connection_t *connection = session->connection;
   xcb_query_pointer_cookie_t c0
-    = xcb_query_pointer(session->connection, iface->window);
+    = xcb_query_pointer(connection, iface->window);
   xcb_query_pointer_reply_t *r0
-    = xcb_query_pointer_reply(session->connection, c0, NULL);
-  xcb_flush(session->connection);
-  values[0] = (iface->mete_box.x += (r0->root_x - xroot));
-  values[1] = (iface->mete_box.y += (r0->root_y - yroot));
-  xroot = r0->root_x;
-  yroot = r0->root_y;
+    = xcb_query_pointer_reply(connection, c0, NULL);
+  xcb_flush(connection);
+
+  if (!ctrl_pressed) {
+    int32_t values[2];
+    values[0] = (iface->mete_box.x += (r0->root_x - xroot));
+    values[1] = (iface->mete_box.y += (r0->root_y - yroot));
+    xroot = r0->root_x;
+    yroot = r0->root_y;
+    xcb_configure_window(connection, motion->event,
+                 XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, values);
+    xcb_flush(connection);
+  } else {
+      /* Don't use configure if motion events behind actual event. */
+    if ( (motion->root_x == r0->root_x)
+       && (motion->root_y == r0->root_y) ) {
+        /* Honor window min/max values. */
+      bool valid = false;
+      int16_t yD = r0->root_y - yroot;
+      int16_t xD = r0->root_x - xroot;
+      xroot = r0->root_x;
+      yroot = r0->root_y;
+
+      if ( (mete_box.h - (yD * 2) >= iface->szhints.y)
+          && (mete_box.h + (yD * 2) < iface->szhints.h) ) {
+        mete_box.h -= yD;
+        mete_box.y += yD;
+        valid = true;
+      } else {
+        if (yD > 0) {
+          if (mete_box.h != iface->szhints.y) {
+            mete_box.y += mete_box.h;
+            mete_box.h = iface->szhints.y;
+            mete_box.y -= mete_box.h;
+            valid = true;
+          }
+        } else {
+          if (mete_box.h != iface->szhints.h) {
+            mete_box.y += mete_box.h;
+            mete_box.h = iface->szhints.h;
+            mete_box.y -= mete_box.h;
+            valid = true;
+      } } }
+      
+
+      if ( (mete_box.w + xD >= iface->szhints.x)
+          && (mete_box.w - xD < iface->szhints.w) ) {
+        mete_box.w += xD;
+        valid = true;
+      } else {
+        if (xD < 0) {
+          if (mete_box.w != iface->szhints.x) {
+            mete_box.w += iface->szhints.x;
+            valid = true;
+          }
+        } else {
+          if (mete_box.w != iface->szhints.w) {
+            mete_box.w += iface->szhints.w;
+            valid = true;
+      } } }
+      
+      if (valid) {
+        int32_t values[3];
+        values[2] = mete_box.h;
+        values[1] = mete_box.w;
+        values[0] = mete_box.y - ydelta;
+        xcb_configure_window(connection, motion->event,
+                     XCB_CONFIG_WINDOW_Y |
+                     XCB_CONFIG_WINDOW_WIDTH |
+                     XCB_CONFIG_WINDOW_HEIGHT, values);
+        xcb_flush(connection);
+      }
+    }
+  }
   free(r0);
-  xcb_configure_window(session->connection, motion->event,
-               XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, values);
-  xcb_flush(session->connection);
   return true;
 }
 
@@ -408,32 +480,32 @@ static bool
 _drag_begin_hbtn(PhxInterface *iface,
                  xcb_motion_notify_event_t *motion) {
 
+  xcb_grab_pointer_cookie_t c0;
+  xcb_grab_pointer_reply_t *r0;
   const char *named;
+
   puts(" start drag XCB_MOTION_NOTIFY");
-  if (!!(motion->state & XCB_MOD_MASK_CONTROL))
+  ctrl_pressed = (!!(motion->state & XCB_MOD_MASK_CONTROL));
+  if (ctrl_pressed)
         named = "top_right_corner";
   else  named = "move";
   ui_cursor_set_named(named, motion->event);
-/* During testing, block resize for now. */
-if (!(motion->state & XCB_MOD_MASK_CONTROL)) {
-  if (!!session->has_WM)
-    return _movesize_message(motion);
-  else {
-    xcb_grab_pointer_cookie_t c0;
-    xcb_grab_pointer_reply_t *r0;
-    c0 = xcb_grab_pointer(session->connection, 1, motion->event,
-        XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE
-           | XCB_EVENT_MASK_POINTER_MOTION,
-        XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC,
-        XCB_NONE, XCB_NONE, motion->time);
-    r0 = xcb_grab_pointer_reply(session->connection, c0, NULL);
-    if ((r0 == NULL) || (r0->status != XCB_GRAB_STATUS_SUCCESS)) {
-      puts("grab failed");
-      return false;
-    }
-    return true;
+
+  if ( (!!session->has_WM)
+      && (!ctrl_pressed) ) {
+    return _move_message(motion);
   }
-}
+
+  c0 = xcb_grab_pointer(session->connection, 1, motion->event,
+      XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE
+         | XCB_EVENT_MASK_POINTER_MOTION,
+      XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC,
+      XCB_NONE, XCB_NONE, motion->time);
+  r0 = xcb_grab_pointer_reply(session->connection, c0, NULL);
+  if ((r0 == NULL) || (r0->status != XCB_GRAB_STATUS_SUCCESS)) {
+    puts("grab failed");
+    return false;
+  }
   return true;
 }
 
@@ -698,8 +770,9 @@ focus_set:
 
   if ( (response == XCB_KEY_PRESS)
       || (response == XCB_KEY_RELEASE) ) {
-    if (obj->type == ((BTN_HEADER_MANAGER << 8) | PHX_BUTTON))
-      return _hbtn_manager_event(iface, nvt, obj);
+    if (obj != NULL)
+      if (obj->type == ((BTN_HEADER_MANAGER << 8) | PHX_BUTTON))
+        return _hbtn_manager_event(iface, nvt, obj);
     return _default_nexus_meter(iface, nvt, obj);
   }
 
@@ -708,6 +781,21 @@ focus_set:
       = (xcb_button_press_event_t*)nvt;
     xroot = mouse->root_x;
     yroot = mouse->root_y;
+    xdelta = (ydelta = 0);
+    if (_NET_FRAME_EXTENTS != XCB_ATOM_NONE) {
+      uint32_t *extents;
+      xcb_get_property_cookie_t c0;
+      xcb_get_property_reply_t *r0;
+      c0 = xcb_get_property(session->connection, 0, iface->window,
+                            _NET_FRAME_EXTENTS,
+                            XCB_GET_PROPERTY_TYPE_ANY, 0, 4);
+      r0 = xcb_get_property_reply(session->connection, c0, NULL);
+      extents = xcb_get_property_value(r0);
+      xdelta = extents[0];
+      ydelta = extents[2];
+      free(r0);
+    }
+    mete_box = iface->mete_box;
     return _default_nexus_meter(iface, nvt, obj);
   }
 
@@ -768,9 +856,11 @@ focus_set:
         } while (idx != 0);
       if (wm_button != NULL) {
         wm_button->mete_box.x += wD;
+        wm_button->child->mete_box.x += wD;
         ui_invalidate_object(obj);
       }
     }
+    /*return false;*/
   }
 
   return _default_nexus_meter(iface, nvt, obj);
@@ -849,7 +939,10 @@ user_configure_layout(PhxInterface *iface) {
 
     /* Remove wm decorations */
   xcb_window_t window = iface->window;
-  ui_window_undecorate_set(window);
+  /*ui_window_undecorate_set(window);*/
+
+  HEADER_HEIGHT = (14 + 10);
+  ui_window_minimum_set(window, 4 * HEADER_HEIGHT, HEADER_HEIGHT);
 
     /* On an undecorated window, allow only 1 headerbar.
       Do not restrict to being first nexus created. */
@@ -864,15 +957,21 @@ user_configure_layout(PhxInterface *iface) {
   hbar->_draw_cb = _draw_hdr_background;
   hbar->_event_cb = _default_headerbar_meter;
 
-  HEADER_HEIGHT = (14 + 10);
+    /* A blurr image takes too long to draw from scratch when performing
+      a resize drag. We cache a surface of this blurr the width of
+      visible display.
+  hbar->exclusive = create_blurr(hbar); */
 
-    /* Creation of close button */
+
   ypos = (int16_t)(((double)(14 + 10) * 0.208333) + 0.499999);
   xpos = ypos + 3;
   sz = (14 + 10) - (ypos << 1);
+  nexus_box.w = (nexus_box.h = sz);
+
+#if 1
+    /* Creation of close button */
   nexus_box.x = xpos;
   nexus_box.y = ypos;
-  nexus_box.w = (nexus_box.h = sz);
   obtn = ui_button_create(hbar, BTN_HEADER_CLOSE, nexus_box);
   frame_remove(obtn);
   obtn->_draw_cb = _draw_header_button;
@@ -914,7 +1013,7 @@ user_configure_layout(PhxInterface *iface) {
   obtn->child = ui_object_child_create(obtn, PHX_DRAWING, NULL, nexus_box);
   obtn->child->_draw_cb = _draw_symbol_maximize;
   visible_set(obtn->child, false);
-
+#endif
     /* Creation of move/resize button */
   nexus_box.x = iface->mete_box.w - (sz + 1 + xpos);
   nexus_box.y = ypos;
@@ -946,8 +1045,18 @@ main(int argc, char *argv[]) {
 #if DEBUG_EVENTS_ON
   debug_flags &= ~((uint64_t)1 << XCB_MOTION_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_CONFIGURE_NOTIFY);
+  debug_flags &= ~((uint64_t)1 << XCB_EXPOSE);
+  debug_flags &= ~((uint64_t)1 << XCB_KEY_PRESS);
+  debug_flags &= ~((uint64_t)1 << XCB_KEY_RELEASE);
+  debug_flags &= ~((uint64_t)1 << XCB_BUTTON_PRESS);
+  debug_flags &= ~((uint64_t)1 << XCB_BUTTON_RELEASE);
   debug_flags &= ~((uint64_t)1 << XCB_ENTER_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_LEAVE_NOTIFY);
+/*
+  debug_flags &= ~((uint64_t)1 << XCB_FOCUS_IN);
+  debug_flags &= ~((uint64_t)1 << XCB_FOCUS_OUT);
+*/
+  debug_flags &= ~((uint64_t)1 << XCB_VISIBILITY_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_PROPERTY_NOTIFY);
 #endif
 
