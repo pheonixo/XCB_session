@@ -34,9 +34,9 @@ ui_active_focus_set(PhxObject *obj) {
     notify.event = _window_for(focused);
       /* Window may have been destroyed. */
     if ((iface = _interface_for(notify.event)) != NULL) {
-        /* Do not remove focus from iface, unless lost to another iface.
-          Attachment, such as headerbar, can be sensitive to 'window' focus.
-          Objects within iface do lose focus. */
+        /* Do not remove focus from iface, unless lost to another iface,
+          or NULL. Attachment(s), such as headerbar, can be sensitive
+          to 'window' focus. Objects within iface do lose focus. */
       if ( !IS_WINDOW_TYPE(focused)
            && (focused->type != PHX_HEADERBAR) )
         focused->_event_cb(iface, (xcb_generic_event_t*)&notify, focused);

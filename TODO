@@ -13,6 +13,10 @@ P3=$! wait $P1 $P2 $P3
 Still to address bank ddl positioning near display edges
 
 Deal with Window Manager issues of oddities, include no WM also.
+When using headerbar with WM titlebar, functions work but occassional glitches
+can appear. As far as I can tell, they are due to WM. REMINDER: not designed to
+be used like that and if want spot placement availablity, looks like need bug
+reports filed to WMs will be required.
 MOVING, MAXIMIZE:
 Can not use _NET_WM_MOVERESIZE on a override-redirect. WM must own window, so
 must have _MOTIF_WM_HINTS to create an undecorated window, which will allow WM

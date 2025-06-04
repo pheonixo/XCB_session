@@ -498,11 +498,15 @@ _event_visibility(xcb_generic_event_t *nvt) {
   xcb_visibility_notify_event_t *seen
     = (xcb_visibility_notify_event_t*)nvt;
 
+  if (ui_active_drag_get() != NULL)  return true;
+
   if (ui_window_is_transient(seen->window)) {
     xcb_grab_pointer_cookie_t c0;
     xcb_grab_pointer_reply_t *r0;
       /* On non-WM, need to raise transients. */
-    if (session->has_WM == 0) {
+      /* XXX include twm */
+    if ( (!session->has_WM)
+        || (_MOTIF_WM_HINTS == XCB_ATOM_NONE) ) {
       const static uint32_t values[] = { XCB_STACK_MODE_ABOVE };
       xcb_configure_window(session->connection, seen->window,
                            XCB_CONFIG_WINDOW_STACK_MODE, values);
@@ -743,7 +747,8 @@ _process_event(xcb_generic_event_t *nvt) {
                    XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, values);
 
       if ( (!!session->has_WM)
-          && (!!(iface->state & SBIT_UNDECORATED)) ) {
+          && (!!(iface->state & SBIT_UNDECORATED))
+          && (_MOTIF_WM_HINTS != XCB_ATOM_NONE) ) {
         struct MWMHints {
           uint32_t   flags, functions, decorations, input_mode, status;
         } hints = { 2, 0, 0, 0, 0 };
@@ -814,8 +819,7 @@ xcb_main(void) {
     return;
   }
     /* Test if Window manager exists. Might even be us? */
-  if ( (session->has_WM == 0)
-      && (_MOTIF_WM_HINTS != XCB_ATOM_NONE) ) {
+  if (!session->has_WM)  {
     xcb_screen_t *screen;
     xcb_get_window_attributes_cookie_t c0;
     xcb_get_window_attributes_reply_t *r0;
@@ -827,7 +831,11 @@ xcb_main(void) {
     free(r0);
   }
 
-  if ( (CURSOR_DEFAULT != NULL) || (session->has_WM == 0) ) {
+    /* XXX Don't know supportive test to use other then has_WM.
+      So to include twm with has_WM and include setting of cursor
+      use _MOTIF_WM_HINTS. */
+  if ( (CURSOR_DEFAULT != NULL)
+      || (_MOTIF_WM_HINTS == XCB_ATOM_NONE) ) {
     const char *named
       = (CURSOR_DEFAULT != NULL) ? CURSOR_DEFAULT : "left_ptr";
     ui_cursor_initialize(named);

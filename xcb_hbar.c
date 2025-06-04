@@ -356,6 +356,71 @@ static PhxRectangle mete_box;
   /* locked in type of drag on motion start. */
 static bool ctrl_pressed;
 
+
+/* If SBIT_NET_FRAME not set, we create a frame.
+  If has _NET_FRAME_EXTENTS, set offset for grab point. */
+static void
+_frame_extents(PhxInterface *iface, int16_t *xD, int16_t *yD) {
+
+  if (!(iface->state & SBIT_NET_FRAME)) {
+      /* current (non) supportive test for _NET_FRAME_EXTENTS.
+        Can't use (_NET_FRAME_EXTENTS == XCB_ATOM_NONE) as another
+        application could have set as we are. */
+    if ( (!session->has_WM)
+        || (_MOTIF_WM_HINTS == XCB_ATOM_NONE) ) {
+      uint32_t extents[4];
+      xcb_query_tree_cookie_t treeCookie
+        = xcb_query_tree(session->connection, iface->window);
+      xcb_query_tree_reply_t *tree
+        = xcb_query_tree_reply(session->connection, treeCookie, NULL);
+      xcb_get_geometry_cookie_t c0
+        = xcb_get_geometry(session->connection, tree->parent);
+      xcb_get_geometry_reply_t *r0
+        = xcb_get_geometry_reply(session->connection, c0, NULL);
+      xcb_get_geometry_cookie_t c1
+        = xcb_get_geometry(session->connection, iface->window);
+      xcb_get_geometry_reply_t *r1
+        = xcb_get_geometry_reply(session->connection, c1, NULL);
+      if (_NET_FRAME_EXTENTS == XCB_ATOM_NONE) {
+        xcb_intern_atom_cookie_t c2;
+        xcb_intern_atom_reply_t *r2;
+        c2 = xcb_intern_atom(session->connection, 0, 18, "_NET_FRAME_EXTENTS");
+        r2 = xcb_intern_atom_reply(session->connection, c2, NULL);
+        _NET_FRAME_EXTENTS = r2->atom;  free(r2);
+      }
+      extents[0] = r1->x;
+      extents[1] = r0->width + r0->border_width - (r1->x + r1->width);
+      extents[2] = r1->y;
+      extents[3] = r0->height + r0->border_width - (r1->y + r1->height);
+      xcb_change_property(session->connection, XCB_PROP_MODE_REPLACE,
+                          iface->window, _NET_FRAME_EXTENTS,
+                          XCB_ATOM_CARDINAL, 32, 4, extents);
+      free(tree);
+      free(r1);
+      free(r0);
+    }
+    iface->state |= SBIT_NET_FRAME;
+  }
+
+  {
+    xcb_get_property_cookie_t c0;
+    xcb_get_property_reply_t *r0;
+    c0 = xcb_get_property(session->connection, 0, iface->window,
+                          _NET_FRAME_EXTENTS,
+                          XCB_GET_PROPERTY_TYPE_ANY, 0, 4);
+    r0 = xcb_get_property_reply(session->connection, c0, NULL);
+    if (r0 != NULL) {
+      if ( (r0->length == 4) && (r0->type == XCB_ATOM_CARDINAL) ) {
+        uint32_t *extents
+          = xcb_get_property_value(r0);
+        *xD = extents[0];
+        *yD = extents[2];
+      }
+      free(r0);
+    }
+  }
+}
+
 static bool
 _move_message(xcb_motion_notify_event_t *motion) {
 
@@ -403,8 +468,11 @@ _drag_motion_hbtn(PhxInterface *iface,
 
   if (!ctrl_pressed) {
     int32_t values[2];
-    values[0] = (iface->mete_box.x += (r0->root_x - xroot));
-    values[1] = (iface->mete_box.y += (r0->root_y - yroot));
+      /* The delta addins are for when WM' titlebar exists. The position
+        of the 'undecorated' window is offset by the _NET_FRAME. This was
+        intented for headerbars, an undecorated window. */
+    values[0] = (iface->mete_box.x += (r0->root_x - xroot - xdelta));
+    values[1] = (iface->mete_box.y += (r0->root_y - yroot - ydelta));
     xroot = r0->root_x;
     yroot = r0->root_y;
     xcb_configure_window(connection, motion->event,
@@ -491,7 +559,7 @@ _drag_begin_hbtn(PhxInterface *iface,
   else  named = "move";
   ui_cursor_set_named(named, motion->event);
 
-  if ( (!!session->has_WM)
+  if ( (!!session->has_WM) && (_MOTIF_WM_HINTS != XCB_ATOM_NONE)
       && (!ctrl_pressed) ) {
     return _move_message(motion);
   }
@@ -549,7 +617,10 @@ _hbtn_minimize_event(PhxInterface *iface,
 
   uint8_t response = nvt->response_type & (uint8_t)0x7F;
   if (response == XCB_BUTTON_RELEASE) {
-    if (session->has_WM != 0) {
+      /* When has WM and not in override-redirect. */
+    if ( (!!session->has_WM)
+        && !(!!(iface->state & SBIT_UNDECORATED)
+           && (_MOTIF_WM_HINTS == XCB_ATOM_NONE)) ) {
       xcb_button_press_event_t *bp = (xcb_button_press_event_t*)nvt;
       xcb_screen_t *screen
         = xcb_setup_roots_iterator(xcb_get_setup(session->connection)).data;
@@ -619,7 +690,9 @@ _hbtn_maximize_event(PhxInterface *iface,
     xcb_connection_t *connection = session->connection;
     xcb_screen_t *screen
       = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
-    if (session->has_WM != 0) {
+      /* XXX Current way to exclude twm, _MOTIF. */
+    if ( (!!session->has_WM)
+        && (_MOTIF_WM_HINTS != XCB_ATOM_NONE) ) {
       xcb_intern_atom_cookie_t c0, c1, c2;
       xcb_intern_atom_reply_t *r0, *r1, *r2;
       xcb_client_message_event_t *message = calloc(32, 1);
@@ -782,19 +855,9 @@ focus_set:
     xroot = mouse->root_x;
     yroot = mouse->root_y;
     xdelta = (ydelta = 0);
-    if (_NET_FRAME_EXTENTS != XCB_ATOM_NONE) {
-      uint32_t *extents;
-      xcb_get_property_cookie_t c0;
-      xcb_get_property_reply_t *r0;
-      c0 = xcb_get_property(session->connection, 0, iface->window,
-                            _NET_FRAME_EXTENTS,
-                            XCB_GET_PROPERTY_TYPE_ANY, 0, 4);
-      r0 = xcb_get_property_reply(session->connection, c0, NULL);
-      extents = xcb_get_property_value(r0);
-      xdelta = extents[0];
-      ydelta = extents[2];
-      free(r0);
-    }
+    if ( (!(iface->state & SBIT_UNDECORATED))
+        && (obj->type == ((BTN_HEADER_MANAGER << 8) | PHX_BUTTON)) )
+      _frame_extents(iface, &xdelta, &ydelta);
     mete_box = iface->mete_box;
     return _default_nexus_meter(iface, nvt, obj);
   }
@@ -826,12 +889,15 @@ focus_set:
     if (!!(motion->state & XCB_BUTTON_MASK_1)) {
         /* 'obj' != NULL at this point. */
       if (obj->type == ((BTN_HEADER_MANAGER << 8) | PHX_BUTTON)) {
-          /* Not returning normally from drag, so kill
-            button default of release. */
-        obj->state &= ~OBIT_BTN_PRESS;
-        iface->state |= SBIT_HBR_DRAG;
-        ui_active_drag_set((PhxObject*)obj->i_mount);
-        return _drag_begin_hbtn(iface, motion);
+          /* Don't allow move when maximized. */
+        if (!(iface->state & SBIT_MAXIMIZED)) {
+            /* Not returning normally from drag, so kill
+              button default of release. */
+          obj->state &= ~OBIT_BTN_PRESS;
+          iface->state |= SBIT_HBR_DRAG;
+          ui_active_drag_set((PhxObject*)obj->i_mount);
+          return _drag_begin_hbtn(iface, motion);
+        }
       }
     }
     return _default_nexus_meter(iface, nvt, obj);
@@ -939,7 +1005,7 @@ user_configure_layout(PhxInterface *iface) {
 
     /* Remove wm decorations */
   xcb_window_t window = iface->window;
-  /*ui_window_undecorate_set(window);*/
+  ui_window_undecorate_set(window);
 
   HEADER_HEIGHT = (14 + 10);
   ui_window_minimum_set(window, 4 * HEADER_HEIGHT, HEADER_HEIGHT);
@@ -1052,10 +1118,8 @@ main(int argc, char *argv[]) {
   debug_flags &= ~((uint64_t)1 << XCB_BUTTON_RELEASE);
   debug_flags &= ~((uint64_t)1 << XCB_ENTER_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_LEAVE_NOTIFY);
-/*
   debug_flags &= ~((uint64_t)1 << XCB_FOCUS_IN);
   debug_flags &= ~((uint64_t)1 << XCB_FOCUS_OUT);
-*/
   debug_flags &= ~((uint64_t)1 << XCB_VISIBILITY_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_PROPERTY_NOTIFY);
 #endif

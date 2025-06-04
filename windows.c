@@ -193,7 +193,8 @@ _window_stack_topmost(PhxInterface *iface) {
       session->stack_order[idx] = session->stack_order[(idx + 1)];
     session->stack_order[(session->ncount - 1)] = iface;
 
-    if (session->has_WM != 0) {
+    if ( (!session->has_WM)
+        || (_MOTIF_WM_HINTS == XCB_ATOM_NONE) ) {
       xcb_connection_t *connection = session->connection;
       xcb_screen_t *screen
         = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
@@ -303,11 +304,14 @@ _default_interface_meter(PhxInterface *iface,
     return true;
   }
 
-    /* On focus, PHX_HEADERBAR acts as if one with iface. */
+    /* On focus, PHX_HEADERBAR acts as if one with iface.
+      A headerbar is designed to be used without a WM' titlebar.
+      It can be tested with one but sensitivity redraw will not
+      occur since SBIT_UNDECORATED will not be set. */
   if ( (response == XCB_FOCUS_IN)
       || (response == XCB_FOCUS_OUT) ) {
 focus_set:
-    if ((iface->state & SBIT_UNDECORATED) != 0) {
+    if (!!(iface->state & SBIT_UNDECORATED)) {
         /* Get PHX_HEADERBAR for this iface. */
       PhxNexus *inspect;
       uint16_t idx = 0;

@@ -17,6 +17,8 @@
 #define SBIT_HBR_DRAG       (1 << 11)    /* WM type funcs, move/resize */
 #define SBIT_MAXIMIZED      (1 << 12)    /* For WM, maximized */
 #define SBIT_MINIMIZED      (1 << 13)    /* For WM, minimized */
+#define SBIT_NET_FRAME      (1 << 14)    /* For WM, allow move/resize */
+
 
 /* specific to type of object, bits [0-7] */
   /* nexus: configure updating */  /* other objects not to use for persistant */
