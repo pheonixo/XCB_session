@@ -14,7 +14,7 @@ ui_dropdown_from(PhxObject *obj) {
   if (obj != obj->o_mount)
     obj = obj->o_mount;
   else {
-    PhxInterface *inspect = _interface_for(_window_for(obj));
+    PhxInterface *inspect = ui_interface_for(ui_window_for(obj));
     if (OBJECT_BASE_TYPE(inspect) == PHX_IBANK)
     return inspect;
   }
@@ -394,8 +394,8 @@ ui_bank_insensitive_set(PhxObject *obj) {
       /* set the actual object to requested. */
     obj->state |= OBIT_SENSITIVE;
       /* object is now the bank member in need of attention. */
-  } else if (ui_window_is_transient(_window_for(obj))) {
-    ibank = _interface_for(_window_for(obj));
+  } else if (ui_window_is_transient(ui_window_for(obj))) {
+    ibank = ui_interface_for(ui_window_for(obj));
     if ( (ibank == NULL)
         || (OBJECT_STYLE(ibank) != DDL_COMBO) ) return;
       /* object is bank member and of testing type. */
@@ -583,8 +583,8 @@ ui_bank_create(PhxObject *actuator,
   configure.x = (configure.y = 0);
 
     /* Create window/interface. */
-  window = ui_dropdown_create(configure, _window_for(actuator));
-  ibank = _interface_for(window);
+  window = ui_dropdown_create(configure, ui_window_for(actuator));
+  ibank = ui_interface_for(window);
     /* Dropdowns belong or are created for an object. Take on
       object's attributes. */
   free(ibank->attrib->font_name);

@@ -300,7 +300,7 @@ main(int argc, char *argv[]) {
     /* A 'topmost' decorated window */
   window = ui_window_create(configure);
   if (window == 0)  exit(EXIT_FAILURE);
-    /* Since one window... instead of _interface_for() */
+    /* Since one window... instead of ui_interface_for() */
   nexus_configure_layout(session->iface[0]);
   /*object_configure_layout(session->iface[0]);*/
     /* Map the window on the screen */
@@ -310,7 +310,7 @@ main(int argc, char *argv[]) {
   configure.y = 230;
   window = ui_window_create(configure);
   if (window == 0)  exit(EXIT_FAILURE);
-    /* Since one window... instead of _interface_for() */
+    /* Since one window... instead of ui_interface_for() */
   object_configure_layout(session->iface[1]);
   /*nexus_configure_layout(session->iface[1]);*/
     /* Map the window on the screen */

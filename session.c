@@ -31,9 +31,9 @@ ui_active_focus_set(PhxObject *obj) {
     DEBUG_ASSERT((focused->_event_cb == NULL),
                  "SEGFAULT: undefined _event_cb... ui_active_focus_set()");
     notify.response_type = XCB_FOCUS_OUT;
-    notify.event = _window_for(focused);
+    notify.event = ui_window_for(focused);
       /* Window may have been destroyed. */
-    if ((iface = _interface_for(notify.event)) != NULL) {
+    if ((iface = ui_interface_for(notify.event)) != NULL) {
         /* Do not remove focus from iface, unless lost to another iface,
           or NULL. Attachment(s), such as headerbar, can be sensitive
           to 'window' focus. Objects within iface do lose focus. */
@@ -48,8 +48,8 @@ ui_active_focus_set(PhxObject *obj) {
     DEBUG_ASSERT((obj->_event_cb == NULL),
                  "SEGFAULT: undefined _event_cb... ui_active_focus_set()");
     notify.response_type = XCB_FOCUS_IN;
-    notify.event = _window_for(obj);
-    iface = _interface_for(notify.event);
+    notify.event = ui_window_for(obj);
+    iface = ui_interface_for(notify.event);
     obj->_event_cb(iface, (xcb_generic_event_t*)&notify, obj);
   }
   session->has_focus = obj;
@@ -95,8 +95,8 @@ ui_active_within_set(PhxObject *obj) {
     }
     if (imount->_event_cb != NULL) {
       notify.response_type = XCB_LEAVE_NOTIFY;
-      notify.event = _window_for((PhxObject*)imount);
-      iface = _interface_for(notify.event);
+      notify.event = ui_window_for((PhxObject*)imount);
+      iface = ui_interface_for(notify.event);
       imount->_event_cb(iface,
                         (xcb_generic_event_t*)&notify,
                         (PhxObject*)imount);
@@ -113,13 +113,13 @@ ui_active_within_set(PhxObject *obj) {
     }
     if (imount->_event_cb != NULL) {
       notify.response_type = XCB_ENTER_NOTIFY;
-      notify.event = _window_for((PhxObject*)imount);
-      iface = _interface_for(notify.event);
+      notify.event = ui_window_for((PhxObject*)imount);
+      iface = ui_interface_for(notify.event);
       handled
         = imount->_event_cb(iface, (xcb_generic_event_t*)&notify, obj);
     }
     if (!handled)
-      ui_cursor_set_named(NULL, _window_for((PhxObject*)imount));
+      ui_cursor_set_named(NULL, ui_window_for((PhxObject*)imount));
     obj = (PhxObject*)imount;
   }
   session->obj_within = obj;
@@ -376,7 +376,7 @@ _session_create(xcb_connection_t *connection) {
 }
 
 xcb_window_t
-_window_for(PhxObject *obj) {
+ui_window_for(PhxObject *obj) {
 
   PhxInterface *iface;
   if ( (session == NULL) || (obj == NULL) ){
@@ -391,12 +391,12 @@ _window_for(PhxObject *obj) {
 }
 
 PhxInterface *
-_interface_for(xcb_window_t window) {
+ui_interface_for(xcb_window_t window) {
 
   uint16_t sdx;
 
   if (window == 0) {
-    DEBUG_ASSERT(true, "Invalid window... _interface_for()");
+    DEBUG_ASSERT(true, "Invalid window... ui_interface_for()");
     return NULL;
   }
   if (session == NULL) {
@@ -404,7 +404,7 @@ _interface_for(xcb_window_t window) {
     return NULL;
   }
   if (session->ncount == 0) {
-    DEBUG_ASSERT(true, "Session contains no windows... _interface_for()");
+    DEBUG_ASSERT(true, "Session contains no windows... ui_interface_for()");
     return NULL;
   }
 
@@ -414,7 +414,7 @@ _interface_for(xcb_window_t window) {
       return session->iface[sdx];
   while (sdx != 0);
 
-  DEBUG_ASSERT(true, "Session does not contain window... _interface_for()");
+  DEBUG_ASSERT(true, "Session does not contain window... ui_interface_for()");
   return NULL;
 }
 

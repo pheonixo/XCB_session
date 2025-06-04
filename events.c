@@ -146,7 +146,7 @@ static bool
 _event_keyboard(xcb_generic_event_t *nvt) {
 
   xcb_key_press_event_t *kp = (xcb_key_press_event_t*)nvt;
-  PhxInterface *iface       = _interface_for(kp->event);
+  PhxInterface *iface       = ui_interface_for(kp->event);
   PhxObject *focus;
 
     /* Accidentically sent to us ? or deleted window */
@@ -187,7 +187,7 @@ _event_mouse(xcb_generic_event_t *nvt) {
   session->last_event_x = x;
   session->last_event_y = y;
 
-  iface = _interface_for(mouse->event);
+  iface = ui_interface_for(mouse->event);
   if (!!(iface->state & SBIT_RELEASE_IGNORE)) {
     iface->state &= ~SBIT_RELEASE_IGNORE;
     return true;
@@ -207,7 +207,7 @@ _event_mouse(xcb_generic_event_t *nvt) {
   if ((focus = ui_active_focus_get()) == NULL) {
       /* obj can't be NULL on 'press'. release will have a focus. */
     ui_active_focus_set(obj);
-    iface = _interface_for(_window_for(obj));
+    iface = ui_interface_for(ui_window_for(obj));
     iface->state |= SBIT_RELEASE_IGNORE;
     _window_stack_topmost(iface);
     bptime = mouse->time;
@@ -216,9 +216,9 @@ _event_mouse(xcb_generic_event_t *nvt) {
 
     /* Transient, if focus is a transient. Want
       even non-focused 'parent' events. */
-  if (ui_window_is_transient(_window_for(focus))) {
-    xcb_window_t window = _window_for(focus);
-    iface = _interface_for(window);
+  if (ui_window_is_transient(ui_window_for(focus))) {
+    xcb_window_t window = ui_window_for(focus);
+    iface = ui_interface_for(window);
     obj = (PhxObject*)iface->nexus[0];
       /* conversion to transient '->event'. */
     _coordinates_for_object(iface, nvt, obj, xPtr, yPtr);
@@ -239,7 +239,7 @@ _event_mouse(xcb_generic_event_t *nvt) {
     uint8_t num_clicks;
       /* Feature: click to bring forward a window does not alter state. */
       /* rethink if window and iface click? */
-    DEBUG_ASSERT(( (focus != NULL) && (_window_for(focus) != mouse->event) ),
+    DEBUG_ASSERT(( (focus != NULL) && (ui_window_for(focus) != mouse->event) ),
                          "failure: mouse_event bad window.");
 
     if (obj->i_mount->type != PHX_HEADERBAR) {
@@ -309,9 +309,9 @@ _event_motion(xcb_generic_event_t *nvt) {
     /* Transient, if focus is a transient. Want
       even non-focused 'parent' events. */
   if (focus != NULL) {
-    xcb_window_t window = _window_for(focus);
+    xcb_window_t window = ui_window_for(focus);
     if (ui_window_is_transient(window)) {
-      iface = _interface_for(window);
+      iface = ui_interface_for(window);
       obj = (PhxObject*)iface->nexus[0];
         /* conversion to transient '->event'. */
       _coordinates_for_object(iface, nvt, obj, xPtr, yPtr);
@@ -322,7 +322,7 @@ _event_motion(xcb_generic_event_t *nvt) {
     }
   }
 
-  iface = _interface_for(motion->event);
+  iface = ui_interface_for(motion->event);
   obj = _get_object_at_pointer(iface, x, y);
 
     /* First check if a drag-type was in progress. */
@@ -370,7 +370,7 @@ _event_enter(xcb_generic_event_t *nvt) {
   PhxInterface *iface;
   PhxObject *obj;
 
-  iface = _interface_for(xing->event);
+  iface = ui_interface_for(xing->event);
     /* Using WM's _NET_WM_MOVERESIZE this is only means of determining
       _NET_WM_MOVERESIZE_CANCEL. We regain focus even after we had to
       call ungrab_pointer() to start drag. */
@@ -424,7 +424,7 @@ _event_focus(xcb_generic_event_t *nvt) {
 
   bool locus = ((nvt->response_type & (uint8_t)0x7F) == XCB_FOCUS_IN);
   xcb_focus_in_event_t *focus = (xcb_focus_in_event_t*)nvt;
-  PhxInterface *iface = _interface_for(focus->event);
+  PhxInterface *iface = ui_interface_for(focus->event);
 
   if (iface != NULL) {
     iface->state &= ~SBIT_CLICKS;
@@ -465,7 +465,7 @@ bool
 _event_expose(xcb_generic_event_t *nvt) {
 
   xcb_expose_event_t *expose = (xcb_expose_event_t*)nvt;
-  PhxInterface *iface = _interface_for(expose->window);
+  PhxInterface *iface = ui_interface_for(expose->window);
   cairo_t *cr;
 
   DEBUG_ASSERT( ( ((int16_t)expose->x < 0) || ((int16_t)expose->y < 0) ),
@@ -514,7 +514,7 @@ _event_visibility(xcb_generic_event_t *nvt) {
       /* does not send focus in/out events. */
     xcb_set_input_focus(session->connection, XCB_INPUT_FOCUS_PARENT,
                                      seen->window, XCB_CURRENT_TIME);
-    ui_active_focus_set((PhxObject*)_interface_for(seen->window));
+    ui_active_focus_set((PhxObject*)ui_interface_for(seen->window));
     c0 = xcb_grab_pointer(session->connection, 1, seen->window,
         XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE
            | XCB_EVENT_MASK_POINTER_MOTION,
@@ -535,7 +535,7 @@ _event_configure(xcb_generic_event_t *nvt) {
   xcb_configure_notify_event_t *configure
     = (xcb_configure_notify_event_t*)nvt;
 
-  PhxInterface *iface = _interface_for(configure->event);
+  PhxInterface *iface = ui_interface_for(configure->event);
   int16_t hD = configure->width - iface->mete_box.w;
   int16_t vD = configure->height - iface->mete_box.h;
   if ((hD != 0) || (vD != 0))
@@ -577,7 +577,7 @@ _event_selection(xcb_generic_event_t *nvt) {
     if (request->selection == CLIPBOARD) {
       PhxObject *obj = ui_active_focus_get();
       if (obj != NULL) {
-        PhxInterface *iface = _interface_for(obj->i_mount->window);
+        PhxInterface *iface = ui_interface_for(obj->i_mount->window);
           /* send to object, contents of clipboard is valid. */
         if (obj->_event_cb != NULL)
           return obj->_event_cb(iface, nvt, obj);
@@ -596,7 +596,7 @@ _event_selection(xcb_generic_event_t *nvt) {
     if ( (notify->selection == CLIPBOARD)
         && (_xclb_process_notify(session->xclipboard, notify)) ) {
       PhxObject *obj = ui_active_focus_get();
-      PhxInterface *iface = _interface_for(obj->i_mount->window);
+      PhxInterface *iface = ui_interface_for(obj->i_mount->window);
         /* send to object, contents of clipboard is valid. */
       if (obj != NULL) {
         if (obj->_event_cb != NULL)
@@ -623,7 +623,7 @@ _event_protocols(xcb_generic_event_t *nvt) {
   xcb_client_message_event_t *cm
     = (xcb_client_message_event_t*)nvt;
 
-  PhxInterface *iface = _interface_for(cm->window);
+  PhxInterface *iface = ui_interface_for(cm->window);
 
   if (cm->data.data32[0] != WM_DELETE_WINDOW) {
     DEBUG_ASSERT(true, "unhandled WM_PROTOCOLS.");
@@ -708,7 +708,7 @@ _process_event(xcb_generic_event_t *nvt) {
         /* Do not assume umappping is that of the topmost! */
       uint16_t sdx;
       xcb_map_notify_event_t *map = (xcb_map_notify_event_t*)nvt;
-      PhxInterface *iface = _interface_for(map->event);
+      PhxInterface *iface = ui_interface_for(map->event);
       iface->state &= ~SBIT_MAPPED;
       if ( ((sdx = session->ncount - 1) != 0)
           && (!((session->stack_order[sdx])->state & SBIT_MAPPED)) ) {
@@ -725,7 +725,7 @@ _process_event(xcb_generic_event_t *nvt) {
 
     case XCB_MAP_NOTIFY: {        /* response_type 19 */
       xcb_map_notify_event_t *map = (xcb_map_notify_event_t*)nvt;
-      PhxInterface *iface = _interface_for(map->event);
+      PhxInterface *iface = ui_interface_for(map->event);
       iface->state |= SBIT_MAPPED;
       _window_stack_topmost(iface);
       break;
@@ -738,7 +738,7 @@ _process_event(xcb_generic_event_t *nvt) {
          * doesnt stop WM configures, but will be sent after map notify */
       xcb_reparent_notify_event_t *rp
         = (xcb_reparent_notify_event_t*)nvt;
-      PhxInterface *iface = _interface_for(rp->window);
+      PhxInterface *iface = ui_interface_for(rp->window);
 
       uint32_t values[2];
       values[0] = iface->mete_box.x;

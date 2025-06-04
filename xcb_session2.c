@@ -39,7 +39,7 @@ main(int argc, char *argv[]) {
   window = ui_window_create(configure);
   if (window == 0)  exit(EXIT_FAILURE);
 
-    /* Since one window... instead of _interface_for() */
+    /* Since one window... instead of ui_interface_for() */
   user_configure_port_layout(session->iface[0]);
 
     /* Map the window on the screen */

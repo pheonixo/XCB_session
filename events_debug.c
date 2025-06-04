@@ -80,7 +80,7 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
     case XCB_KEY_PRESS: {         /* response_type 2 */
       xcb_key_press_event_t *kp = (xcb_key_press_event_t*)nvt;
       xcb_keysym_t keyval       = _xcb_keysym_for(kp->detail, kp->state);
-      test = _interface_for(kp->event);
+      test = ui_interface_for(kp->event);
       printf("window %"PRIu32", KEY_PRESS.  "
              " code %"PRIu8" modifers %"PRIu16""
              " keyval %"PRIx32" key_name %s  %s\n",
@@ -91,7 +91,7 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
     case XCB_KEY_RELEASE: {       /* response_type 3 */
       xcb_key_press_event_t *kp = (xcb_key_press_event_t*)nvt;
       xcb_keysym_t keyval       = _xcb_keysym_for(kp->detail, kp->state);
-      test = _interface_for(kp->event);
+      test = ui_interface_for(kp->event);
       printf("window %"PRIu32", KEY_RELEASE."
              " code %"PRIu8" modifers %"PRIu16""
              " keyval %"PRIx32" key_name %s  %s\n",
@@ -101,7 +101,7 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
     }
     case XCB_BUTTON_PRESS: {      /* response_type 4 */
       bp = (xcb_button_press_event_t*)nvt;
-      test = _interface_for(bp->event);
+      test = ui_interface_for(bp->event);
       printf("window %"PRIu32", BUTTON_PRESS   ", test->window);
   bp_detail:
       switch (bp->detail) {
@@ -119,13 +119,13 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
     }
     case XCB_BUTTON_RELEASE: {    /* response_type 5 */
       bp = (xcb_button_press_event_t*)nvt;
-      test = _interface_for(bp->event);
+      test = ui_interface_for(bp->event);
       printf("window %"PRIu32", BUTTON_RELEASE ", test->window);
       goto bp_detail;
     }
     case XCB_MOTION_NOTIFY: {     /* response_type 6 */
       xcb_motion_notify_event_t *motion = (xcb_motion_notify_event_t*)nvt;
-      test = _interface_for(motion->event);
+      test = ui_interface_for(motion->event);
       printf("window %"PRIu32", MOTION_NOTIFY."
              " (%"PRIi16",%"PRIi16") state=%"PRIu16" %s\n",
              test->window, motion->event_x, motion->event_y,
@@ -134,7 +134,7 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
     }
     case XCB_ENTER_NOTIFY: {      /* response_type 7 */
       xcb_enter_notify_event_t *xing = (xcb_enter_notify_event_t*)nvt;
-      test = _interface_for(xing->event);
+      test = ui_interface_for(xing->event);
       printf("window %"PRIu32", ENTER_NOTIFY."
              " (%"PRIi16",%"PRIi16") detail=%"PRIu8" mode=%"PRIu8" %s\n",
              test->window, xing->event_x, xing->event_y,
@@ -143,7 +143,7 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
     }
     case XCB_LEAVE_NOTIFY: {      /* response_type 8 */
       xcb_enter_notify_event_t *xing = (xcb_enter_notify_event_t*)nvt;
-      test = _interface_for(xing->event);
+      test = ui_interface_for(xing->event);
       printf("window %"PRIu32", LEAVE_NOTIFY."
              " (%"PRIi16",%"PRIi16") detail=%"PRIu8" mode=%"PRIu8" %s\n",
              test->window, xing->event_x, xing->event_y,
@@ -153,7 +153,7 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
     case XCB_FOCUS_IN:            /* response_type 9 */
     case XCB_FOCUS_OUT: {         /* response_type 10 */
       xcb_focus_in_event_t *focus = (xcb_focus_in_event_t*)nvt;
-      test = _interface_for(focus->event);
+      test = ui_interface_for(focus->event);
       printf("window %"PRIu32", FOCUS_", test->window);
       if ((nvt->response_type & (uint8_t)0x7F) == XCB_FOCUS_IN) {
         printf("IN. detail=%"PRIu8" mode=%"PRIu8" %s\n",
@@ -166,7 +166,7 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
     }
     case XCB_EXPOSE: {            /* response_type 12 */
       xcb_expose_event_t *expose = (xcb_expose_event_t*)nvt;
-      test = _interface_for(expose->window);
+      test = ui_interface_for(expose->window);
       printf("window %"PRIu32", EXPOSE. Region"
          " (%"PRIu16",%"PRIu16",%"PRIu16",%"PRIu16")  %s\n",
          test->window, expose->x, expose->y,
@@ -176,7 +176,7 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
     case XCB_VISIBILITY_NOTIFY: { /* response_type 15 */
       xcb_visibility_notify_event_t *seen
         = (xcb_visibility_notify_event_t*)nvt;
-      test = _interface_for(seen->window);
+      test = ui_interface_for(seen->window);
       printf("window %"PRIu32", VISIBILITY_NOTIFY. state %"PRIu8"  %s\n",
              test->window, seen->state, caller);
       break;
@@ -192,28 +192,28 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
     case XCB_UNMAP_NOTIFY: {      /* response_type 18 */
       xcb_unmap_notify_event_t *unmap
         = (xcb_unmap_notify_event_t*)nvt;
-      PhxInterface *iface = _interface_for(unmap->window);
+      PhxInterface *iface = ui_interface_for(unmap->window);
       DEBUG(iface->window, "XCB_UNMAP_NOTIFY");
       break;
     }
     case XCB_MAP_NOTIFY: {        /* response_type 19 */
       xcb_map_notify_event_t *map
         = (xcb_map_notify_event_t*)nvt;
-      PhxInterface *iface = _interface_for(map->window);
+      PhxInterface *iface = ui_interface_for(map->window);
       DEBUG(iface->window, "XCB_MAP_NOTIFY");
       break;
     }
     case XCB_REPARENT_NOTIFY: {   /* response_type 21 */
       xcb_reparent_notify_event_t *rp
         = (xcb_reparent_notify_event_t*)nvt;
-      PhxInterface *iface = _interface_for(rp->window);
+      PhxInterface *iface = ui_interface_for(rp->window);
       DEBUG(iface->window, "XCB_REPARENT_NOTIFY");
       break;
     }
     case XCB_CONFIGURE_NOTIFY: {  /* response_type 22 */
       xcb_configure_notify_event_t *configure
         = (xcb_configure_notify_event_t*)nvt;
-      PhxInterface *iface = _interface_for(configure->event);
+      PhxInterface *iface = ui_interface_for(configure->event);
       printf("window %"PRIu32", CONFIGURE_NOTIFY."
              " (%"PRIi16",%"PRIi16",%"PRIi16",%"PRIi16")  %s\n",
              iface->window, configure->x, configure->y,
@@ -234,7 +234,7 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
       window = prop->window;
       if (prop->state != XCB_PROPERTY_DELETE) {
           /* For validation of iface. */
-        PhxInterface *iface = _interface_for(window);
+        PhxInterface *iface = ui_interface_for(window);
         window = (iface == NULL) ? 0 : iface->window;
       }
       printf("window %"PRIu32", XCB_PROPERTY_NOTIFY."
@@ -246,7 +246,7 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
       xcb_selection_clear_event_t *clear
         = (xcb_selection_clear_event_t*)nvt;
       xcb_window_t window = clear->owner;
-      PhxInterface *iface = _interface_for(window);
+      PhxInterface *iface = ui_interface_for(window);
       DEBUG(iface->window, "XCB_SELECTION_CLEAR");
       break;
     }
@@ -254,7 +254,7 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
       xcb_selection_request_event_t *request
         = (xcb_selection_request_event_t*)nvt;
       xcb_window_t window = request->owner;
-      PhxInterface *iface = _interface_for(window);
+      PhxInterface *iface = ui_interface_for(window);
       DEBUG(iface->window, "XCB_SELECTION_REQUEST");
       break;
     }
@@ -262,7 +262,7 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
       xcb_selection_notify_event_t *selection
         = (xcb_selection_notify_event_t*)nvt;
       xcb_window_t window = selection->requestor;
-      PhxInterface *iface = _interface_for(window);
+      PhxInterface *iface = ui_interface_for(window);
       DEBUG(iface->window, "XCB_SELECTION_NOTIFY");
       break;
     }

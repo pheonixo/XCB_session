@@ -78,7 +78,7 @@ ui_window_minimum_set(xcb_window_t window, uint16_t x, uint16_t y) {
   if (!!(x & 0x8000))  x = 1;
   if (!!(y & 0x8000))  y = 1;
   _xcb_size_hints_set(window, x, y, 4);
-  iface = _interface_for(window);
+  iface = ui_interface_for(window);
   iface->szhints.x = x;
   iface->szhints.y = y;
 }
@@ -93,7 +93,7 @@ ui_window_maximum_set(xcb_window_t window, uint16_t x, uint16_t y) {
 
   PhxInterface *iface;
   _xcb_size_hints_set(window, x, y, 5);
-  iface = _interface_for(window);
+  iface = ui_interface_for(window);
   iface->szhints.w = x;
   iface->szhints.h = y;
 }
@@ -105,7 +105,7 @@ ui_window_maximum_get(xcb_window_t window, uint16_t *x, uint16_t *y) {
 
 bool
 ui_window_is_transient(xcb_window_t window) {
-  PhxInterface *iface = _interface_for(window);
+  PhxInterface *iface = ui_interface_for(window);
   if ( (iface == NULL) || (!(iface->state & SBIT_TRANSIENT)) )
     return false;
   return true;
@@ -263,7 +263,7 @@ _default_interface_meter(PhxInterface *iface,
        && (keyval <= (uint16_t)0xffee) ) {
       PhxObject *within = ui_active_within_get();
       if ( (within != NULL)
-          && (_window_for(within) == iface->window) ) {
+          && (ui_window_for(within) == iface->window) ) {
         if (!!(iface->state & SBIT_UNDECORATED)) {
             /* Get PHX_HEADERBAR for this iface. */
           PhxNexus *inspect;
@@ -569,7 +569,7 @@ _interface_create(xcb_connection_t *connection,
 void
 ui_window_undecorate_set(xcb_window_t window) {
 
-  PhxInterface *iface = _interface_for(window);
+  PhxInterface *iface = ui_interface_for(window);
   if (iface != NULL) {
     iface->state |= SBIT_UNDECORATED;
     if (_MOTIF_WM_HINTS == XCB_ATOM_NONE) {
@@ -711,7 +711,7 @@ ui_dialog_create(PhxRectangle configure, xcb_window_t transient_for_window) {
   if (iface == NULL)  return 0;
   iface->type = PHX_ITDLG;
   iface->state |= SBIT_TRANSIENT;
-  iface->i_mount = _interface_for(transient_for_window);
+  iface->i_mount = ui_interface_for(transient_for_window);
   iface->_event_cb = NULL;
   iface->_raze_cb = _default_interface_raze;
   return window;
@@ -743,7 +743,7 @@ ui_dropdown_create(PhxRectangle configure, xcb_window_t transient_for_window) {
   if (iface == NULL)  return 0;
   iface->type = PHX_ITDDL;
   iface->state |= SBIT_TRANSIENT;
-  iface->i_mount = _interface_for(transient_for_window);
+  iface->i_mount = ui_interface_for(transient_for_window);
   iface->_event_cb = NULL;
   iface->_raze_cb = _default_interface_raze;
   return window;

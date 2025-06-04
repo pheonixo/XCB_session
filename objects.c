@@ -277,7 +277,7 @@ ui_object_create(PhxNexus *nexus,
   nexus->ncount += 1;
 
     /* If a PhxBank, special updating */
-  iface = _interface_for(nexus->window);
+  iface = ui_interface_for(nexus->window);
   if (OBJECT_BASE_TYPE(iface) == PHX_IBANK) {
       /* resizes both window and its nexus.
         For default, added objects of banks do not follow nexus resize.

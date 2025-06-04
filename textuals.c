@@ -285,7 +285,7 @@ phxmarks_initialize(PhxTextbuffer *tbuf) {
   memset(tbuf->mark_list, 0, (OBJS_ALLOC * sizeof(PhxMark*)));
 
     /* setup a mark, add to above created list. */
-  _newlinemarks_create(_interface_for(_window_for(tbuf->owner)), tbuf->owner);
+  _newlinemarks_create(ui_interface_for(ui_window_for(tbuf->owner)), tbuf->owner);
 
   tbuf->dirty_offset = 0;
   phxmarks_update(tbuf);

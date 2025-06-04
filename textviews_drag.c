@@ -111,9 +111,9 @@ _textview_drag_cancel(PhxInterface *iface,
   tbuf->bin = tbuf->drag_sbin;
     /* Set focus to within's window (cursor's position).
       Since different windows, used DNDX. */
-  if (_window_for(within) != _window_for(obj)) {
-    iface = (within != NULL) ? _interface_for(_window_for(within))
-                             : _interface_for(_window_for(obj));
+  if (ui_window_for(within) != ui_window_for(obj)) {
+    iface = (within != NULL) ? ui_interface_for(ui_window_for(within))
+                             : ui_interface_for(ui_window_for(obj));
     iface->state &= ~SBIT_CLICKS;
     xcb_set_input_focus(session->connection,
                         XCB_INPUT_FOCUS_PARENT,

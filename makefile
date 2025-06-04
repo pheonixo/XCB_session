@@ -128,19 +128,19 @@ xxbnk: xcb_banks.c   $(SRC) $(XHDR) makefile
 	@gcc $(CFLAGS) -o xxbnk xcb_banks.c     $(SRC) $(LIBS)
 
 # objects as 'editor bar', navigatable combo button (4 variations)
-xebar: xcb_ebar.c    $(SRC) $(XHDR) makefile
-	@echo "  CC -o xebar"
-	@gcc $(CFLAGS) -o xebar xcb_ebar.c      $(SRC) $(LIBS)
+xxebr: xcb_ebar.c    $(SRC) $(XHDR) makefile
+	@echo "  CC -o xxebr"
+	@gcc $(CFLAGS) -o xxebr xcb_ebar.c      $(SRC) $(LIBS)
 
 #  Design of Findport
 # nexus findbar (textview add on, 2 nexus: 1 w/textview, findbar)
-xfbar: xcb_fbar.c xcb_fbar.h  $(SRC) $(XHDR) libctype.a makefile
-	@echo "  CC -o xfbar"
-	@gcc $(CFLAGS) -o xfbar xcb_fbar.c $(SRC) $(LIBS) -L./ -lctype
+xxfbr: xcb_fbar.c xcb_fbar.h  $(SRC) $(XHDR) libctype.a makefile
+	@echo "  CC -o xxfbr"
+	@gcc $(CFLAGS) -o xxfbr xcb_fbar.c $(SRC) $(LIBS) -L./ -lctype
 # nexus findbar (multiple for size relationships)
-xfbar2: xcb_fbar2.c  xcb_fbar.h $(SRC) $(XHDR) libctype.a makefile
-	@echo "  CC -o xfbar2"
-	@gcc $(CFLAGS) -o xfbar2 xcb_fbar2.c $(SRC) $(LIBS) -L./ -lctype
+xxfbr2: xcb_fbar2.c  xcb_fbar.h $(SRC) $(XHDR) libctype.a makefile
+	@echo "  CC -o xxfbr2"
+	@gcc $(CFLAGS) -o xxfbr2 xcb_fbar2.c $(SRC) $(LIBS) -L./ -lctype
 
 #  Design of Headerport
 # nexus hearderbar (textview add on)
@@ -148,5 +148,5 @@ xxhbr: xcb_hbar.c $(SRC) $(XHDR) libctype.a makefile
 	@echo "  CC -o xxhbr"
 	@gcc $(CFLAGS) -o xxhbr xcb_hbar.c $(SRC) $(LIBS) -L./ -lctype
 
-all: xxssn xxss2 xxnex xxgne xxfse xxbtn xxtv1 xxtxt xxgtx xxbnk xebar \
-xfbar xfbar2 xxhbr
+all: xxssn xxss2 xxnex xxgne xxfse xxbtn xxtv1 xxtxt xxgtx xxbnk xxebr \
+xxfbr xxfbr2 xxhbr

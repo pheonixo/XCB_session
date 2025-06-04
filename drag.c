@@ -429,7 +429,7 @@ set_within:
     /* begin translation of coordinates */
   mount = (PhxInterface*)iserv->within;
   if (!IS_IFACE_TYPE(mount))  mount = mount->i_mount;
-  iface = _interface_for(mount->window);
+  iface = ui_interface_for(mount->window);
     /* event_x, event_y are in has_drag coordinates */
     /* but rather than use, calculate within's using root. */
   x = motion->root_x - iface->mete_box.x;
@@ -475,7 +475,7 @@ xdnd_status_event(xcb_window_t window, xcb_client_message_data_t *param) {
 
   motion.response_type = XCB_MOTION_NOTIFY;
   motion.event = window;
-  if ((iface = _interface_for(window)) == NULL) {
+  if ((iface = ui_interface_for(window)) == NULL) {
     DEBUG_ASSERT(true, "failure: Not our window. xdnd_status_event()");
     return;
   }
@@ -567,7 +567,7 @@ _dnd_selection_event(xcb_generic_event_t *nvt) {
         xdnd_process_selection(session->xdndserver, NULL);
           /* As receiver, check if we contained source in server.
             If not shutdown server. */
-        iface = _interface_for(session->xdndserver->xdndSource.source);
+        iface = ui_interface_for(session->xdndserver->xdndSource.source);
         if (iface == NULL)  xdnd_selection_clear(session->xdndserver);
         return true;
       }
@@ -586,7 +586,7 @@ _dnd_selection_event(xcb_generic_event_t *nvt) {
         DND_DEBUG_PUTS("ui_active_within_set(NULL) _dnd_selection_event()");
         ui_active_within_set(NULL);
           /* Check if we own source. */
-        if (_interface_for(cm->data.data32[0]) != NULL) {
+        if (ui_interface_for(cm->data.data32[0]) != NULL) {
           DND_DEBUG_PRINT("received XDND_LEAVE,", cm->window);
           return true;
         }
@@ -597,8 +597,8 @@ _dnd_selection_event(xcb_generic_event_t *nvt) {
           /* Base on drop accepted, set topmost */
         if (ui_active_within_get() != NULL) {
           PhxObject *within = ui_active_within_get();
-          if (_window_for(within) != cm->window)
-            _window_stack_topmost(_interface_for(_window_for(within)));
+          if (ui_window_for(within) != cm->window)
+            _window_stack_topmost(ui_interface_for(ui_window_for(within)));
         } else if (cm->type == XDND_FINISHED) {
           xcb_set_input_focus(session->connection,
                               XCB_INPUT_FOCUS_PARENT,

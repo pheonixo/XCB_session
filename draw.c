@@ -150,7 +150,7 @@ _event_invalidate(struct _sigtimer *tmr) {
   if (strcmp(tmr->id, "frame") != 0)  return;
 
     /* Because of server lag, verify iface wasn't deleted. */
-  iface = (_interface_for(tmr->iface->window));
+  iface = (ui_interface_for(tmr->iface->window));
   if (iface != NULL) {
       /* Could send direct to expose, but then need an interupt
         signal for event loop to wake on rare instances of
