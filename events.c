@@ -371,6 +371,7 @@ _event_enter(xcb_generic_event_t *nvt) {
   PhxObject *obj;
 
   iface = ui_interface_for(xing->event);
+  obj = _get_object_at_pointer(iface, xing->event_x, xing->event_y);
     /* Using WM's _NET_WM_MOVERESIZE this is only means of determining
       _NET_WM_MOVERESIZE_CANCEL. We regain focus even after we had to
       call ungrab_pointer() to start drag. */
@@ -382,6 +383,9 @@ _event_enter(xcb_generic_event_t *nvt) {
       puts(" finished drag XCB_ENTER_NOTIFY");
       iface->state &= ~SBIT_HBR_DRAG;
       ui_active_drag_set(NULL);
+    } else {
+      ui_active_within_set(obj);
+      return true;
     }
   }
 #if DND_EXTERNAL_ON
@@ -394,7 +398,6 @@ _event_enter(xcb_generic_event_t *nvt) {
                     && ((iface->state & SBIT_HBR_DRAG) == 0) ),
                          "failure: within already set.");
 
-  obj = _get_object_at_pointer(iface, xing->event_x, xing->event_y);
   if (obj == NULL) {
     DEBUG_ASSERT((!ui_window_is_transient(iface->window)),
                         "failure: entered NULL object.");
@@ -412,6 +415,10 @@ static bool
 _event_leave(xcb_generic_event_t *nvt) {
 
   xcb_enter_notify_event_t *xing = (xcb_enter_notify_event_t*)nvt;
+
+  if (!!(ui_interface_for(xing->event)->state & SBIT_HBR_DRAG))
+    return true;
+
   if (xing->mode == XCB_NOTIFY_MODE_NORMAL)
     ui_active_within_set(NULL);
   return true;
@@ -427,10 +434,13 @@ _event_focus(xcb_generic_event_t *nvt) {
   PhxInterface *iface = ui_interface_for(focus->event);
 
   if (iface != NULL) {
+
+    if (!!(iface->state & SBIT_HBR_DRAG))  return true;
+
     iface->state &= ~SBIT_CLICKS;
       /* On non-dropdown windows, first content click focuses. */
     if ( (locus) && (!ui_window_is_transient(focus->event)) ) {
-#if 0
+#if 1
       if (!!(iface->state & SBIT_MAPPED))
         _window_stack_topmost(iface);
 #else

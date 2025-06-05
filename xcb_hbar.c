@@ -756,8 +756,11 @@ static bool
 _hbtn_manager_event(PhxInterface *iface,
                     xcb_generic_event_t *nvt,
                     PhxObject *obj) {
+  uint8_t response;
 
-  uint8_t response = nvt->response_type & (uint8_t)0x7F;
+  if (!!(iface->state & SBIT_HBR_DRAG))  return true;
+
+  response = nvt->response_type & (uint8_t)0x7F;
 
   if ( (response == XCB_KEY_PRESS)
       || (response == XCB_KEY_RELEASE) ) {
@@ -823,6 +826,8 @@ _default_headerbar_meter(PhxInterface *iface,
 
   if ( (response == XCB_ENTER_NOTIFY)
       || (response == XCB_LEAVE_NOTIFY) ) {
+    if (!!(iface->state & SBIT_HBR_DRAG))
+      return true;
     return _default_nexus_meter(iface, nvt, obj);
   }
 
@@ -868,6 +873,8 @@ focus_set:
     if (!!(iface->state & SBIT_HBR_DRAG)) {
       xcb_button_press_event_t *mouse
         = (xcb_button_press_event_t*)nvt;
+        /* mark last position */
+      _drag_motion_hbtn(iface, (xcb_motion_notify_event_t*)mouse);
       xcb_ungrab_pointer(session->connection, mouse->time);
       xcb_flush(session->connection);
       puts(" finished drag XCB_BUTTON_RELEASE");

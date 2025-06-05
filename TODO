@@ -1,5 +1,7 @@
 TODO notes:
 
+Work out pointer seperation on extreme fast movement.
+
 no wm test:
 cd /home/steven/Development/Projects/XCB_session
 ./xxtv1 & P1=$! ./xxtxt & P2=$! ./xxgtx & P3=$! wait $P1 $P2 $P3
