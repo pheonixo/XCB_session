@@ -1,6 +1,6 @@
 TODO notes:
 
-Work out pointer seperation on extreme fast movement.
+Stobing of content now occurs because of speed refinements to WM resize.
 
 no wm test:
 cd /home/steven/Development/Projects/XCB_session

@@ -50,6 +50,8 @@ _drag_keyboard(PhxInterface *iface, xcb_generic_event_t *nvt) {
   PhxObject *has_drag = ui_active_drag_get();
   if (has_drag == NULL)  return false;
 
+  if (!!(iface->state & SBIT_HBR_DRAG))  return true;
+
   if (keyval == 0xFF1B) {
       /* We respond on key release, but acknowledge it's ours. */
     if (locus)  return true;

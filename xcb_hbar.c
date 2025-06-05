@@ -347,15 +347,15 @@ _draw_hdr_background(PhxObject *b, cairo_t *cr) {
 }
 
 #pragma mark *** WM functions ***
-  /* postion move/resize starts */
-static int16_t xroot, yroot;
+/* These statics obtained on button pressed, Used during drag operation. */
+  /* directional from pointer position to mete_box. */
+static int16_t xvector, yvector, wvector;
   /* offset applied if decorated. */
 static int16_t xdelta, ydelta;
-  /* iface's expected/updated values during drag. */
+  /* iface's expected/updated values during drag. (avoid lock) */
 static PhxRectangle mete_box;
   /* locked in type of drag on motion start. */
 static bool ctrl_pressed;
-
 
 /* If SBIT_NET_FRAME not set, we create a frame.
   If has _NET_FRAME_EXTENTS, set offset for grab point. */
@@ -471,10 +471,8 @@ _drag_motion_hbtn(PhxInterface *iface,
       /* The delta addins are for when WM' titlebar exists. The position
         of the 'undecorated' window is offset by the _NET_FRAME. This was
         intented for headerbars, an undecorated window. */
-    values[0] = (iface->mete_box.x += (r0->root_x - xroot - xdelta));
-    values[1] = (iface->mete_box.y += (r0->root_y - yroot - ydelta));
-    xroot = r0->root_x;
-    yroot = r0->root_y;
+    values[0] = (iface->mete_box.x = (r0->root_x + xvector - xdelta));
+    values[1] = (iface->mete_box.y = (r0->root_y + yvector - ydelta));
     xcb_configure_window(connection, motion->event,
                  XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, values);
     xcb_flush(connection);
@@ -484,10 +482,8 @@ _drag_motion_hbtn(PhxInterface *iface,
        && (motion->root_y == r0->root_y) ) {
         /* Honor window min/max values. */
       bool valid = false;
-      int16_t yD = r0->root_y - yroot;
-      int16_t xD = r0->root_x - xroot;
-      xroot = r0->root_x;
-      yroot = r0->root_y;
+      int16_t yD = r0->root_y + yvector - mete_box.y;
+      int16_t xD = r0->root_x - wvector - (mete_box.x + mete_box.w);
 
       if ( (mete_box.h - (yD * 2) >= iface->szhints.y)
           && (mete_box.h + (yD * 2) < iface->szhints.h) ) {
@@ -509,7 +505,6 @@ _drag_motion_hbtn(PhxInterface *iface,
             mete_box.y -= mete_box.h;
             valid = true;
       } } }
-      
 
       if ( (mete_box.w + xD >= iface->szhints.x)
           && (mete_box.w - xD < iface->szhints.w) ) {
@@ -518,15 +513,15 @@ _drag_motion_hbtn(PhxInterface *iface,
       } else {
         if (xD < 0) {
           if (mete_box.w != iface->szhints.x) {
-            mete_box.w += iface->szhints.x;
+            mete_box.w = iface->szhints.x;
             valid = true;
           }
         } else {
           if (mete_box.w != iface->szhints.w) {
-            mete_box.w += iface->szhints.w;
+            mete_box.w = iface->szhints.w;
             valid = true;
       } } }
-      
+
       if (valid) {
         int32_t values[3];
         values[2] = mete_box.h;
@@ -848,6 +843,10 @@ focus_set:
 
   if ( (response == XCB_KEY_PRESS)
       || (response == XCB_KEY_RELEASE) ) {
+
+    if (!!(iface->state & SBIT_HBR_DRAG))
+      return true;
+
     if (obj != NULL)
       if (obj->type == ((BTN_HEADER_MANAGER << 8) | PHX_BUTTON))
         return _hbtn_manager_event(iface, nvt, obj);
@@ -857,8 +856,11 @@ focus_set:
   if (response == XCB_BUTTON_PRESS) {
     xcb_button_press_event_t *mouse
       = (xcb_button_press_event_t*)nvt;
-    xroot = mouse->root_x;
-    yroot = mouse->root_y;
+
+    xvector = iface->mete_box.x - mouse->root_x;
+    yvector = iface->mete_box.y - mouse->root_y;
+    wvector = mouse->root_x - (iface->mete_box.x + iface->mete_box.w);
+
     xdelta = (ydelta = 0);
     if ( (!(iface->state & SBIT_UNDECORATED))
         && (obj->type == ((BTN_HEADER_MANAGER << 8) | PHX_BUTTON)) )
@@ -1031,10 +1033,9 @@ user_configure_layout(PhxInterface *iface) {
   hbar->_event_cb = _default_headerbar_meter;
 
     /* A blurr image takes too long to draw from scratch when performing
-      a resize drag. We cache a surface of this blurr the width of
-      visible display.
+      a resize drag. With refinements, without blurr, button drawing now
+      too slow causing strobing.
   hbar->exclusive = create_blurr(hbar); */
-
 
   ypos = (int16_t)(((double)(14 + 10) * 0.208333) + 0.499999);
   xpos = ypos + 3;
