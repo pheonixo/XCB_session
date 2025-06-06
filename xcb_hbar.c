@@ -762,20 +762,13 @@ _hbtn_manager_event(PhxInterface *iface,
       /* Allow modifier keys to alter functionality when no drag. */
     if (ui_active_drag_get() == NULL) {
       xcb_key_press_event_t *kp = (xcb_key_press_event_t*)nvt;
-      if (response == XCB_KEY_PRESS) {
-        xcb_keysym_t keyval = _xcb_keysym_for(kp->detail, kp->state);
-        if (   (keyval == 0x0ffe3)                       /* XK_Control_L */
-            || (keyval == 0x0ffe4) ) {                   /* XK_Control_R */
-          obj->child->_draw_cb = _draw_symbol_resize;
-          ui_invalidate_object(obj);
-          return true;
-        }
-        return false;
-      }
-      if (!!(kp->state & XCB_MOD_MASK_CONTROL)) {
-        obj->child->_draw_cb = _draw_symbol_move;
+      xcb_keysym_t keyval = _xcb_keysym_for(kp->detail, kp->state);
+      if (   (keyval == 0x0ffe3)                       /* XK_Control_L */
+          || (keyval == 0x0ffe4) ) {                   /* XK_Control_R */
+        if (response == XCB_KEY_PRESS)
+              obj->child->_draw_cb = _draw_symbol_resize;
+        else  obj->child->_draw_cb = _draw_symbol_move;
         ui_invalidate_object(obj);
-        return true;
       }
     }
       /* Even thou we respond to modifier, pass false to allow
@@ -784,11 +777,16 @@ _hbtn_manager_event(PhxInterface *iface,
   }
 
   if (response == XCB_ENTER_NOTIFY) {
+    xcb_enter_notify_event_t *xing
+      = (xcb_enter_notify_event_t*)nvt;
     sensitive_set(obj, true);
+    if (!!(xing->state & XCB_MOD_MASK_CONTROL))
+      obj->child->_draw_cb = _draw_symbol_resize;
     visible_set(obj->child, true);
     ui_invalidate_object(obj);
   } else if (response == XCB_LEAVE_NOTIFY) {
     sensitive_set(obj, (ui_active_focus_get() != NULL));
+    obj->child->_draw_cb = _draw_symbol_move;
     visible_set(obj->child, false);
     ui_invalidate_object(obj);
   }
@@ -882,7 +880,7 @@ focus_set:
       puts(" finished drag XCB_BUTTON_RELEASE");
       iface->state &= ~SBIT_HBR_DRAG;
       ui_active_drag_set(NULL);
-      ui_active_within_set(obj);
+      ui_active_within_set(obj, mouse->state);
       return true;
     }
     return _default_nexus_meter(iface, nvt, obj);

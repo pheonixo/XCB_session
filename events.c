@@ -339,7 +339,7 @@ _event_motion(xcb_generic_event_t *nvt) {
 
     /* Drag selection is still possiblity. Send locus notices if changed. */
   if (ui_active_within_get() != obj)
-    ui_active_within_set(obj);
+    ui_active_within_set(obj, motion->state);
 
     /* Find/set for mount under pointer. */
   imount = _coordinates_for_object(iface, nvt, obj, xPtr, yPtr);
@@ -384,7 +384,7 @@ _event_enter(xcb_generic_event_t *nvt) {
       iface->state &= ~SBIT_HBR_DRAG;
       ui_active_drag_set(NULL);
     } else {
-      ui_active_within_set(obj);
+      ui_active_within_set(obj, xing->state);
       return true;
     }
   }
@@ -405,7 +405,7 @@ _event_enter(xcb_generic_event_t *nvt) {
   }
     /* Need basic on entry, objects set to their desire. */
   ui_cursor_set_named("left_ptr", xing->event);
-  ui_active_within_set(obj);
+  ui_active_within_set(obj, xing->state);
 
   return true;
 }
@@ -420,7 +420,7 @@ _event_leave(xcb_generic_event_t *nvt) {
     return true;
 
   if (xing->mode == XCB_NOTIFY_MODE_NORMAL)
-    ui_active_within_set(NULL);
+    ui_active_within_set(NULL, xing->state);
   return true;
 }
 

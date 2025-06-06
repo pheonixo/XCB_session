@@ -67,14 +67,16 @@ ui_active_within_get(void) {
   gleaned from mouse motion event handling. Allows adjustments such as
   highlite, text prep/reset, etc if object needs it.
   Mode will indicate if in drag. */
+/* Add state to allow notify with mod keys. */
 void
-ui_active_within_set(PhxObject *obj) {
+ui_active_within_set(PhxObject *obj, uint16_t state) {
 
   xcb_enter_notify_event_t notify = { 0 };
   PhxInterface *iface;
   PhxObject *within;
 
   notify.detail = XCB_NOTIFY_DETAIL_NONE;
+  notify.state = state;
 #if DND_EXTERNAL_ON
   if ( (ui_active_drag_get() != NULL)
       || (xdndActivated_get(session->xdndserver)) )

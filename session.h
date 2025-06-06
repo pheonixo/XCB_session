@@ -164,7 +164,8 @@ extern xcb_window_t      ui_window_for(PhxObject *obj);
 extern PhxObject *       ui_active_focus_get(void);
 extern void              ui_active_focus_set(PhxObject *obj);
 extern PhxObject *       ui_active_within_get(void);
-extern void              ui_active_within_set(PhxObject *obj);
+extern void              ui_active_within_set(PhxObject *obj,
+                                              uint16_t state);
 extern PhxObject *       ui_active_drag_get(void);
 extern void              ui_active_drag_set(PhxObject *obj);
 

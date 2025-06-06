@@ -621,9 +621,12 @@ _default_gfuse_meter(PhxInterface *iface,
     case XCB_BUTTON_RELEASE: {   /* response_type 5 */
       PhxObject *has_drag = ui_active_drag_get();
       if (has_drag != NULL) {
-        if (has_drag != obj)
-          ui_active_within_set(obj);
-        DND_DEBUG_PUTS("ui_active_within_set(obj) _default_gfuse_meter()");
+        if (has_drag != obj) {
+          xcb_button_press_event_t *mouse
+            = (xcb_button_press_event_t*)nvt;
+          ui_active_within_set(obj, mouse->state);
+          DND_DEBUG_PUTS("ui_active_within_set(obj) _default_gfuse_meter()");
+        }
         DND_DEBUG_PUTS("ui_active_drag_set(NULL) _default_gfuse_meter()");
         ui_active_drag_set(NULL);
         return true;

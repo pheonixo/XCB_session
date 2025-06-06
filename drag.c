@@ -70,7 +70,7 @@ _drag_keyboard(PhxInterface *iface, xcb_generic_event_t *nvt) {
       /* Ignore release of mouse button. */
     iface->state |= SBIT_RELEASE_IGNORE;
       /* Sets cursor to 'within', even when a 'topmost' change. */
-    ui_active_within_set(ui_active_within_get());
+    ui_active_within_set(ui_active_within_get(), kp->state);
     DND_DEBUG_PUTS("ui_active_drag_set(NULL) _drag_keyboard()");
     ui_active_drag_set(NULL);
 
@@ -186,7 +186,7 @@ _drag_motion(PhxInterface *iface, xcb_generic_event_t *nvt, PhxObject *obj) {
   }
     /* Even if drag, objects need to be informed of enter/leave */
   if (ui_active_within_get() != obj)
-    ui_active_within_set(obj);
+    ui_active_within_set(obj, motion->state);
     /* Case: drag cancel
       has_drag == NULL, SBIT_RELEASE_IGNORE is set
       want within updates, and exit jump to setting points. */
@@ -398,7 +398,7 @@ _dnd_drop(xcb_dnd_notify_event_t *dnd) {
   dnd->within->state &= ~(OBIT_DND_CARET | OBIT_DND_COPY | OBIT_DND);
   ui_invalidate_object(dnd->within);
     /* resend an ENTER to reset cursor/state (window coordinates) */
-  ui_active_within_set(dnd->within);
+  ui_active_within_set(dnd->within, dnd->owner_state);
 }
 
 bool
@@ -488,7 +488,7 @@ xdnd_status_event(xcb_window_t window, xcb_client_message_data_t *param) {
   obj = _get_object_at_pointer(iface, x, y);
 
   if (ui_active_within_get() != obj)
-    ui_active_within_set(obj);
+    ui_active_within_set(obj, motion.state);
 
   if ( (obj == NULL) || (IS_IFACE_TYPE(obj)) )  {
       /* If left the window (no wm, no leave notify) or
@@ -586,7 +586,7 @@ _dnd_selection_event(xcb_generic_event_t *nvt) {
           /* send an XCB_LEAVE_NOTIFY to 'within' */
         DND_DEBUG_INTERNAL("XCB_LEAVE_NOTIFY", ui_active_within_get());
         DND_DEBUG_PUTS("ui_active_within_set(NULL) _dnd_selection_event()");
-        ui_active_within_set(NULL);
+        ui_active_within_set(NULL, 0);
           /* Check if we own source. */
         if (ui_interface_for(cm->data.data32[0]) != NULL) {
           DND_DEBUG_PRINT("received XDND_LEAVE,", cm->window);
