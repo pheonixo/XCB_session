@@ -2,27 +2,8 @@ TODO notes:
 
 Stobing of content now occurs because of speed refinements to WM resize.
 
-when WM calls configure:
-configure/expose
-Currently
- configure sums to 1/60th then sends I send expose
- but still receive WM expose which I tell redraw
- but instead of redraw, blit last good, knowing real expose will
- switch surface for blit on follow up expose
-
- on interface_draw: draw to inactive surface, on drawn switch
-  active with inactive
- 1/60th timer fires: send interface_draw and expose
- should be timer to draw and timer to expose?
-
-if frame == NULL  create 1/120 draw
-                  create 1/60  expose
-
-if frame != NULL  update invalid region
-                  check has expose create 1/60 if needed
-
-
-
+Added configure timer to resize. Stopped spamming of X server. Small
+stutter improvement.
 
 surface
 for iface,

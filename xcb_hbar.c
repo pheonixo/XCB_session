@@ -357,6 +357,48 @@ static PhxRectangle mete_box;
   /* locked in type of drag on motion start. */
 static bool ctrl_pressed;
 
+static void
+_configure_invalidate(struct _sigtimer *tmr) {
+
+  PhxInterface *iface;
+
+  if (strcmp(tmr->id, "configure") != 0)  return;
+
+    /* Because of server lag, verify iface wasn't deleted. */
+  iface = (ui_interface_for(tmr->iface->window));
+  if (iface != NULL) {
+    int32_t values[3];
+    union rectangle_endianess rect_u;
+
+    rect_u.r64 = tmr->data;
+    values[2] = rect_u.rect.h;
+    values[1] = rect_u.rect.w;
+    values[0] = rect_u.rect.y - ydelta;
+    xcb_configure_window(session->connection, tmr->iface->window,
+                 XCB_CONFIG_WINDOW_Y |
+                 XCB_CONFIG_WINDOW_WIDTH |
+                 XCB_CONFIG_WINDOW_HEIGHT, values);
+    xcb_flush(session->connection);
+  }
+  ui_timer_delete(tmr);
+}
+
+static void
+_invalidate_configure(PhxInterface *iface, PhxRectangle dirty) {
+
+  union rectangle_endianess rect_u;
+  struct _sigtimer *tmr;
+
+  tmr = ui_timer_get(iface, "configure");
+  if (tmr == NULL) {
+    struct timespec ts = { 0, 16000000 };
+    tmr = ui_timer_create(iface, "configure", &ts, _configure_invalidate);
+    DEBUG_ASSERT((tmr == NULL), "error: NULL timer _invalidate_configure()");
+  }
+  rect_u.rect = dirty; 
+  tmr->data = rect_u.r64;
+}
+
 /* If SBIT_NET_FRAME not set, we create a frame.
   If has _NET_FRAME_EXTENTS, set offset for grab point. */
 static void
@@ -522,17 +564,7 @@ _drag_motion_hbtn(PhxInterface *iface,
             valid = true;
       } } }
 
-      if (valid) {
-        int32_t values[3];
-        values[2] = mete_box.h;
-        values[1] = mete_box.w;
-        values[0] = mete_box.y - ydelta;
-        xcb_configure_window(connection, motion->event,
-                     XCB_CONFIG_WINDOW_Y |
-                     XCB_CONFIG_WINDOW_WIDTH |
-                     XCB_CONFIG_WINDOW_HEIGHT, values);
-        xcb_flush(connection);
-      }
+      if (valid)  _invalidate_configure(iface, mete_box);
     }
   }
   free(r0);
