@@ -2,6 +2,35 @@ TODO notes:
 
 Stobing of content now occurs because of speed refinements to WM resize.
 
+when WM calls configure:
+configure/expose
+Currently
+ configure sums to 1/60th then sends I send expose
+ but still receive WM expose which I tell redraw
+ but instead of redraw, blit last good, knowing real expose will
+ switch surface for blit on follow up expose
+
+ on interface_draw: draw to inactive surface, on drawn switch
+  active with inactive
+ 1/60th timer fires: send interface_draw and expose
+ should be timer to draw and timer to expose?
+
+if frame == NULL  create 1/120 draw
+                  create 1/60  expose
+
+if frame != NULL  update invalid region
+                  check has expose create 1/60 if needed
+
+
+
+
+surface
+for iface,
+  SBIT_SURFACE_ID is valid to paint to vid_buffer
+ !SBIT_SURFACE_ID is surface to be drawn on by _interface_draw(iface);
+  when _interface_draw() completes drawing it uses 'state ^= SBIT_SURFACE_ID'
+
+
 no wm test:
 cd /home/steven/Development/Projects/XCB_session
 ./xxtv1 & P1=$! ./xxtxt & P2=$! ./xxgtx & P3=$! wait $P1 $P2 $P3

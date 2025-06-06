@@ -815,10 +815,17 @@ _longest_x_advance(PhxTextbuffer *tbuf) {
   uint16_t max_advance;
   const char *rdPtr;
   PhxAttr *attrib = tbuf->owner->attrib;
-  cairo_t *cr = cairo_create(tbuf->owner->i_mount->surface);
+  cairo_surface_t *drawable;
+  cairo_t *cr;
+  phx_newline_t *ndata;
+  PhxMarkData *pPtr;
 
-  phx_newline_t *ndata = tbuf->mark_list[0]->data;
-  PhxMarkData *pPtr = ndata->_results.pairs;
+  drawable = tbuf->owner->i_mount->surface;
+  DEBUG_ASSERT((drawable == NULL), "SEGFAULT: _longest_x_advance()");
+  cr = cairo_create(drawable);
+
+  ndata = tbuf->mark_list[0]->data;
+  pPtr = ndata->_results.pairs;
 
   max_advance = 0;
   rdPtr = (const char*)tbuf->string;
@@ -1832,8 +1839,12 @@ ui_textual_glyph_advance(PhxObject *obj,
         break;
     } else {
       char *rdPtr = *stream;
-      if (cr == NULL)
-        cr = cairo_create(obj->i_mount->surface);
+      if (cr == NULL) {
+        cairo_surface_t *drawable = obj->i_mount->surface;
+        DEBUG_ASSERT((drawable == NULL),
+                         "SEGFAULT: ui_textual_glyph_advance()");
+        cr = cairo_create(drawable);
+      }
       advance += ext_cairo_glyph_advance(stream, cr,
                                          obj->attrib->font_name,
                                          obj->attrib->font_var & 0x0FF,
@@ -1852,12 +1863,16 @@ ui_textual_glyph_advance(PhxObject *obj,
 char *
 ui_textual_glyph_table(PhxObject *obj) {
 
+  cairo_surface_t *drawable;
   cairo_t *cro;
   PhxAttr *attrib;
   char *glyph_widths;
   uint16_t idx;  /* ABSOLUTE MUST! gcc can't handle using char for idx. */
 
-  cro = cairo_create(obj->i_mount->surface);
+  drawable = obj->i_mount->surface;
+  DEBUG_ASSERT((drawable == NULL),
+                         "SEGFAULT: ui_textual_glyph_table()");
+  cro = cairo_create(drawable);
 
   attrib = obj->attrib;
   cairo_select_font_face(cro, attrib->font_name,

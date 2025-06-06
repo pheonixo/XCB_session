@@ -237,12 +237,15 @@ _text_label_fit(PhxObjectLabel *olbl, bool max) {
   char *sPtr;
   unsigned char ch0, *nlPtr;
   int line_height, ncnt, x_advance, max_advance, tab_width;
+  cairo_surface_t *drawable;
   cairo_t *cro;
   bool had_eval;
   PhxAttr *attrib;
   PhxLabelbuffer *lbuf = (PhxLabelbuffer*)olbl->exclusive;
 
-  cro = cairo_create(olbl->i_mount->surface);
+  drawable = olbl->i_mount->surface;
+  DEBUG_ASSERT((drawable == NULL), "SEGFAULT: _text_label_fit()");
+  cro = cairo_create(drawable);
   attrib = olbl->attrib;
   line_height = attrib->font_em;
     /* get <newline> count to determine pixel line height of font */

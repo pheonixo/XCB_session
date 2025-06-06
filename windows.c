@@ -132,6 +132,7 @@ ui_attributes_set(PhxObject *obj,
                   int font_weight,
                   int line_height) {
 
+  cairo_surface_t *drawable;
   cairo_t *cro;
   cairo_font_extents_t font_extents;
   double pixel_line_height, font_size;
@@ -144,7 +145,9 @@ ui_attributes_set(PhxObject *obj,
   }
   attrib->font_var = (font_slant << 8) | font_weight;
 
-  cro = cairo_create(((PhxInterface*)obj)->i_mount->surface);
+  drawable = ((PhxInterface*)obj)->i_mount->surface;
+  DEBUG_ASSERT((drawable == NULL), "SEGFAULT: ui_attributes_set()");
+  cro = cairo_create(drawable);
   cairo_select_font_face(cro, font_name, font_slant, font_weight);
 
   pixel_line_height = line_height;
@@ -528,6 +531,7 @@ _interface_create(xcb_connection_t *connection,
                                                iface->draw_box.h);
   err = cairo_surface_status(iface->vid_buffer);
   if (err != CAIRO_STATUS_SUCCESS) {
+    free(iface);
     DEBUG_ASSERT(true, "Some weird internal error...?!");
     return NULL;
   }
