@@ -7,8 +7,6 @@
  #define M_PI 3.14159265358979323846
 #endif
 
-extern bool  _event_expose(xcb_generic_event_t *nvt);
-
 PhxRGBA RGBA_SELECTION = {
   (double)0x091/0x0FF, (double)0x0C2/0x0FF, (double)0x0F2/0x0FF, 1.0 };
 PhxRGBA RGBA_TEXT_FGFILL = {
