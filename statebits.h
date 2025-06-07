@@ -41,7 +41,7 @@
 #define DRAG_CURSOR_BIT      12
 #define OBIT_DND_COPY        (1 << DRAG_CURSOR_BIT) /* dnd action move/copy */
 
-#define 0BIT_SUR_TOUCH       (1 << 15)
+#define OBIT_SUR_TOUCH       (1 << 15)
 
 /* XPD/JST [16-23] */
 /* Applies to all, save PHX_IFACE */
