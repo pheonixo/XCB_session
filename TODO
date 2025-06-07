@@ -1,16 +1,13 @@
 TODO notes:
 
-Stobing of content now occurs because of speed refinements to WM resize.
+On no-WM, can't switch focus to a non-XCB_session application.
+This includes GDB.
 
+Strobing/flickering solved by bit gravity added to window.
+Not sure if this a bandaid?!?
+Stobing of content now occurs because of speed refinements to WM resize.
 Added configure timer to resize. Stopped spamming of X server. Small
 stutter improvement.
-
-surface
-for iface,
-  SBIT_SURFACE_ID is valid to paint to vid_buffer
- !SBIT_SURFACE_ID is surface to be drawn on by _interface_draw(iface);
-  when _interface_draw() completes drawing it uses 'state ^= SBIT_SURFACE_ID'
-
 
 no wm test:
 cd /home/steven/Development/Projects/XCB_session

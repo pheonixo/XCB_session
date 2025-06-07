@@ -667,6 +667,13 @@ _window_create(PhxRectangle configure) {
     /* Set for WMs. twm does need this! */
   _window_input_set(window);
 
+    /* Stop aggressive redrawing on resize. Stops strobing
+      or flickering. */
+  values[0] = XCB_GRAVITY_NORTH_WEST;
+  xcb_change_window_attributes(connection, window,
+                               XCB_CW_BIT_GRAVITY, values);
+
+
   _window_event_delete(connection, window);
 /*  _window_event_focus(connection, window);*/
 
