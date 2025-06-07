@@ -579,7 +579,6 @@ _drag_begin_hbtn(PhxInterface *iface,
   xcb_grab_pointer_reply_t *r0;
   const char *named;
 
-  puts(" start drag XCB_MOTION_NOTIFY");
   ctrl_pressed = (!!(motion->state & XCB_MOD_MASK_CONTROL));
   if (ctrl_pressed)
         named = "top_right_corner";
@@ -909,8 +908,10 @@ focus_set:
       _drag_motion_hbtn(iface, (xcb_motion_notify_event_t*)mouse);
       xcb_ungrab_pointer(session->connection, mouse->time);
       xcb_flush(session->connection);
-      puts(" finished drag XCB_BUTTON_RELEASE");
       iface->state &= ~SBIT_HBR_DRAG;
+      if (!!(mouse->state & XCB_MOD_MASK_CONTROL))
+            obj->child->_draw_cb = _draw_symbol_resize;
+      else  obj->child->_draw_cb = _draw_symbol_move;
       ui_active_drag_set(NULL);
       ui_active_within_set(obj, mouse->state);
       return true;
@@ -1072,7 +1073,6 @@ user_configure_layout(PhxInterface *iface) {
   sz = (14 + 10) - (ypos << 1);
   nexus_box.w = (nexus_box.h = sz);
 
-#if 1
     /* Creation of close button */
   nexus_box.x = xpos;
   nexus_box.y = ypos;
@@ -1117,7 +1117,7 @@ user_configure_layout(PhxInterface *iface) {
   obtn->child = ui_object_child_create(obtn, PHX_DRAWING, NULL, nexus_box);
   obtn->child->_draw_cb = _draw_symbol_maximize;
   visible_set(obtn->child, false);
-#endif
+
     /* Creation of move/resize button */
   nexus_box.x = iface->mete_box.w - (sz + 1 + xpos);
   nexus_box.y = ypos;
