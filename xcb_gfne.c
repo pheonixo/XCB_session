@@ -110,8 +110,7 @@ user_configure_0_layout(PhxInterface *iface) {
   RECTANGLE(nexus_box, 50 - GRIPSZ,         ndx - GRIPSZ,
                        180 + (GRIPSZ << 1), 200 + (GRIPSZ << 1));
   fuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
-  fuse->min_max.w = 610;
-  fuse->min_max.h = 300 + ndx;
+
                      /* Set up a background */
   ndx = 325;
   background_l2r_layout(iface, ndx);
@@ -119,8 +118,6 @@ user_configure_0_layout(PhxInterface *iface) {
   RECTANGLE(nexus_box, 50 - GRIPSZ,         ndx - GRIPSZ,
                        180 + (GRIPSZ << 1), 200 + (GRIPSZ << 1));
   fuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
-  fuse->min_max.w = 610;
-  fuse->min_max.h = 300 + ndx;
 
                      /* Set up a background */
   ndx = 75;
@@ -129,8 +126,7 @@ user_configure_0_layout(PhxInterface *iface) {
   RECTANGLE(nexus_box, 425 - GRIPSZ,        ndx - GRIPSZ,
                        180 + (GRIPSZ << 1), 200 + (GRIPSZ << 1));
   fuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
-  fuse->min_max.w = 610;
-  fuse->min_max.h = 300 + ndx;
+
                      /* Set up a background */
   ndx = 325;
   background_r2l_layout(iface, ndx);
@@ -138,8 +134,6 @@ user_configure_0_layout(PhxInterface *iface) {
   RECTANGLE(nexus_box, 425 - GRIPSZ,        ndx - GRIPSZ,
                        180 + (GRIPSZ << 1), 200 + (GRIPSZ << 1));
   fuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
-  fuse->min_max.w = 610;
-  fuse->min_max.h = 300 + ndx;
 }
 
 static void
@@ -160,8 +154,7 @@ user_configure_1_layout(PhxInterface *iface) {
   RECTANGLE(nexus_box, 65 - GRIPSZ,         140 + ndx - GRIPSZ,
                        205 + (GRIPSZ << 1), 180 + (GRIPSZ << 1));
   fuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
-  fuse->min_max.w = 610;
-  fuse->min_max.h = 500;
+
                      /* Set up a background */
   ndx = 420;
   background_t2b_layout(iface, ndx);
@@ -169,8 +162,6 @@ user_configure_1_layout(PhxInterface *iface) {
   RECTANGLE(nexus_box, 65 - GRIPSZ,         140 + ndx - GRIPSZ,
                        205 + (GRIPSZ << 1), 180 + (GRIPSZ << 1));
   fuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
-  fuse->min_max.w = 610;
-  fuse->min_max.h = 500;
 
                      /* Set up a background */
   ndx = 40;
@@ -179,8 +170,7 @@ user_configure_1_layout(PhxInterface *iface) {
   RECTANGLE(nexus_box, 325 - GRIPSZ,        140 + ndx - GRIPSZ,
                        200 + (GRIPSZ << 1), 180 + (GRIPSZ << 1));
   fuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
-  fuse->min_max.w = 610;
-  fuse->min_max.h = 300 + ndx;
+
                      /* Set up a background */
   ndx = 420;
   background_b2t_layout(iface, ndx);
@@ -188,8 +178,6 @@ user_configure_1_layout(PhxInterface *iface) {
   RECTANGLE(nexus_box, 325 - GRIPSZ,        140 + ndx - GRIPSZ,
                        200 + (GRIPSZ << 1), 180 + (GRIPSZ << 1));
   fuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
-  fuse->min_max.w = 610;
-  fuse->min_max.h = 300 + ndx;
 }
 
 int

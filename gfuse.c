@@ -767,5 +767,5 @@ ui_gfuse_create(PhxInterface *iface, PhxRectangle configure,
       Must match gfuse! */
   nfuse->state |= HXPD_RGT | VXPD_BTM;
 
-  return (PhxNFuse*)nfuse;
+  return (PhxNFuse*)gfuse;
 }

@@ -79,6 +79,7 @@ gfuse_configure_layout(PhxInterface *iface) {
 
   PhxRectangle nexus_box;
   PhxNFuse *fuse;
+  PhxNexus *nexus;
 
     /* Currently only names as window id */
   xcb_window_t window = iface->window;
@@ -87,10 +88,11 @@ gfuse_configure_layout(PhxInterface *iface) {
                      /* Set up a gfuse */
   RECTANGLE(nexus_box, 100 - GRIPSZ,        44 - GRIPSZ,
                        818 + (GRIPSZ << 1), 200 + (GRIPSZ << 1));
-    /* returns user area, 0,0 referenced */
+    /* returns gfuse */
   fuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
-  nexus_configure_layout((PhxInterface*)fuse);
-
+    /* obtain user area, 0,0 referenced */
+  nexus = fuse->nexus[0];
+  nexus_configure_layout((PhxInterface*)nexus);
 }
 
 #pragma mark *** Main ***
