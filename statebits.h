@@ -4,22 +4,22 @@
 /* first 16 bits for specifics of an entity */
 
 /* specific PHX_IFACE only bits [0-31] */
-#define SBIT_CLICKS         3            /* bits 0,1 click count */
-#define SBIT_TRANSIENT      (1 << 3)     /* Special window type */
-#define SBIT_MAPPED         (1 << 4)     /* Same as Object's visible */
-#define SBIT_SENSITIVE      (1 << 5)     /* Alignment with objects */
+#define SBIT_CLICKS          3            /* bits 0,1 click count */
+#define SBIT_TRANSIENT       (1 << 3)     /* Special window type */
+#define SBIT_MAPPED          (1 << 4)     /* Same as Object's visible */
+#define SBIT_SENSITIVE       (1 << 5)     /* Alignment with objects */
 
-#define SBIT_RELEASE_IGNORE (1 << 7)     /* Button/key release ignore */
-#define SBIT_SELECTING      (1 << 8)     /* Drag selection of content */
+#define SBIT_RELEASE_IGNORE  (1 << 7)     /* Button/key release ignore */
+#define SBIT_SELECTING       (1 << 8)     /* Drag selection of content */
 
-#define SBIT_UNDECORATED    (1 << 9)     /* For undecorated */
-#define SBIT_HEADERBAR      (1 << 10)    /* For undecorated, adds nexus */
-#define SBIT_HBR_DRAG       (1 << 11)    /* WM type funcs, move/resize */
-#define SBIT_MAXIMIZED      (1 << 12)    /* For WM, maximized */
-#define SBIT_MINIMIZED      (1 << 13)    /* For WM, minimized */
-#define SBIT_NET_FRAME      (1 << 14)    /* For WM, allow move/resize */
+#define SBIT_UNDECORATED     (1 << 9)     /* For undecorated */
+#define SBIT_HEADERBAR       (1 << 10)    /* For undecorated, adds nexus */
+#define SBIT_HBR_DRAG        (1 << 11)    /* WM type funcs, move/resize */
+#define SBIT_MAXIMIZED       (1 << 12)    /* For WM, maximized */
+#define SBIT_MINIMIZED       (1 << 13)    /* For WM, minimized */
+#define SBIT_NET_FRAME       (1 << 14)    /* For WM, allow move/resize */
 
-#define SBIT_SURFACE_ID     (1 << 15)
+#define SBIT_SUR_TOUCH       (1 << 15)
 
 /* specific to type of object, bits [0-7] */
   /* nexus: configure updating */  /* other objects not to use for persistant */
@@ -40,6 +40,8 @@
 #define OBIT_DND             (1 << 11) /* highlight, drag is within object */
 #define DRAG_CURSOR_BIT      12
 #define OBIT_DND_COPY        (1 << DRAG_CURSOR_BIT) /* dnd action move/copy */
+
+#define 0BIT_SUR_TOUCH       (1 << 15)
 
 /* XPD/JST [16-23] */
 /* Applies to all, save PHX_IFACE */
