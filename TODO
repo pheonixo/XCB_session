@@ -4,10 +4,13 @@ On no-WM, can't switch focus to a non-XCB_session application.
 This includes GDB.
 
 Strobing/flickering solved by bit gravity added to window.
-Not sure if this a bandaid?!?
-Stobing of content now occurs because of speed refinements to WM resize.
-Added configure timer to resize. Stopped spamming of X server. Small
-stutter improvement.
+Remove bit gravity! Does not redraw correctly for application design.
+Turns out it's more than likely something not initialized correctly,
+or being set/utilized wrongly or gcc. Strobe/flicker doesn't always occur
+depending on build or session being run.
+
+New test with window as 4 panes is overwriting a sliver of headerbar. It
+does not happen everytime, and can sometimes be more than sliver.
 
 no wm test:
 cd /home/steven/Development/Projects/XCB_session

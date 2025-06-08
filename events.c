@@ -481,19 +481,16 @@ _event_expose(xcb_generic_event_t *nvt) {
   DEBUG_ASSERT( ( ((int16_t)expose->x < 0) || ((int16_t)expose->y < 0) ),
                    "probable failure: _event_expose().");
 
+  _interface_draw(iface);
+
   cr = cairo_create(iface->vid_buffer);
   cairo_rectangle(cr, expose->x, expose->y,
                       expose->width, expose->height);
   cairo_clip(cr);
-
-  _interface_draw(iface);
-
   cairo_set_source_surface(cr, iface->surface, 0, 0);
   cairo_paint(cr);
-
   DEBUG_ASSERT((cairo_status(cr) != CAIRO_STATUS_SUCCESS),
                                 "failure: _event_expose().");
-
   cairo_destroy(cr);
   cairo_surface_flush(iface->vid_buffer);
 

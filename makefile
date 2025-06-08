@@ -148,5 +148,9 @@ xxhbr: xcb_hbar.c $(SRC) $(XHDR) libctype.a makefile
 	@echo "  CC -o xxhbr"
 	@gcc $(CFLAGS) -o xxhbr xcb_hbar.c $(SRC) $(LIBS) -L./ -lctype
 
+xxhbr2: xcb_hbar2.c $(SRC) $(XHDR) libctype.a makefile
+	@echo "  CC -o xxhbr2"
+	@gcc $(CFLAGS) -o xxhbr2 xcb_hbar2.c $(SRC) $(LIBS) -L./ -lctype
+
 all: xxssn xxss2 xxnex xxgne xxfse xxbtn xxtv1 xxtxt xxgtx xxbnk xxebr \
 xxfbr xxfbr2 xxhbr
