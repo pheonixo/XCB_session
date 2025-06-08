@@ -208,9 +208,23 @@ ui_nexus_create(PhxInterface *iface, PhxRectangle configure) {
   nexus->min_max.w = iface->min_max.w;
   nexus->min_max.h = iface->min_max.h;
 
-    /* this is mapping */
-  iface->nexus[iface->ncount] = nexus;
+    /* This is mapping. With a special nexus, headerbar, if adding
+      it will place as topmost. If not adding a headerbar, we must check
+      if one exists. We place new nexus under headerbar, the topmost
+      before adding this one. We also have no idea if new nexus will
+      be a headerbar. */
+  if (iface->ncount == 0)  goto topmost;
+  if (iface->nexus[(iface->ncount - 1)]->type == PHX_HEADERBAR) {
+    PhxNexus *swap = iface->nexus[(iface->ncount - 1)];
+    iface->nexus[(iface->ncount - 1)] = nexus;
+    iface->nexus[iface->ncount] = swap;
+  } else {
+topmost:
+    iface->nexus[iface->ncount] = nexus;
+  }
   iface->ncount += 1;
+
+    /* drawing ability */
   if (iface->surface != NULL) {
     cairo_status_t error;
     nexus->surface = cairo_surface_create_for_rectangle(
@@ -220,12 +234,14 @@ ui_nexus_create(PhxInterface *iface, PhxRectangle configure) {
                                     nexus->mete_box.w,
                                     nexus->mete_box.h);
     error = cairo_surface_status(nexus->surface);
-    if (error != CAIRO_STATUS_SUCCESS)
-      puts("error: _ui_nexus_create_for() surface creation");
+    DEBUG_ASSERT((error != CAIRO_STATUS_SUCCESS),
+                      "error: _ui_nexus_create_for() surface creation");
+    nexus->sur_width  = nexus->draw_box.w;
+    nexus->sur_height = nexus->draw_box.h;
   }
 
   nexus->i_mount = iface;
-  nexus->window = iface->window;
+  nexus->window  = iface->window;
 
   return nexus;
 }

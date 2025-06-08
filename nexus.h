@@ -17,6 +17,8 @@ struct _PhxNFuse {
  PhxAttr            *attrib;         /* attribute defaults */
  PhxRectangle       min_max;
  cairo_surface_t    *surface;
+ uint16_t           sur_width;       /* for determining re-surfacing */
+ uint16_t           sur_height;      /* for determining re-surfacing */
  xcb_window_t       window;
    /* information this object may need for operation */
  void               *exclusive;
@@ -37,6 +39,8 @@ struct _PhxNexus {
  PhxAttr            *attrib;         /* attribute defaults */
  PhxRectangle       min_max;
  cairo_surface_t    *surface;
+ uint16_t           sur_width;       /* for determining re-surfacing */
+ uint16_t           sur_height;      /* for determining re-surfacing */
  xcb_window_t       window;
    /* information this object may need for operation */
  void               *exclusive;

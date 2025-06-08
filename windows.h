@@ -30,6 +30,8 @@ struct _PhxInterface {
   /* from here, differs from objects */
  PhxRectangle       min_max;         /* configure limit 'rays' */
  cairo_surface_t    *surface;
+ uint16_t           sur_width;       /* for determining re-surfacing */
+ uint16_t           sur_height;      /* for determining re-surfacing */
  xcb_window_t       window;
   /* from here, differs from other iface */
  cairo_surface_t    *vid_buffer;

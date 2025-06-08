@@ -222,9 +222,11 @@ _window_stack_topmost(PhxInterface *iface) {
     xcb_configure_window(session->connection, iface->window,
                          XCB_CONFIG_WINDOW_STACK_MODE, values);
     iface->state &= ~SBIT_CLICKS;
+/*
     xcb_set_input_focus(session->connection,
                         XCB_INPUT_FOCUS_PARENT,
                         iface->window, XCB_CURRENT_TIME);
+*/
   }
 }
 
@@ -546,6 +548,8 @@ _interface_create(xcb_connection_t *connection,
     DEBUG_ASSERT(true, "Some weird internal error...?!");
     return NULL;
   }
+  iface->sur_width  = iface->draw_box.w;
+  iface->sur_height = iface->draw_box.h;
 
     /* now have surface, fill in default text attributes */
   iface->attrib = _interface_attrib_default(iface);
@@ -668,10 +672,10 @@ _window_create(PhxRectangle configure) {
   _window_input_set(window);
 
     /* Stop aggressive redrawing on resize. Stops strobing
-      or flickering. */
+      or flickering.
   values[0] = XCB_GRAVITY_NORTH_WEST;
   xcb_change_window_attributes(connection, window,
-                               XCB_CW_BIT_GRAVITY, values);
+                               XCB_CW_BIT_GRAVITY, values); */
 
 
   _window_event_delete(connection, window);
