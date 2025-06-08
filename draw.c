@@ -90,8 +90,7 @@ _nexus_walk(PhxInterface *iface) {
       }
         /* check if nexus fusion, has surface, check children */
       if (nexus->ncount != 0) {
-if (!IS_IFACE_TYPE(nexus))
-puts("logic error _nexus_walk()");
+        DEBUG_ASSERT((!IS_IFACE_TYPE(nexus)), "logic error _nexus_walk()");
         if (OBJECT_BASE_TYPE(nexus) >= PHX_NEXUS)
           _object_walk(nexus, cr);
         else
@@ -110,7 +109,7 @@ _interface_draw(PhxInterface *iface) {
   cairo_t *cr;
 
   if (iface->surface == NULL) {
-    puts("severe error, no iface surface");
+    DEBUG_ASSERT(true, "severe error, no iface surface");
     return false;
   }
 
