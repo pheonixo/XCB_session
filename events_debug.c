@@ -269,14 +269,27 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
     case XCB_CLIENT_MESSAGE: {    /* response_type 33 */
       xcb_client_message_event_t *message
         = (xcb_client_message_event_t*)nvt;
-      char buffer[64];
+      char buffer0[64];
       xcb_get_atom_name_reply_t *reply
         = xcb_get_atom_name_reply(session->connection,
                   xcb_get_atom_name(session->connection, message->type), NULL);
-      memmove(buffer, xcb_get_atom_name_name(reply), reply->name_len);
-      buffer[reply->name_len] = 0;
+      memmove(buffer0, xcb_get_atom_name_name(reply), reply->name_len);
+      buffer0[reply->name_len] = 0;
       free(reply);
-      printf("%"PRIu32" XCB_CLIENT_MESSAGE %s\n", message->window, buffer);
+      if (strcmp(buffer0, "WM_PROTOCOLS") == 0) {
+        char buffer1[64];
+        reply
+          = xcb_get_atom_name_reply(session->connection,
+         xcb_get_atom_name(session->connection, message->data.data32[0]), NULL);
+        memmove(buffer1, xcb_get_atom_name_name(reply), reply->name_len);
+        buffer1[reply->name_len] = 0;
+        free(reply);
+        printf("%"PRIu32" XCB_CLIENT_MESSAGE %s:%s\n",
+               message->window, buffer0, buffer1);
+      } else {
+        printf("%"PRIu32" XCB_CLIENT_MESSAGE %s\n",
+               message->window, buffer0);
+      }
       break;
     }
 
