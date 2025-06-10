@@ -137,7 +137,10 @@ typedef struct _PhxSession {
 #endif
   /* addressment of WM issues. */
  PhxInterface         **stack_order;
- uint16_t             has_WM;
+  /* adding second bit, sync. */
+#define HAS_WM   1
+#define HAS_SYNC 2
+ uint16_t             WMstate;
 } PhxSession;
 
 /* defines within session.c */

@@ -408,7 +408,7 @@ _frame_extents(PhxInterface *iface, int16_t *xD, int16_t *yD) {
       /* current (non) supportive test for _NET_FRAME_EXTENTS.
         Can't use (_NET_FRAME_EXTENTS == XCB_ATOM_NONE) as another
         application could have set as we are. */
-    if ( (!session->has_WM)
+    if ( (!(session->WMstate & HAS_WM))
         || (_MOTIF_WM_HINTS == XCB_ATOM_NONE) ) {
       uint32_t extents[4];
       xcb_query_tree_cookie_t treeCookie
@@ -585,7 +585,8 @@ _drag_begin_hbtn(PhxInterface *iface,
   else  named = "move";
   ui_cursor_set_named(named, motion->event);
 
-  if ( (!!session->has_WM) && (_MOTIF_WM_HINTS != XCB_ATOM_NONE)
+  if ( (!!(session->WMstate & HAS_WM))
+      && (_MOTIF_WM_HINTS != XCB_ATOM_NONE)
       && (!ctrl_pressed) ) {
     return _move_message(motion);
   }
@@ -644,7 +645,7 @@ _hbtn_minimize_event(PhxInterface *iface,
   uint8_t response = nvt->response_type & (uint8_t)0x7F;
   if (response == XCB_BUTTON_RELEASE) {
       /* When has WM and not in override-redirect. */
-    if ( (!!session->has_WM)
+    if ( (!!(session->WMstate & HAS_WM))
         && !(!!(iface->state & SBIT_UNDECORATED)
            && (_MOTIF_WM_HINTS == XCB_ATOM_NONE)) ) {
       xcb_button_press_event_t *bp = (xcb_button_press_event_t*)nvt;
@@ -717,7 +718,7 @@ _hbtn_maximize_event(PhxInterface *iface,
     xcb_screen_t *screen
       = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
       /* XXX Current way to exclude twm, _MOTIF. */
-    if ( (!!session->has_WM)
+    if ( (!!(session->WMstate & HAS_WM))
         && (_MOTIF_WM_HINTS != XCB_ATOM_NONE) ) {
       xcb_intern_atom_cookie_t c0, c1, c2;
       xcb_intern_atom_reply_t *r0, *r1, *r2;
@@ -891,7 +892,8 @@ focus_set:
     wvector = mouse->root_x - (iface->mete_box.x + iface->mete_box.w);
 
     xdelta = (ydelta = 0);
-    if ( (!(iface->state & SBIT_UNDECORATED))
+    if ( (!!(session->WMstate & HAS_WM))
+        && (!(iface->state & SBIT_UNDECORATED))
         && (obj->type == ((BTN_HEADER_MANAGER << 8) | PHX_BUTTON)) )
       _frame_extents(iface, &xdelta, &ydelta);
     mete_box = iface->mete_box;
@@ -904,14 +906,21 @@ focus_set:
     if (!!(iface->state & SBIT_HBR_DRAG)) {
       xcb_button_press_event_t *mouse
         = (xcb_button_press_event_t*)nvt;
+      PhxObject *wmgr_btn;
+      PhxNexus *hbar;
+      uint16_t ndx;
         /* mark last position */
       _drag_motion_hbtn(iface, (xcb_motion_notify_event_t*)mouse);
       xcb_ungrab_pointer(session->connection, mouse->time);
       xcb_flush(session->connection);
       iface->state &= ~SBIT_HBR_DRAG;
+      hbar = (PhxNexus*)ui_active_drag_get();
+      ndx = hbar->ncount;
+      while ((wmgr_btn = hbar->objects[(--ndx)])->type
+               != ((BTN_HEADER_MANAGER << 8) | PHX_BUTTON)) ;
       if (!!(mouse->state & XCB_MOD_MASK_CONTROL))
-            obj->child->_draw_cb = _draw_symbol_resize;
-      else  obj->child->_draw_cb = _draw_symbol_move;
+            wmgr_btn->child->_draw_cb = _draw_symbol_resize;
+      else  wmgr_btn->child->_draw_cb = _draw_symbol_move;
       ui_active_drag_set(NULL);
       ui_active_within_set(obj, mouse->state);
       return true;

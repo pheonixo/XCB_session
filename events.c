@@ -512,7 +512,7 @@ _event_visibility(xcb_generic_event_t *nvt) {
     xcb_grab_pointer_reply_t *r0;
       /* On non-WM, need to raise transients. */
       /* XXX include twm */
-    if ( (!session->has_WM)
+    if ( (!(session->WMstate & HAS_WM))
         || (_MOTIF_WM_HINTS == XCB_ATOM_NONE) ) {
       const static uint32_t values[] = { XCB_STACK_MODE_ABOVE };
       xcb_configure_window(session->connection, seen->window,
@@ -753,7 +753,7 @@ _process_event(xcb_generic_event_t *nvt) {
       xcb_configure_window(session->connection, iface->window,
                    XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, values);
 
-      if ( (!!session->has_WM)
+      if ( (!!(session->WMstate & HAS_WM))
           && (!!(iface->state & SBIT_UNDECORATED))
           && (_MOTIF_WM_HINTS != XCB_ATOM_NONE) ) {
         struct MWMHints {
@@ -826,14 +826,14 @@ xcb_main(void) {
     return;
   }
     /* Test if Window manager exists. Might even be us? */
-  if (!session->has_WM)  {
+  if (!(session->WMstate & HAS_WM))  {
     xcb_screen_t *screen;
     xcb_get_window_attributes_cookie_t c0;
     xcb_get_window_attributes_reply_t *r0;
     screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
     c0 = xcb_get_window_attributes(connection, screen->root);
     r0 = xcb_get_window_attributes_reply(connection, c0, NULL);
-    session->has_WM =
+    session->WMstate |=
        !!(r0->all_event_masks & XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT);
     free(r0);
   }

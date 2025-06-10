@@ -196,7 +196,7 @@ _window_stack_topmost(PhxInterface *iface) {
       session->stack_order[idx] = session->stack_order[(idx + 1)];
     session->stack_order[(session->ncount - 1)] = iface;
 
-    if ( (!session->has_WM)
+    if ( (!(session->WMstate & HAS_WM))
         || (_MOTIF_WM_HINTS == XCB_ATOM_NONE) ) {
       xcb_connection_t *connection = session->connection;
       xcb_screen_t *screen
@@ -589,23 +589,22 @@ ui_window_undecorate_set(xcb_window_t window) {
 }
 
 static void
-_window_event_delete(xcb_connection_t *connection, xcb_window_t window) {
+_window_event_protocols(xcb_connection_t *connection, xcb_window_t window) {
+
+  xcb_atom_t values[4];
+
+  values[0] = WM_DELETE_WINDOW;
+  values[1] = WM_TAKE_FOCUS;
+/*
+  values[2] = _NET_WM_SYNC_REQUEST;
+  values[3] = _NET_WM_PING;
+*/
 
     /* code to allow delete window instead of quit */
   xcb_change_property(connection, XCB_PROP_MODE_REPLACE, window,
-                      WM_PROTOCOLS, XCB_ATOM_ATOM, 32, 1,
-                      &WM_DELETE_WINDOW);
+                      WM_PROTOCOLS, XCB_ATOM_ATOM, 32, 2,
+                      values);
 }
-
-/*
-static void
-_window_event_focus(xcb_connection_t *connection, xcb_window_t window) {
-
-  xcb_change_property(connection, XCB_PROP_MODE_APPEND, window,
-                      WM_PROTOCOLS, XCB_ATOM_ATOM, 32, 1,
-                      &WM_TAKE_FOCUS);
-}
-*/
 
 static xcb_window_t
 _window_create(PhxRectangle configure) {
@@ -677,9 +676,7 @@ _window_create(PhxRectangle configure) {
   xcb_change_window_attributes(connection, window,
                                XCB_CW_BIT_GRAVITY, values); */
 
-
-  _window_event_delete(connection, window);
-/*  _window_event_focus(connection, window);*/
+  _window_event_protocols(connection, window);
 
 #if DND_EXTERNAL_ON
   xdnd_window_awareness(connection, window);

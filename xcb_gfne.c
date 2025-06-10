@@ -91,7 +91,6 @@ static void
 user_configure_0_layout(PhxInterface *iface) {
 
   PhxRectangle nexus_box;
-  PhxNFuse *fuse;
   int ndx;
 
     /* Currently only names as window id */
@@ -109,7 +108,7 @@ user_configure_0_layout(PhxInterface *iface) {
                      /* Set up a gfuse */
   RECTANGLE(nexus_box, 50 - GRIPSZ,         ndx - GRIPSZ,
                        180 + (GRIPSZ << 1), 200 + (GRIPSZ << 1));
-  fuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
+  ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
 
                      /* Set up a background */
   ndx = 325;
@@ -117,7 +116,7 @@ user_configure_0_layout(PhxInterface *iface) {
                      /* Set up a gfuse */
   RECTANGLE(nexus_box, 50 - GRIPSZ,         ndx - GRIPSZ,
                        180 + (GRIPSZ << 1), 200 + (GRIPSZ << 1));
-  fuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
+  ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
 
                      /* Set up a background */
   ndx = 75;
@@ -125,7 +124,7 @@ user_configure_0_layout(PhxInterface *iface) {
                      /* Set up a gfuse */
   RECTANGLE(nexus_box, 425 - GRIPSZ,        ndx - GRIPSZ,
                        180 + (GRIPSZ << 1), 200 + (GRIPSZ << 1));
-  fuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
+  ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
 
                      /* Set up a background */
   ndx = 325;
@@ -133,14 +132,13 @@ user_configure_0_layout(PhxInterface *iface) {
                      /* Set up a gfuse */
   RECTANGLE(nexus_box, 425 - GRIPSZ,        ndx - GRIPSZ,
                        180 + (GRIPSZ << 1), 200 + (GRIPSZ << 1));
-  fuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
+  ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
 }
 
 static void
 user_configure_1_layout(PhxInterface *iface) {
 
   PhxRectangle nexus_box;
-  PhxNFuse *fuse;
   int ndx;
 
     /* Currently only names as window id */
@@ -153,7 +151,7 @@ user_configure_1_layout(PhxInterface *iface) {
                      /* Set up a gfuse */
   RECTANGLE(nexus_box, 65 - GRIPSZ,         140 + ndx - GRIPSZ,
                        205 + (GRIPSZ << 1), 180 + (GRIPSZ << 1));
-  fuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
+  ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
 
                      /* Set up a background */
   ndx = 420;
@@ -161,7 +159,7 @@ user_configure_1_layout(PhxInterface *iface) {
                      /* Set up a gfuse */
   RECTANGLE(nexus_box, 65 - GRIPSZ,         140 + ndx - GRIPSZ,
                        205 + (GRIPSZ << 1), 180 + (GRIPSZ << 1));
-  fuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
+  ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
 
                      /* Set up a background */
   ndx = 40;
@@ -169,7 +167,7 @@ user_configure_1_layout(PhxInterface *iface) {
                      /* Set up a gfuse */
   RECTANGLE(nexus_box, 325 - GRIPSZ,        140 + ndx - GRIPSZ,
                        200 + (GRIPSZ << 1), 180 + (GRIPSZ << 1));
-  fuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
+  ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
 
                      /* Set up a background */
   ndx = 420;
@@ -177,7 +175,7 @@ user_configure_1_layout(PhxInterface *iface) {
                      /* Set up a gfuse */
   RECTANGLE(nexus_box, 325 - GRIPSZ,        140 + ndx - GRIPSZ,
                        200 + (GRIPSZ << 1), 180 + (GRIPSZ << 1));
-  fuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
+  ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
 }
 
 int

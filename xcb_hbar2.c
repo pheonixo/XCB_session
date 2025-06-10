@@ -418,7 +418,7 @@ _frame_extents(PhxInterface *iface, int16_t *xD, int16_t *yD) {
       /* current (non) supportive test for _NET_FRAME_EXTENTS.
         Can't use (_NET_FRAME_EXTENTS == XCB_ATOM_NONE) as another
         application could have set as we are. */
-    if ( (!session->has_WM)
+    if ( (!(session->WMstate & HAS_WM))
         || (_MOTIF_WM_HINTS == XCB_ATOM_NONE) ) {
       uint32_t extents[4];
       xcb_query_tree_cookie_t treeCookie
@@ -595,7 +595,8 @@ _drag_begin_hbtn(PhxInterface *iface,
   else  named = "move";
   ui_cursor_set_named(named, motion->event);
 
-  if ( (!!session->has_WM) && (_MOTIF_WM_HINTS != XCB_ATOM_NONE)
+  if ( (!!(session->WMstate & HAS_WM))
+      && (_MOTIF_WM_HINTS != XCB_ATOM_NONE)
       && (!ctrl_pressed) ) {
     return _move_message(motion);
   }
@@ -654,7 +655,7 @@ _hbtn_minimize_event(PhxInterface *iface,
   uint8_t response = nvt->response_type & (uint8_t)0x7F;
   if (response == XCB_BUTTON_RELEASE) {
       /* When has WM and not in override-redirect. */
-    if ( (!!session->has_WM)
+    if ( (!!(session->WMstate & HAS_WM))
         && !(!!(iface->state & SBIT_UNDECORATED)
            && (_MOTIF_WM_HINTS == XCB_ATOM_NONE)) ) {
       xcb_button_press_event_t *bp = (xcb_button_press_event_t*)nvt;
@@ -727,7 +728,7 @@ _hbtn_maximize_event(PhxInterface *iface,
     xcb_screen_t *screen
       = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
       /* XXX Current way to exclude twm, _MOTIF. */
-    if ( (!!session->has_WM)
+    if ( (!!(session->WMstate & HAS_WM))
         && (_MOTIF_WM_HINTS != XCB_ATOM_NONE) ) {
       xcb_intern_atom_cookie_t c0, c1, c2;
       xcb_intern_atom_reply_t *r0, *r1, *r2;
@@ -901,7 +902,8 @@ focus_set:
     wvector = mouse->root_x - (iface->mete_box.x + iface->mete_box.w);
 
     xdelta = (ydelta = 0);
-    if ( (!(iface->state & SBIT_UNDECORATED))
+    if ( (!!(session->WMstate & HAS_WM))
+        && (!(iface->state & SBIT_UNDECORATED))
         && (obj->type == ((BTN_HEADER_MANAGER << 8) | PHX_BUTTON)) )
       _frame_extents(iface, &xdelta, &ydelta);
     mete_box = iface->mete_box;
@@ -1040,6 +1042,14 @@ user_add_text(PhxInterface *iface) {
   uint16_t quad_height = rem_view_quad / 4;
 
     /* Want ports to overlay with closest to headerbar being topmost */
+  RECTANGLE(nexus_box, 0, (14 + 10),
+                          iface->mete_box.w,
+                          iface->mete_box.h - (14 + 10));
+  nexus = ui_nexus_create(iface, nexus_box);
+  nexus->state |= HXPD_RGT | VXPD_BTM;
+
+
+/*
   RECTANGLE(nexus_box, 0, iface->mete_box.h - quad_height,
                           iface->mete_box.w,
                           quad_height);
@@ -1060,6 +1070,7 @@ user_add_text(PhxInterface *iface) {
   nfuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_SOUTH);
   nfuse->state |= HXPD_RGT | VXPD_BTM;
   nfuse->min_max.y = hbar->mete_box.h;
+*/
 }
 
 static PhxNexus *
