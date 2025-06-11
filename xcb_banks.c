@@ -60,7 +60,7 @@ user_configure_layout(PhxInterface *iface) {
   nexus_box.y += nexus_box.h;
   obj = (PhxObject*)ui_button_label_create(obtn, "Button 2",
                                                 (HJST_CTR | VJST_CTR));
-  sensitive_set(obj, false);
+  ui_sensitive_set(obj, false);
   nexus_box.y += nexus_box.h;
   ui_button_label_create(obtn, "Button 3", (HJST_CTR | VJST_CTR));
 }

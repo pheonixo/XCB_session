@@ -247,7 +247,7 @@ _draw_header_button(PhxObject *b, cairo_t *cr) {
 
   attrib = b->attrib;
 
-  if (!sensitive_get(b)) {
+  if (!ui_sensitive_get(b)) {
     focus_out.bg_fill.r = 0.0;
     focus_out.bg_fill.g = 0.0;
     focus_out.bg_fill.b = 0.0;
@@ -636,12 +636,12 @@ _hbtn_close_event(PhxInterface *iface,
                        XCB_EVENT_MASK_NO_EVENT, (char*)message);
     xcb_flush(session->connection);
   } else if (response == XCB_ENTER_NOTIFY) {
-    sensitive_set(obj, true);
-    visible_set(obj->child, true);
+    ui_sensitive_set(obj, true);
+    ui_visible_set(obj->child, true);
     ui_invalidate_object(obj);
   } else if (response == XCB_LEAVE_NOTIFY) {
-    sensitive_set(obj, (ui_active_focus_get() != NULL));
-    visible_set(obj->child, false);
+    ui_sensitive_set(obj, (ui_active_focus_get() != NULL));
+    ui_visible_set(obj->child, false);
     ui_invalidate_object(obj);
   }
   return _default_button_meter(iface, nvt, obj);
@@ -704,12 +704,12 @@ _hbtn_minimize_event(PhxInterface *iface,
       xcb_flush(session->connection);
     }
   } else if (response == XCB_ENTER_NOTIFY) {
-    sensitive_set(obj, true);
-    visible_set(obj->child, true);
+    ui_sensitive_set(obj, true);
+    ui_visible_set(obj->child, true);
     ui_invalidate_object(obj);
   } else if (response == XCB_LEAVE_NOTIFY) {
-    sensitive_set(obj, (ui_active_focus_get() != NULL));
-    visible_set(obj->child, false);
+    ui_sensitive_set(obj, (ui_active_focus_get() != NULL));
+    ui_visible_set(obj->child, false);
     ui_invalidate_object(obj);
   }
   return _default_button_meter(iface, nvt, obj);
@@ -778,12 +778,12 @@ _hbtn_maximize_event(PhxInterface *iface,
       xcb_flush(connection);
     }
   } else if (response == XCB_ENTER_NOTIFY) {
-    sensitive_set(obj, true);
-    visible_set(obj->child, true);
+    ui_sensitive_set(obj, true);
+    ui_visible_set(obj->child, true);
     ui_invalidate_object(obj);
   } else if (response == XCB_LEAVE_NOTIFY) {
-    sensitive_set(obj, (ui_active_focus_get() != NULL));
-    visible_set(obj->child, false);
+    ui_sensitive_set(obj, (ui_active_focus_get() != NULL));
+    ui_visible_set(obj->child, false);
     ui_invalidate_object(obj);
   }
   return _default_button_meter(iface, nvt, obj);
@@ -821,15 +821,15 @@ _hbtn_manager_event(PhxInterface *iface,
   if (response == XCB_ENTER_NOTIFY) {
     xcb_enter_notify_event_t *xing
       = (xcb_enter_notify_event_t*)nvt;
-    sensitive_set(obj, true);
+    ui_sensitive_set(obj, true);
     if (!!(xing->state & XCB_MOD_MASK_CONTROL))
       obj->child->_draw_cb = _draw_symbol_resize;
-    visible_set(obj->child, true);
+    ui_visible_set(obj->child, true);
     ui_invalidate_object(obj);
   } else if (response == XCB_LEAVE_NOTIFY) {
-    sensitive_set(obj, (ui_active_focus_get() != NULL));
+    ui_sensitive_set(obj, (ui_active_focus_get() != NULL));
     obj->child->_draw_cb = _draw_symbol_move;
-    visible_set(obj->child, false);
+    ui_visible_set(obj->child, false);
     ui_invalidate_object(obj);
   }
   return _default_button_meter(iface, nvt, obj);
@@ -875,7 +875,7 @@ focus_set:
     ndx = hbar->ncount;
     while (ndx != 0) {
       PhxObject *inspect = hbar->objects[(--ndx)];
-      sensitive_set(inspect, (response == XCB_FOCUS_IN));
+      ui_sensitive_set(inspect, (response == XCB_FOCUS_IN));
       ui_invalidate_object(inspect);
     }
     return false;
@@ -1132,7 +1132,7 @@ user_configure_layout(PhxInterface *iface) {
   obtn->attrib->stroke  = header_stroke;
   obtn->child = ui_object_child_create(obtn, PHX_DRAWING, NULL, nexus_box);
   obtn->child->_draw_cb = _draw_symbol_close;
-  visible_set(obtn->child, false);
+  ui_visible_set(obtn->child, false);
 
     /* Creation of minimize button */
   nexus_box.x = sz + (2 * xpos) - 1;
@@ -1147,7 +1147,7 @@ user_configure_layout(PhxInterface *iface) {
   obtn->attrib->stroke  = header_stroke;
   obtn->child = ui_object_child_create(obtn, PHX_DRAWING, NULL, nexus_box);
   obtn->child->_draw_cb = _draw_symbol_minimize;
-  visible_set(obtn->child, false);
+  ui_visible_set(obtn->child, false);
 
     /* Creation of maximize button */
   nexus_box.x = (2 * (sz - 1)) + (3 * xpos);
@@ -1162,7 +1162,7 @@ user_configure_layout(PhxInterface *iface) {
   obtn->attrib->stroke  = header_stroke;
   obtn->child = ui_object_child_create(obtn, PHX_DRAWING, NULL, nexus_box);
   obtn->child->_draw_cb = _draw_symbol_maximize;
-  visible_set(obtn->child, false);
+  ui_visible_set(obtn->child, false);
 
     /* Creation of move/resize button */
   nexus_box.x = iface->mete_box.w - (sz + 1 + xpos);
@@ -1179,7 +1179,7 @@ user_configure_layout(PhxInterface *iface) {
   obtn->child = ui_object_child_create(obtn, PHX_DRAWING, NULL, nexus_box);
     /* default state is to move, keyboard alters to allow resize. */
   obtn->child->_draw_cb = _draw_symbol_move;
-  visible_set(obtn->child, false);
+  ui_visible_set(obtn->child, false);
 
   return hbar;
 }

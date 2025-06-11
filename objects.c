@@ -2,34 +2,6 @@
 #include "configure.h"
 #include "banks.h"
 
-void
-visible_set(PhxObject *obj, bool visible) {
-  if (visible)    obj->state &= ~OBIT_VISIBLE;
-  else            obj->state |=  OBIT_VISIBLE;
-}
-
-__inline bool
-visible_get(PhxObject *obj) {
-  return ((obj->state & OBIT_VISIBLE) == 0);
-}
-
-/* Basic use for dropdowms. Signals active and selectable.
-  Uses on navigation buttons. */
-void
-sensitive_set(PhxObject *obj, bool sensitive) {
-
-  if (sensitive)  obj->state &= ~OBIT_SENSITIVE;
-  else {          obj->state |=  OBIT_SENSITIVE;
-      /* Test if related to a combo button */
-    ui_bank_insensitive_set(obj);
-  }
-}
-
-__inline bool
-sensitive_get(PhxObject *obj) {
-  return ((obj->state & OBIT_SENSITIVE) == 0);
-}
-
 #pragma mark *** Drawing ***
 
 void

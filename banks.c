@@ -59,7 +59,7 @@ ui_bank_content_update(PhxBank *ibank) {
 
   for (odx = 0; odx < nexus->ncount; odx++) {
     PhxObject *inspect = nexus->objects[odx];
-    if (!visible_get(inspect))  continue;
+    if (!ui_visible_get(inspect))  continue;
     configure.w = maxof(configure.w, inspect->mete_box.w);
     configure.h = maxof(configure.h, (inspect->mete_box.y
                                      + inspect->mete_box.h));
@@ -115,8 +115,8 @@ set_actuator:
       uint16_t idx = 0;
       do {
         PhxObject *inspect = nexus->objects[idx];
-        if ( (visible_get(inspect))
-            && (sensitive_get(inspect)) ) {
+        if ( (ui_visible_get(inspect))
+            && (ui_sensitive_get(inspect)) ) {
           vault->on_idx = idx;
           vault->actuator->ncount = 1;
           goto set_actuator;
@@ -149,7 +149,7 @@ _default_bank_run(PhxBank *ibank, xcb_generic_event_t *nvt, PhxObject *obj) {
         ui_invalidate_object((PhxObject*)ibank);
       }
     } else {
-      if (!sensitive_get(obj)) {
+      if (!ui_sensitive_get(obj)) {
         if (vault->in_idx != (uint16_t)~0) {
           vObj = nexus->objects[vault->in_idx];
           _attrib_colours_swap(vObj->attrib, (PhxAttr*)&vault->bg_fill);
@@ -187,7 +187,7 @@ _default_bank_run(PhxBank *ibank, xcb_generic_event_t *nvt, PhxObject *obj) {
         vault->in_idx = (uint16_t)~0;
         vault->was_idx = vault->on_idx;
       }
-    } else  if (sensitive_get(obj)) {
+    } else  if (ui_sensitive_get(obj)) {
       vault->in_idx = nexus->ncount;
       while (nexus->objects[(--vault->in_idx)] != obj) ;
       vObj = nexus->objects[vault->in_idx];
@@ -347,7 +347,7 @@ ui_bank_remove_object(PhxBank *ibank, uint16_t idx) {
     tdx = idx;
     do {
       PhxObject *tObj = nexus->objects[tdx];
-      if ( (visible_get(tObj)) && (sensitive_get(tObj)) ) {
+      if ( (ui_visible_get(tObj)) && (ui_sensitive_get(tObj)) ) {
         vault->on_idx = tdx;
         goto ctest;
       }
@@ -356,7 +356,7 @@ ui_bank_remove_object(PhxBank *ibank, uint16_t idx) {
   if (idx != 0) {
     do {
       PhxObject *tObj = nexus->objects[(--idx)];
-      if ( (visible_get(tObj)) && (sensitive_get(tObj)) ) {
+      if ( (ui_visible_get(tObj)) && (ui_sensitive_get(tObj)) ) {
         vault->on_idx = idx;
         goto ctest;
       }
@@ -417,7 +417,7 @@ ui_bank_insensitive_set(PhxObject *obj) {
     uint16_t tdx = idx;
     do {
       PhxObject *tObj = nexus->objects[tdx];
-      if ( (visible_get(tObj)) && (sensitive_get(tObj)) ) {
+      if ( (ui_visible_get(tObj)) && (ui_sensitive_get(tObj)) ) {
         vault->on_idx = tdx;
         goto ctest;
       }
@@ -426,7 +426,7 @@ ui_bank_insensitive_set(PhxObject *obj) {
   if (idx != 0) {
     do {
       PhxObject *tObj = nexus->objects[(--idx)];
-      if ( (visible_get(tObj)) && (sensitive_get(tObj)) ) {
+      if ( (ui_visible_get(tObj)) && (ui_sensitive_get(tObj)) ) {
         vault->on_idx = idx;
         goto ctest;
       }

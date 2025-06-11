@@ -1,8 +1,37 @@
 #include "nexus.h"
 #include "objects.h"
+#include "banks.h"
 
 /* draw_demo.c */
 extern void  _demo_draw(PhxObject *obj, cairo_t *cr);
+
+void
+ui_visible_set(PhxObject *obj, bool visible) {
+  if (visible)    obj->state &= ~OBIT_VISIBLE;
+  else            obj->state |=  OBIT_VISIBLE;
+}
+
+__inline bool
+ui_visible_get(PhxObject *obj) {
+  return ((obj->state & OBIT_VISIBLE) == 0);
+}
+
+/* Basic use for dropdowms. Signals active and selectable.
+  Uses on navigation buttons. */
+void
+ui_sensitive_set(PhxObject *obj, bool sensitive) {
+
+  if (sensitive)  obj->state &= ~OBIT_SENSITIVE;
+  else {          obj->state |=  OBIT_SENSITIVE;
+      /* Test if related to a combo button */
+    ui_bank_insensitive_set(obj);
+  }
+}
+
+__inline bool
+ui_sensitive_get(PhxObject *obj) {
+  return ((obj->state & OBIT_SENSITIVE) == 0);
+}
 
 #pragma mark *** Events ***
 
@@ -18,7 +47,7 @@ _default_nexus_meter(PhxInterface *iface,
 
     /* Nexus' object needs calling, our default is do nothing. */
   if (!IS_IFACE_TYPE(obj)) {
-    if (!sensitive_get(obj))
+    if (!ui_sensitive_get(obj))
       return true;
       /* PhxObject's default of false, forces PhxNexus to handle. */
     if (obj->_event_cb != NULL)
@@ -45,7 +74,7 @@ _default_nexus_meter(PhxInterface *iface,
     if (obj->type == PHX_NEXUS)
       do {
         PhxObject *inspect = ((PhxNexus*)obj)->objects[(--odx)];
-  /*      if ( (visible_get(inspect)) && (inspect->_event_cb != NULL) )*/
+  /*      if ( (ui_visible_get(inspect)) && (inspect->_event_cb != NULL) )*/
         if (inspect->_event_cb != NULL)
           inspect->_event_cb(iface, nvt, inspect);
       } while (odx != 0);

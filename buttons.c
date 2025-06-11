@@ -101,7 +101,7 @@ _draw_button_round_corner(PhxObject *b, cairo_t *cr) {
   if ((obtn->state & OBIT_BTN_PRESS) != 0)
     cairo_set_source_rgb(cr, 0.5, 0.5, 0.5);
   else {
-    double alpha = sensitive_get(obtn) ? c->fg_fill.a : (c->fg_fill.a * 0.5);
+    double alpha = ui_sensitive_get(obtn) ? c->fg_fill.a : (c->fg_fill.a * 0.5);
     cairo_set_source_rgba(cr, c->fg_fill.r,
                               c->fg_fill.g,
                               c->fg_fill.b, alpha);
@@ -137,7 +137,7 @@ _draw_button_combo_arrow(PhxObject *b, cairo_t *cr) {
   x += obtn->draw_box.w - (w + 1.5);
   y += 1.5;
 
-  alpha = sensitive_get(obtn) ? c->fg_ink.a : (c->fg_ink.a * 0.5);
+  alpha = ui_sensitive_get(obtn) ? c->fg_ink.a : (c->fg_ink.a * 0.5);
   cairo_set_source_rgba(cr, c->fg_ink.r,
                             c->fg_ink.g,
                             c->fg_ink.b,
@@ -206,7 +206,7 @@ _draw_button_navigate_right(PhxObject *b, cairo_t *cr) {
   if ((obtn->state & OBIT_BTN_PRESS) != 0)
     cairo_set_source_rgb(cr, 0.5, 0.5, 0.5);
   else {
-    alpha = sensitive_get(obtn) ? c->fg_fill.a : (c->fg_fill.a * 0.5);
+    alpha = ui_sensitive_get(obtn) ? c->fg_fill.a : (c->fg_fill.a * 0.5);
     cairo_set_source_rgba(cr, c->fg_fill.r,
                               c->fg_fill.g,
                               c->fg_fill.b, alpha);
@@ -223,7 +223,7 @@ _draw_button_navigate_right(PhxObject *b, cairo_t *cr) {
     cairo_fill(cr);
   }
 
-  alpha = sensitive_get(obtn) ? c->fg_ink.a : (c->fg_ink.a * 0.5);
+  alpha = ui_sensitive_get(obtn) ? c->fg_ink.a : (c->fg_ink.a * 0.5);
   cairo_set_source_rgba(cr, c->fg_ink.r + 0.2,
                             c->fg_ink.g + 0.2,
                             c->fg_ink.b + 0.2,
@@ -286,7 +286,7 @@ _draw_button_navigate_left(PhxObject *b, cairo_t *cr) {
   if ((obtn->state & OBIT_BTN_PRESS) != 0)
     cairo_set_source_rgb(cr, 0.5, 0.5, 0.5);
   else {
-    alpha = sensitive_get(obtn) ? c->fg_fill.a : (c->fg_fill.a * 0.5);
+    alpha = ui_sensitive_get(obtn) ? c->fg_fill.a : (c->fg_fill.a * 0.5);
     cairo_set_source_rgba(cr, c->fg_fill.r,
                               c->fg_fill.g,
                               c->fg_fill.b, alpha);
@@ -303,7 +303,7 @@ _draw_button_navigate_left(PhxObject *b, cairo_t *cr) {
     cairo_fill(cr);
   }
 
-  alpha = sensitive_get(obtn) ? c->fg_ink.a : (c->fg_ink.a * 0.5);
+  alpha = ui_sensitive_get(obtn) ? c->fg_ink.a : (c->fg_ink.a * 0.5);
   cairo_set_source_rgba(cr, c->fg_ink.r + 0.2,
                             c->fg_ink.g + 0.2,
                             c->fg_ink.b + 0.2,

@@ -30,13 +30,6 @@ struct _PhxObject {
  void               *exclusive;
 };
 
-extern bool              visible_get(PhxObject *obj);
-extern void              visible_set(PhxObject *obj,
-                                     bool visible);
-extern bool              sensitive_get(PhxObject *obj);
-extern void              sensitive_set(PhxObject *obj,
-                                       bool sensitive);
-
 extern PhxObject *       ui_object_create(PhxNexus *nexus,
                                           PhxObjectType type,
                                           PhxDrawHandler draw,

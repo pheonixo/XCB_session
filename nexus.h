@@ -46,6 +46,13 @@ struct _PhxNexus {
  void               *exclusive;
 };
 
+extern bool              ui_visible_get(PhxObject *obj);
+extern void              ui_visible_set(PhxObject *obj,
+                                        bool visible);
+extern bool              ui_sensitive_get(PhxObject *obj);
+extern void              ui_sensitive_set(PhxObject *obj,
+                                          bool sensitive);
+
 extern PhxNexus *        ui_nexus_create(PhxInterface *iface,
                                          PhxRectangle configure);
 extern void              _default_nexus_raze(void *nexus);

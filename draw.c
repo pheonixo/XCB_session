@@ -26,7 +26,7 @@ _object_walk(PhxNexus *nexus, cairo_t *cr) {
     PhxObject *obj = nexus->objects[odx];
       /* initial object must be visible to draw it and
          any visible children */
-    if (visible_get(obj)) {
+    if (ui_visible_get(obj)) {
       cairo_save(cr);
       if (obj->_draw_cb != NULL)  obj->_draw_cb(obj, cr);
       if (obj->child != NULL) {
@@ -34,7 +34,7 @@ _object_walk(PhxNexus *nexus, cairo_t *cr) {
         PhxObject *add = obj->child;
         do {
             /* user may adjust which children at any given time should draw */
-          if (visible_get(add))
+          if (ui_visible_get(add))
             if (add->_draw_cb != NULL)  add->_draw_cb(add, cr);
           add = add->child;
         } while (add != NULL);
@@ -51,7 +51,7 @@ _nexus_walk(PhxInterface *iface) {
     /* walk all iface nexus, ascending since layered system */
   do {
     PhxNexus *nexus = iface->nexus[ndx];
-    if (!visible_get((PhxObject*)nexus)) continue;
+    if (!ui_visible_get((PhxObject*)nexus)) continue;
     if (nexus->surface != NULL) {
       PhxInterface *mount;
       cairo_t *cr;

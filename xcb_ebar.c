@@ -67,7 +67,7 @@ btn_navigate_left(PhxInterface *iface,
     if (vault->on_idx != 0) {
       do {
         PhxObject *inspect = nexus->objects[(--vault->on_idx)];
-        if (sensitive_get(inspect)) {
+        if (ui_sensitive_get(inspect)) {
           ui_actuator_content_update(ibank);
           result_cb(ibank);
           ui_invalidate_object(actuator);
@@ -78,7 +78,7 @@ btn_navigate_left(PhxInterface *iface,
     vault->on_idx = nexus->ncount;
     do {
       PhxObject *inspect = nexus->objects[(--vault->on_idx)];
-      if (sensitive_get(inspect)) {
+      if (ui_sensitive_get(inspect)) {
         ui_actuator_content_update(ibank);
         result_cb(ibank);
         ui_invalidate_object(actuator);
@@ -112,7 +112,7 @@ btn_navigate_right(PhxInterface *iface,
     if ((vault->on_idx + 1) < nexus->ncount) {
       do {
         PhxObject *inspect = nexus->objects[(++vault->on_idx)];
-        if (sensitive_get(inspect)) {
+        if (ui_sensitive_get(inspect)) {
           ui_actuator_content_update(ibank);
           result_cb(ibank);
           ui_invalidate_object(actuator);
@@ -123,7 +123,7 @@ btn_navigate_right(PhxInterface *iface,
     vault->on_idx = ~0;
     do {
       PhxObject *inspect = nexus->objects[(++vault->on_idx)];
-      if (sensitive_get(inspect)) {
+      if (ui_sensitive_get(inspect)) {
         ui_actuator_content_update(ibank);
         result_cb(ibank);
         ui_invalidate_object(actuator);
@@ -233,7 +233,7 @@ _configure_bar(PhxNexus *nexus, bool frame, bool max_text) {
 
   RECTANGLE(within_box, (28 + 1), 0, 1, 28);
   obj = ui_object_create(nexus, PHX_DRAWING, ui_draw_vertical_line, within_box);
-  sensitive_set(obj, false);
+  ui_sensitive_set(obj, false);
 
   RECTANGLE(within_box, (28 + 1 + 1), 0, 150, 28);
   style = BTN_COMBO_ARROW;
@@ -249,8 +249,8 @@ _configure_bar(PhxNexus *nexus, bool frame, bool max_text) {
   obj = ui_button_object_create(obtn, PHX_DRAWING, _draw_scroll_up);
   obj->mete_box.h /= 2;
   obj->draw_box.h /= 2;
-  sensitive_set(obj, false);
-  /*sensitive_set(obtn->child, false);*/
+  ui_sensitive_set(obj, false);
+  /*ui_sensitive_set(obtn->child, false);*/
 
   for (sdx = 0; sdx < 2; sdx++) {
     obj = ui_button_label_create(obtn, strings[sdx], (HJST_CTR | VJST_CTR));
@@ -261,7 +261,7 @@ _configure_bar(PhxNexus *nexus, bool frame, bool max_text) {
   RECTANGLE(obj->draw_box, 2, (obj->mete_box.h / 2) - 1,
                            obj->mete_box.w - 4, 2);
   obj->attrib->stroke = 2;
-  sensitive_set(obj, false);
+  ui_sensitive_set(obj, false);
 
   for (; strings[sdx] != NULL; sdx++) {
     obj = ui_button_label_create(obtn, strings[sdx], (HJST_CTR | VJST_CTR));
@@ -299,7 +299,7 @@ _configure_bar(PhxNexus *nexus, bool frame, bool max_text) {
 
   RECTANGLE(within_box, (28 + 1 + 1 + 150 + 1), 0, 1, 28);
   obj = ui_object_create(nexus, PHX_DRAWING, ui_draw_vertical_line, within_box);
-  sensitive_set(obj, false);
+  ui_sensitive_set(obj, false);
 
   RECTANGLE(within_box, (28 + 1 + 1 + 150 + 1 + 1), 0, 28, 28);
   style = BTN_NAVIGATE_RIGHT;

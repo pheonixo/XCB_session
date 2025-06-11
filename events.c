@@ -24,7 +24,7 @@ _get_object_at(PhxObject *obj, int16_t x, int16_t y) {
     if (inspect->o_mount != inspect)
       continue;
 
-    if (visible_get(inspect)) {
+    if (ui_visible_get(inspect)) {
       int16_t x0 = inspect->mete_box.x;
       int16_t y0 = inspect->mete_box.y;
       int16_t w_cmp = inspect->mete_box.w + x0;
@@ -48,8 +48,8 @@ _get_object_from(PhxInterface *iface, int16_t x, int16_t y) {
   if (ndx == 0)  return rObj;
   do {
     PhxNexus *inspect = iface->nexus[(--ndx)];
-    if (visible_get((PhxObject*)inspect)) {
-         /* Don't assume that a <= 0 width/height was made !visible_get() */
+    if (ui_visible_get((PhxObject*)inspect)) {
+         /* Don't assume that a <= 0 width/height was made !ui_visible_get() */
       int16_t w_cmp = inspect->mete_box.w;
       int16_t h_cmp = inspect->mete_box.h;
       if ((w_cmp > 0) && (h_cmp > 0)) {

@@ -89,7 +89,7 @@ _fsearchmarks_draw(PhxTextbuffer *tbuf, cairo_t *cr) {
 
   fdata = _fsearch_for_textview(tbuf->owner);
   if ( (fdata == NULL) || (fdata->_results.ncount == 0) )  return;
-  if (!visible_get((PhxObject*)fdata->findbar))   return;
+  if (!ui_visible_get((PhxObject*)fdata->findbar))   return;
 
   has_focus = (ui_active_focus_get() == tbuf->owner);
   font_em = tbuf->owner->attrib->font_em;
@@ -203,8 +203,8 @@ _fsearch_found_update(phx_fsearch_t *fdata) {
     set = ((tbuf->insert.offset != fdata->_results.pairs->d0)
            || (tbuf->release.offset != fdata->_results.pairs->d1));
   }
-  sensitive_set(fdata->findbar->objects[navigate_right_box], set);
-  sensitive_set(fdata->findbar->objects[navigate_left_box], set);
+  ui_sensitive_set(fdata->findbar->objects[navigate_right_box], set);
+  ui_sensitive_set(fdata->findbar->objects[navigate_left_box], set);
 }
 
 /* Updates 'pairs' from start of current selected by what was replaced.
@@ -392,12 +392,12 @@ result_cb(PhxBank *ibank) {
   ui_nexus_resize((PhxNexus*)otxt->i_mount, &rbox);
 
 final_adjust:
-  visible_set(findbar->objects[close0_box], set);
-  visible_set(findbar->objects[replace_all_box], !set);
-  visible_set(findbar->objects[replace_box], !set);
-  visible_set(findbar->objects[replace_find_box], !set);
-  visible_set(findbar->objects[close1_box], !set);
-  visible_set(findbar->objects[textview_replace_box], !set);
+  ui_visible_set(findbar->objects[close0_box], set);
+  ui_visible_set(findbar->objects[replace_all_box], !set);
+  ui_visible_set(findbar->objects[replace_box], !set);
+  ui_visible_set(findbar->objects[replace_find_box], !set);
+  ui_visible_set(findbar->objects[close1_box], !set);
+  ui_visible_set(findbar->objects[textview_replace_box], !set);
   vault->was_idx = vault->in_idx;
   ui_invalidate_object((PhxObject*)findbar->i_mount);
 }
@@ -419,7 +419,7 @@ btn_close_event(PhxInterface *iface,
     return _default_button_meter(iface, nvt, obj);
 
   findbar = (PhxNexus*)obj->i_mount;
-  visible_set((PhxObject*)findbar, false);
+  ui_visible_set((PhxObject*)findbar, false);
   ui_invalidate_object((PhxObject*)findbar);
 
     /* Added to allow interface without being attached to content. */
@@ -439,7 +439,7 @@ btn_close_event(PhxInterface *iface,
   vault = (PhxVault*)ibank->exclusive;
   vault->was_idx = (vault->on_idx = 0);
   ui_actuator_content_update(ibank);
-  visible_set(findbar->objects[close0_box], true);
+  ui_visible_set(findbar->objects[close0_box], true);
 
   return _default_button_meter(iface, nvt, obj);
 }
@@ -685,15 +685,15 @@ _findport_visible_set(PhxObjectTextview *otxt, PhxFindport *findbar) {
 
   phx_findboard_t *findboard;
 
-  if (!visible_get((PhxObject*)findbar)) {
+  if (!ui_visible_get((PhxObject*)findbar)) {
     PhxRectangle rbox;
     uint16_t box_height;
-    visible_set((PhxObject*)findbar, true);
-    visible_set(findbar->objects[replace_all_box], false);
-    visible_set(findbar->objects[replace_box], false);
-    visible_set(findbar->objects[replace_find_box], false);
-    visible_set(findbar->objects[close1_box], false);
-    visible_set(findbar->objects[textview_replace_box], false);
+    ui_visible_set((PhxObject*)findbar, true);
+    ui_visible_set(findbar->objects[replace_all_box], false);
+    ui_visible_set(findbar->objects[replace_box], false);
+    ui_visible_set(findbar->objects[replace_find_box], false);
+    ui_visible_set(findbar->objects[close1_box], false);
+    ui_visible_set(findbar->objects[textview_replace_box], false);
       /* Set to view row 0 only. */
     box_height = findbar->objects[choose_box]->mete_box.h;
     findbar->mete_box.h = box_height + 2;
@@ -787,7 +787,7 @@ _findport_keyboard(PhxObjectTextview *otxt, uint8_t key) {
       PhxNexus *findbar = inspect->findbar;
       PhxObjectTextview *ftxt = findbar->objects[bdx];
       ui_textview_buffer_set(ftxt, *dataPtr, (HJST_LFT | VJST_BTM));
-      if (visible_get((PhxObject*)findbar)) {
+      if (ui_visible_get((PhxObject*)findbar)) {
           /* active visible to be only one that gets fdata string updated? */
         phx_fsearch_t *fdata = _fsearch_for_findport(findbar);
         if (fdata->string != NULL)  free(fdata->string);
@@ -1067,7 +1067,7 @@ _findport_create(PhxInterface *iface, PhxRectangle configure) {
     iface->nexus[iface->ncount] = NULL;
     return NULL;
   }
-  visible_set((PhxObject*)nexus, false);
+  ui_visible_set((PhxObject*)nexus, false);
   return nexus;
 }
 
