@@ -15,9 +15,10 @@
 
 #pragma mark *** Drawing ***
 
-void
-_draw_grab_grip(PhxNexus *nexus, cairo_t *cr) {
+static void
+_draw_grab_grip(PhxObject *b, cairo_t *cr) {
 
+  PhxNexus *nexus = (PhxNexus*)b;
   xcb_gravity_t gravity = (nexus->state >> GRAVITY_SHIFT) & 0x0F;
 
   PhxRectangle mbox = nexus->mete_box;
@@ -753,6 +754,7 @@ ui_gfuse_create(PhxInterface *iface, PhxRectangle configure,
   gfuse->type = PHX_GFUSE;
   _gfuse_add_grip(gfuse, gravity);
 
+  gfuse->_draw_cb = _draw_grab_grip;
   gfuse->_event_cb = _default_gfuse_meter;
 
   configure = gfuse->draw_box;

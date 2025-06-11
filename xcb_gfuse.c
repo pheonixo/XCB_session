@@ -21,11 +21,11 @@ user_configure_layout(PhxInterface *iface) {
   RECTANGLE(nexus_box, 220 - GRIPSZ,        150 - GRIPSZ,
                        360 + (GRIPSZ << 1), 300 + (GRIPSZ << 1));
     /* returns user area, 0,0 referenced */
-  subfuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
+  fuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
     /* lock grip 'w', 'h', 50 each */
-  fuse = (PhxNFuse*)subfuse->i_mount;
-  fuse->min_max.w = 630;
-  fuse->min_max.h = 500;
+  subfuse = (PhxNFuse*)fuse->nexus[0];
+  subfuse->min_max.w = 630;
+  subfuse->min_max.h = 500;
 
           /* normal unit area, behaves as inner window */
   RECTANGLE(nexus_box, 0, 150, 360 - 40, 150);
@@ -48,6 +48,7 @@ user_configure_layout(PhxInterface *iface) {
         nexus = ui_nexus_create((PhxInterface*)subsubfuse, nexus_box);
         nexus->min_max.w = 40 + ndx;
       }
+
     RECTANGLE(nexus_box, 40 + 2*40, 90, 80, 120);
     subsubfuse = ui_nfuse_create((PhxInterface*)subfuse, nexus_box);
 

@@ -76,8 +76,6 @@ _nexus_walk(PhxInterface *iface) {
         cairo_rectangle(cr, -xD, -yD, wD, hD);
         cairo_clip(cr);
       }
-      if (nexus->type == PHX_GFUSE)
-        _draw_grab_grip(nexus, cr);
                       /* end clipping code */
 
         /* each nexus can draw a background, or user's desire */
