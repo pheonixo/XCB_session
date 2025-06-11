@@ -868,7 +868,6 @@ _interface_configure(PhxInterface *iface, int16_t hD, int16_t vD) {
   Image_s cImage;
   IData_s *idata;
   uint16_t icount;
-  cairo_status_t error;
 
   if (!IS_WINDOW_TYPE(iface)) {
     DEBUG_ASSERT(true, "error: entry type _interface_configure().");
@@ -890,20 +889,29 @@ _interface_configure(PhxInterface *iface, int16_t hD, int16_t vD) {
   iface->mete_box.h += vD;
   iface->draw_box.h += vD;
 
-    /* surface of iface need redress. */
-  if (iface->surface != NULL)
-    cairo_surface_destroy(iface->surface);
     /* resize video buffer */
   cairo_xcb_surface_set_size(iface->vid_buffer,
                              iface->mete_box.w,
                              iface->mete_box.h);
-    /* new iface->surface, this means all subsurfaces must be redone */
-  iface->surface = ui_surface_create_similar(iface, iface->draw_box.w,
-                                                    iface->draw_box.h);
-  error = cairo_surface_status(iface->surface);
-  if (error != CAIRO_STATUS_SUCCESS) {
-    DEBUG_ASSERT(true, "Some weird cairo error...?!");
-    goto rejected;
+
+    /* Determine if resizing of iface's surface is needed. */
+  if ( (iface->mete_box.w > iface->sur_width)
+      || (iface->mete_box.h > iface->sur_height) ) {
+
+    cairo_status_t error;
+
+    if (iface->surface != NULL)
+      cairo_surface_destroy(iface->surface);
+      /* new iface->surface, this means all subsurfaces must be redone */
+    iface->surface = ui_surface_create_similar(iface, iface->draw_box.w,
+                                                      iface->draw_box.h);
+    error = cairo_surface_status(iface->surface);
+    if (error != CAIRO_STATUS_SUCCESS) {
+      DEBUG_ASSERT(true, "Some weird cairo error...?!");
+      goto rejected;
+    }
+    iface->sur_width  = iface->draw_box.w;
+    iface->sur_height = iface->draw_box.h;
   }
 
   if (iface->ncount != 0) {
