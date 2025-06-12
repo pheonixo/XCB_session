@@ -23,13 +23,17 @@ _draw_grab_grip(PhxObject *b, cairo_t *cr) {
 
   PhxRectangle mbox = nexus->mete_box;
   PhxAttr *c = nexus->attrib;
+
     /* Clear backgound surface. */
-  cairo_set_source_rgba(cr, c->bg_fill.r, c->bg_fill.g,
-                            c->bg_fill.b, c->bg_fill.a);
+  cairo_save(cr);
+  cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
+  cairo_restore(cr);
+
     /* Clip to drawing area. */
   cairo_rectangle(cr, 0, 0, mbox.w, mbox.h);
   cairo_clip(cr);
+
     /* Set background of grip area. Note we don't re-clear
       inner surface after drawing, this occurs by inner nfuse. */
   cairo_set_source_rgba(cr, 0.82, 0.82, 0.82, 1);
