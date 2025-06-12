@@ -7,6 +7,8 @@
  #define M_PI 3.14159265358979323846
 #endif
 
+PhxRGBA RGBA_DEFAULT_BG = {
+  (double)0x0F0/0x0FF, (double)0x0F0/0x0FF, (double)0x0F0/0x0FF, 1.0 };
 PhxRGBA RGBA_SELECTION = {
   (double)0x091/0x0FF, (double)0x0C2/0x0FF, (double)0x0F2/0x0FF, 1.0 };
 PhxRGBA RGBA_TEXT_FGFILL = {
@@ -182,7 +184,7 @@ ui_invalidate_rectangle(PhxInterface *iface, PhxRectangle dirty) {
     iface = iface->i_mount;
   }
   dirty.w += dirty.x, dirty.h += dirty.y;
-  if ((dirty.w <= 0) || (dirty.w <= 0))  return;
+  if ((dirty.w <= 0) || (dirty.h <= 0))  return;
   if (dirty.x < 0)  dirty.x = 0;
   if (dirty.y < 0)  dirty.y = 0;
   rect_u.rect = dirty;

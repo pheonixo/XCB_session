@@ -11,6 +11,7 @@ union rectangle_endianess {
   uint64_t     r64;
 };
 
+extern PhxRGBA RGBA_DEFAULT_BG;
 extern PhxRGBA RGBA_SELECTION;
 extern PhxRGBA RGBA_TEXT_FGFILL;
 extern PhxRGBA RGBA_SEARCH_FGFILL;
