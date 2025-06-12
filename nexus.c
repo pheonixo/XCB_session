@@ -256,12 +256,9 @@ topmost:
     /* drawing ability */
   if (iface->surface != NULL) {
     cairo_status_t error;
-    nexus->surface = cairo_surface_create_for_rectangle(
-                                    iface->surface,
-                                    nexus->mete_box.x,
-                                    nexus->mete_box.y,
-                                    nexus->mete_box.w,
-                                    nexus->mete_box.h);
+    nexus->surface = ui_surface_create_similar(iface,
+                                               nexus->mete_box.w,
+                                               nexus->mete_box.h);
     error = cairo_surface_status(nexus->surface);
     DEBUG_ASSERT((error != CAIRO_STATUS_SUCCESS),
                       "error: _ui_nexus_create_for() surface creation");

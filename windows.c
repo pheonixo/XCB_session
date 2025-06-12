@@ -217,6 +217,8 @@ _window_stack_topmost(PhxInterface *iface) {
       xcb_flush(connection);
     }
   }
+/* On WMs dont raise unless takes focus. */
+  if (!(session->WMstate & HAS_WM))
   {
     const static uint32_t values[] = { XCB_STACK_MODE_ABOVE };
     xcb_configure_window(session->connection, iface->window,
@@ -395,6 +397,16 @@ _default_interface_raze(void *obj) {
     cairo_surface_destroy(iface->vid_buffer);
     iface->vid_buffer = NULL;
   }
+
+  if (iface == (PhxInterface*)ui_active_focus_get())
+    session->has_focus = NULL;
+
+  DEBUG_ASSERT((iface == (PhxInterface*)ui_active_drag_get()),
+                     "failure: has_drag on iface termination.");
+  DEBUG_ASSERT((iface == (PhxInterface*)ui_active_within_get()),
+                     "failure: obj_within on iface termination.");
+  DEBUG_ASSERT((iface == (PhxInterface*)ui_active_focus_get()),
+                     "failure: has_focus on iface termination.");
 
   free(iface);
 }
@@ -594,15 +606,15 @@ _window_event_protocols(xcb_connection_t *connection, xcb_window_t window) {
   xcb_atom_t values[4];
 
   values[0] = WM_DELETE_WINDOW;
-  values[1] = WM_TAKE_FOCUS;
 /*
+  values[1] = WM_TAKE_FOCUS;
   values[2] = _NET_WM_SYNC_REQUEST;
   values[3] = _NET_WM_PING;
 */
 
     /* code to allow delete window instead of quit */
   xcb_change_property(connection, XCB_PROP_MODE_REPLACE, window,
-                      WM_PROTOCOLS, XCB_ATOM_ATOM, 32, 2,
+                      WM_PROTOCOLS, XCB_ATOM_ATOM, 32, 1,
                       values);
 }
 

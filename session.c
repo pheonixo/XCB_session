@@ -45,11 +45,14 @@ ui_active_focus_set(PhxObject *obj) {
     }
   }
   if (obj != NULL) {
-    DEBUG_ASSERT((obj->_event_cb == NULL),
-                 "SEGFAULT: undefined _event_cb... ui_active_focus_set()");
     notify.response_type = XCB_FOCUS_IN;
     notify.event = ui_window_for(obj);
     iface = ui_interface_for(notify.event);
+    if (obj->_event_cb == NULL) {
+      DEBUG_ASSERT(true, "error: undefined _event_cb... ui_active_focus_set()");
+      session->has_focus = (PhxObject*)iface;
+      return;
+    }
     obj->_event_cb(iface, (xcb_generic_event_t*)&notify, obj);
   }
   session->has_focus = obj;
@@ -135,6 +138,49 @@ ui_active_drag_get(void) {
 void
 ui_active_drag_set(PhxObject *obj) {
   session->has_drag = obj;
+}
+
+xcb_window_t
+ui_window_for(PhxObject *obj) {
+
+  PhxInterface *iface;
+  if ( (session == NULL) || (obj == NULL) ){
+    DEBUG_ASSERT(true, "No object, No window.");
+    return 0;
+  }
+    /* Since using basics, and objects unknown at this level of code. */
+  iface = (PhxInterface*)obj;
+  if (IS_IFACE_TYPE(iface))
+    return iface->window;
+  return iface->i_mount->window;
+}
+
+PhxInterface *
+ui_interface_for(xcb_window_t window) {
+
+  uint16_t sdx;
+
+  if (window == 0) {
+    DEBUG_ASSERT(true, "Invalid window... ui_interface_for()");
+    return NULL;
+  }
+  if (session == NULL) {
+    DEBUG_ASSERT(true, "Session not created.");
+    return NULL;
+  }
+  if (session->ncount == 0) {
+    DEBUG_ASSERT(true, "Session contains no windows... ui_interface_for()");
+    return NULL;
+  }
+
+  sdx = session->ncount;
+  do
+    if (session->iface[(--sdx)]->window == window)
+      return session->iface[sdx];
+  while (sdx != 0);
+
+  DEBUG_ASSERT(true, "Session does not contain window... ui_interface_for()");
+  return NULL;
 }
 
 #pragma mark *** Realloc ***
@@ -375,49 +421,6 @@ _session_create(xcb_connection_t *connection) {
   ui_atoms_initialize(connection);
 
   return session;
-}
-
-xcb_window_t
-ui_window_for(PhxObject *obj) {
-
-  PhxInterface *iface;
-  if ( (session == NULL) || (obj == NULL) ){
-    DEBUG_ASSERT(true, "No object, No window.");
-    return 0;
-  }
-    /* Since using basics, and objects unknown at this level of code. */
-  iface = (PhxInterface*)obj;
-  if (IS_IFACE_TYPE(iface))
-    return iface->window;
-  return iface->i_mount->window;
-}
-
-PhxInterface *
-ui_interface_for(xcb_window_t window) {
-
-  uint16_t sdx;
-
-  if (window == 0) {
-    DEBUG_ASSERT(true, "Invalid window... ui_interface_for()");
-    return NULL;
-  }
-  if (session == NULL) {
-    DEBUG_ASSERT(true, "Session not created.");
-    return NULL;
-  }
-  if (session->ncount == 0) {
-    DEBUG_ASSERT(true, "Session contains no windows... ui_interface_for()");
-    return NULL;
-  }
-
-  sdx = session->ncount;
-  do
-    if (session->iface[(--sdx)]->window == window)
-      return session->iface[sdx];
-  while (sdx != 0);
-
-  DEBUG_ASSERT(true, "Session does not contain window... ui_interface_for()");
-  return NULL;
 }
 
 static void

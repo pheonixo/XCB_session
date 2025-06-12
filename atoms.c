@@ -16,6 +16,7 @@ xcb_atom_t TIMESTAMP;
 xcb_atom_t WM_TAKE_FOCUS;
 xcb_atom_t _NET_ACTIVE_WINDOW;
 xcb_atom_t _MOTIF_WM_HINTS;
+xcb_atom_t WM_CHANGE_STATE;
 xcb_atom_t _NET_FRAME_EXTENTS;
 char *     _NET_WM_STRING = NULL;
 
@@ -41,7 +42,7 @@ xcb_atom_t XDND_TYPELIST;
 static void
 _atoms_window_managers(xcb_connection_t *connection) {
 
-  const uint16_t nAtoms = 6;
+  const uint16_t nAtoms = 7;
   xcb_atom_t _NET_SUPPORTING_WM_CHECK;
   xcb_atom_t _NET_WM_NAME;
 
@@ -51,10 +52,11 @@ _atoms_window_managers(xcb_connection_t *connection) {
     uint16_t nsz;
     xcb_intern_atom_cookie_t cookie;
     xcb_intern_atom_reply_t *reply;
-  } atoms[6] = {
+  } atoms[7] = {
     { "WM_TAKE_FOCUS",            13, {0}, NULL },  /* currently unused */
     { "_NET_ACTIVE_WINDOW",       18, {0}, NULL },
     { "_MOTIF_WM_HINTS",          15, {0}, NULL },
+    { "WM_CHANGE_STATE",          15, {0}, NULL },
     { "_NET_FRAME_EXTENTS",       18, {0}, NULL },
     { "_NET_SUPPORTING_WM_CHECK", 24, {0}, NULL },
     { "_NET_WM_NAME",             12, {0}, NULL }
@@ -73,10 +75,11 @@ _atoms_window_managers(xcb_connection_t *connection) {
   WM_TAKE_FOCUS      = atoms[ 0].reply->atom;  free(atoms[ 0].reply);
   _NET_ACTIVE_WINDOW = atoms[ 1].reply->atom;  free(atoms[ 1].reply);
   _MOTIF_WM_HINTS    = atoms[ 2].reply->atom;  free(atoms[ 2].reply);
-  _NET_FRAME_EXTENTS = atoms[ 3].reply->atom;  free(atoms[ 3].reply);
+  WM_CHANGE_STATE    = atoms[ 3].reply->atom;  free(atoms[ 3].reply);
+  _NET_FRAME_EXTENTS = atoms[ 4].reply->atom;  free(atoms[ 4].reply);
 
-  _NET_SUPPORTING_WM_CHECK  = atoms[ 4].reply->atom;  free(atoms[4].reply);
-  _NET_WM_NAME              = atoms[ 5].reply->atom;  free(atoms[5].reply);
+  _NET_SUPPORTING_WM_CHECK  = atoms[ 5].reply->atom;  free(atoms[5].reply);
+  _NET_WM_NAME              = atoms[ 6].reply->atom;  free(atoms[6].reply);
 
   if ( (_NET_SUPPORTING_WM_CHECK != XCB_ATOM_NONE)
       && (_NET_WM_NAME != XCB_ATOM_NONE) ) {

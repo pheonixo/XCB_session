@@ -333,7 +333,13 @@ _draw_hdr_background(PhxObject *b, cairo_t *cr) {
   cairo_rectangle(cr, b->mete_box.x, b->mete_box.y,
                       b->mete_box.w, b->mete_box.h);
   cairo_clip(cr);
-#if 1
+
+  if (b->attrib->bg_fill.a != 0) {
+    PhxRGBA *c = &b->attrib->bg_fill;
+    cairo_set_source_rgba(cr, c->r, c->g, c->b, c->a);
+    cairo_paint(cr);
+  }
+
   tmp = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
                                              b->mete_box.w, 10);
   if (cairo_surface_status(tmp))  return;
@@ -353,7 +359,6 @@ _draw_hdr_background(PhxObject *b, cairo_t *cr) {
 
     /* clean up */
   cairo_surface_destroy(tmp);
-#endif
 }
 
 #pragma mark *** WM functions ***
@@ -405,7 +410,7 @@ _invalidate_configure(PhxInterface *iface, PhxRectangle dirty) {
     tmr = ui_timer_create(iface, "configure", &ts, _configure_invalidate);
     DEBUG_ASSERT((tmr == NULL), "error: NULL timer _invalidate_configure()");
   }
-  rect_u.rect = dirty; 
+  rect_u.rect = dirty;
   tmr->data = rect_u.r64;
 }
 
@@ -657,25 +662,21 @@ _hbtn_minimize_event(PhxInterface *iface,
       /* When has WM and not in override-redirect. */
     if ( (!!(session->WMstate & HAS_WM))
         && !(!!(iface->state & SBIT_UNDECORATED)
-           && (_MOTIF_WM_HINTS == XCB_ATOM_NONE)) ) {
+           && (_MOTIF_WM_HINTS == XCB_ATOM_NONE)
+           && (WM_CHANGE_STATE == XCB_ATOM_NONE)) ) {
       xcb_button_press_event_t *bp = (xcb_button_press_event_t*)nvt;
       xcb_screen_t *screen
         = xcb_setup_roots_iterator(xcb_get_setup(session->connection)).data;
-      xcb_intern_atom_cookie_t c0;
-      xcb_intern_atom_reply_t *r0;
       xcb_client_message_event_t *message = calloc(32, 1);
       message->response_type  = XCB_CLIENT_MESSAGE;
       message->format         = 32;
       message->window         = bp->event;
-      c0 = xcb_intern_atom(session->connection, 0, 15, "WM_CHANGE_STATE");
-      r0 = xcb_intern_atom_reply(session->connection, c0, NULL);
-      message->type           = r0->atom;
+      message->type           = WM_CHANGE_STATE;
       message->data.data32[0] = 3;  /* IconicState */
       xcb_send_event(session->connection, false, screen->root,
                          XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT |
                          XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY, (char*)message);
       xcb_flush(session->connection);
-      free(r0);
     } else if (!(iface->state & SBIT_MAXIMIZED)) {
       uint32_t values[4];
         /* For now, implement a window shade type of minimize. */

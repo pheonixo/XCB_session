@@ -271,7 +271,9 @@ _event_mouse(xcb_generic_event_t *nvt) {
     bptime = mouse->time;
   }
 
-  DEBUG_ASSERT((ui_active_within_get() != obj),
+    /* object could be an un-event which defers to mount. */
+  DEBUG_ASSERT(( (ui_active_within_get() != obj)
+                 && ((PhxObject*)obj->i_mount != ui_active_within_get()) ),
                          "failure: mouse_event within object.");
 
   handled = false;
@@ -372,6 +374,7 @@ _event_enter(xcb_generic_event_t *nvt) {
 
   iface = ui_interface_for(xing->event);
   obj = _get_object_at_pointer(iface, xing->event_x, xing->event_y);
+
     /* Using WM's _NET_WM_MOVERESIZE this is only means of determining
       _NET_WM_MOVERESIZE_CANCEL. We regain focus even after we had to
       call ungrab_pointer() to start drag. */
@@ -388,15 +391,6 @@ _event_enter(xcb_generic_event_t *nvt) {
       return true;
     }
   }
-#if DND_EXTERNAL_ON
-  if ( (ui_active_within_get() != NULL)
-      && (session->xdndserver->xdndSource.source == 0) )
-#else
-  if (ui_active_within_get() != NULL)
-#endif
-    DEBUG_ASSERT(( (ui_active_within_get() == ui_active_focus_get())
-                    && ((iface->state & SBIT_HBR_DRAG) == 0) ),
-                         "failure: within already set.");
 
   if (obj == NULL) {
     DEBUG_ASSERT((!ui_window_is_transient(iface->window)),

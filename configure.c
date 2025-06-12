@@ -638,6 +638,9 @@ _nfuse_delta_sweep(PhxInterface *iface, Image_s *cImage) {
 
 #pragma mark *** Signal events ***
 
+/* A nexus was resized. Any surface touching its mete_box must be
+  redrawn. This has nothing to do with adjustments based on configure
+  notify events. */
 static void
 _invalidate_configured(PhxInterface *iface, Image_s *cImage) {
 
@@ -693,6 +696,8 @@ _invalidate_configured(PhxInterface *iface, Image_s *cImage) {
   ui_invalidate_rectangle(iface, invalid);
 }
 
+/* User gets sent moved/resized configure notice directly. They
+  decide if nexus/contents of needs to be invalidated. */
 static void
 _interface_configure_callbacks(PhxInterface *iface, Image_s *cImage) {
 
@@ -742,26 +747,29 @@ _interface_resurface(PhxInterface *iface) {
 
   uint16_t idx = 0;
   do {
-    PhxRectangle r;
     PhxNexus *inspect = iface->nexus[idx];
-      /* Clear configure sweep bits. */
-    inspect->state &= ~(NBIT_HORZ_TOUCH | NBIT_VERT_TOUCH);
-    if (inspect->surface != NULL) {
-      cairo_surface_destroy(inspect->surface);
-      inspect->surface = NULL;
-    }
-    r = inspect->mete_box;
-    if ( !((r.w <= 0) || (r.h <= 0))
-        && ((r.x + r.w) > 0) && ((r.y + r.h) > 0) ) {
-      cairo_surface_t *surface = inspect->i_mount->surface;
-      if (surface != NULL) {
+    if (!!(inspect->state & (NBIT_HORZ_TOUCH | NBIT_VERT_TOUCH))) {
+      PhxRectangle r;
+      bool visible;
+      inspect->state &= ~(NBIT_HORZ_TOUCH | NBIT_VERT_TOUCH);
+      inspect->state |= OBIT_SUR_TOUCH;
+      r = inspect->mete_box;
+      if ( (r.w > inspect->sur_width)
+          || (r.h > inspect->sur_height) ) {
         cairo_status_t error;
-        inspect->surface
-          = cairo_surface_create_for_rectangle(surface, r.x, r.y, r.w, r.h);
+        DEBUG_ASSERT((inspect->surface == NULL),
+                                             "error: _interface_resurface");
+        cairo_surface_destroy(inspect->surface);
+        inspect->surface = ui_surface_create_similar(iface, r.w, r.h);
         error = cairo_surface_status(inspect->surface);
-        if (error != CAIRO_STATUS_SUCCESS)
-          puts("error: _interface_resurface()");
+        DEBUG_ASSERT((error != CAIRO_STATUS_SUCCESS),
+                                           "error: _interface_resurface()");
+        inspect->sur_width  = r.w;
+        inspect->sur_height = r.h;
       }
+      visible = ( (r.w > 0) && ((r.x + r.w) > 0)
+                 && (r.h > 0) && ((r.y + r.h) > 0) );
+      ui_visible_set((PhxObject*)inspect, visible);
     }
       /* Call even if zero rectangle, just to reset internal state flag. */
     if ( (OBJECT_BASE_TYPE(inspect) == PHX_NFUSE)
@@ -902,9 +910,8 @@ _interface_configure(PhxInterface *iface, int16_t hD, int16_t vD) {
 
     if (iface->surface != NULL)
       cairo_surface_destroy(iface->surface);
-      /* new iface->surface, this means all subsurfaces must be redone */
-    iface->surface = ui_surface_create_similar(iface, iface->draw_box.w,
-                                                      iface->draw_box.h);
+    iface->surface
+      = ui_surface_create_similar(iface, iface->draw_box.w, iface->draw_box.h);
     error = cairo_surface_status(iface->surface);
     if (error != CAIRO_STATUS_SUCCESS) {
       DEBUG_ASSERT(true, "Some weird cairo error...?!");
@@ -922,7 +929,7 @@ _interface_configure(PhxInterface *iface, int16_t hD, int16_t vD) {
          Normal for nfuse is x,y moves, but user may have altered flags */
     _nfuse_delta_sweep(iface, &cImage);
 
-      /* redoes of all cairo_surfaces, because top level was done. */
+      /* Checks to see if a surface needs adjusting. */
     _interface_resurface(iface);
   }
     /* Each nexus that changed sends a CONFIGURE_NOTIFY its

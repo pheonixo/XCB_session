@@ -47,7 +47,7 @@ _object_walk(PhxNexus *nexus, cairo_t *cr) {
 }
 
 static void
-_nexus_walk(PhxInterface *iface) {
+_nexus_walk(PhxInterface *iface, cairo_t *face_cr) {
 
   uint16_t ndx = 0;
     /* walk all iface nexus, ascending since layered system */
@@ -55,50 +55,84 @@ _nexus_walk(PhxInterface *iface) {
     PhxNexus *nexus = iface->nexus[ndx];
     if (!ui_visible_get((PhxObject*)nexus)) continue;
     if (nexus->surface != NULL) {
-      PhxInterface *mount;
       cairo_t *cr;
-
       colour_select++, colour_select %= 12;
       cr = cairo_create(nexus->surface);
-
-                   /* clipping code for surfaces */
-      mount = nexus->i_mount;
-      if (!IS_WINDOW_TYPE(mount)) {
-        int16_t wD, hD,
-                xD = nexus->mete_box.x,
-                yD = nexus->mete_box.y;
-        if (nexus->type == PHX_NEXUS) {
-          xD += (mount->mete_box.x < 0) ? mount->mete_box.x : 0;
-          yD += (mount->mete_box.y < 0) ? mount->mete_box.y : 0;
-        }
-          /* wD, hD aren't concerned with iface extents */
-          /* Since a mount, w, h considered points from origin 0, 0 */
-        wD = minof(mount->mete_box.w, nexus->mete_box.x + nexus->mete_box.w);
-        hD = minof(mount->mete_box.h, nexus->mete_box.y + nexus->mete_box.h);
-        cairo_rectangle(cr, -xD, -yD, wD, hD);
-        cairo_clip(cr);
-      }
-                      /* end clipping code */
-
         /* each nexus can draw a background, or user's desire */
       if (nexus->_draw_cb != NULL)
         nexus->_draw_cb((PhxObject*)nexus, cr);
       else if (nexus->attrib->bg_fill.a != 0) {
         PhxRGBA *c = &nexus->attrib->bg_fill;
+          /* Clear backgound surface. */
+        cairo_save(cr);
+        cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+        cairo_paint(cr);
+        cairo_restore(cr);
+          /* Clip to drawing area. */
+        cairo_rectangle(cr, 0, 0, nexus->mete_box.w, nexus->mete_box.h);
+        cairo_clip(cr);
+          /* Paint viewable nexus user's desire. */
         cairo_set_source_rgba(cr, c->r, c->g, c->b, c->a);
         cairo_paint(cr);
       }
-        /* check if nexus fusion, has surface, check children */
+
+      if (nexus->type == PHX_GFUSE) {
+          /* Has NFuse internal drawing. Need all drawn to
+            their sufaces, then transfer to gfuse' surface. */
+        PhxNexus *subfuse;
+        cairo_set_source_surface(face_cr, nexus->surface,
+                                          nexus->mete_box.x,
+                                          nexus->mete_box.y);
+        cairo_paint(face_cr);
+        subfuse = ((PhxNFuse*)nexus)->nexus[0];
+        cairo_translate(cr, subfuse->mete_box.x, subfuse->mete_box.y);
+        if (subfuse->_draw_cb != NULL)
+          subfuse->_draw_cb((PhxObject*)subfuse, cr);
+        else if (subfuse->attrib->bg_fill.a != 0) {
+          PhxRGBA *c = &subfuse->attrib->bg_fill;
+          cairo_set_source_rgba(cr, c->r, c->g, c->b, c->a);
+          cairo_paint(cr);
+        }
+        if (subfuse->ncount != 0)
+          _nexus_walk((PhxInterface*)subfuse, cr);
+        cairo_set_source_surface(cr, subfuse->surface, 0, 0);
+        cairo_paint(cr);
+        cairo_destroy(cr);
+        cairo_surface_flush(nexus->surface);
+        cairo_set_source_surface(face_cr, nexus->surface,
+                                          nexus->mete_box.x,
+                                          nexus->mete_box.y);
+        cairo_paint(face_cr);
+        continue;
+      }
+      if (nexus->type == PHX_NFUSE) {
+        if (nexus->ncount != 0) {
+          _nexus_walk((PhxInterface*)nexus, cr);
+          cairo_set_source_surface(cr, nexus->surface, 0, 0);
+          cairo_paint(cr);
+          cairo_destroy(cr);
+          cairo_surface_flush(nexus->surface);
+          cairo_set_source_surface(face_cr, nexus->surface,
+                                            nexus->mete_box.x,
+                                            nexus->mete_box.y);
+          cairo_paint(face_cr);
+        }
+        continue;
+      }
+       /* check if nexus fusion, has surface, check children */
       if (nexus->ncount != 0) {
         DEBUG_ASSERT((!IS_IFACE_TYPE(nexus)), "logic error _nexus_walk()");
         if (OBJECT_BASE_TYPE(nexus) >= PHX_NEXUS)
           _object_walk(nexus, cr);
         else
-          _nexus_walk((PhxInterface*)nexus);
+          _nexus_walk((PhxInterface*)nexus, face_cr);
       }
-
       cairo_destroy(cr);
       cairo_surface_flush(nexus->surface);
+      cairo_set_source_surface(face_cr, nexus->surface,
+                                        nexus->mete_box.x,
+                                        nexus->mete_box.y);
+      cairo_paint(face_cr);
     }
   } while ((++ndx) < iface->ncount);
 }
@@ -127,7 +161,7 @@ _interface_draw(PhxInterface *iface) {
     cairo_paint(cr);
   }
 
-  if (iface->ncount != 0)  _nexus_walk(iface);
+  if (iface->ncount != 0)  _nexus_walk(iface, cr);
 
   cairo_destroy(cr);
   cairo_surface_flush(iface->surface);

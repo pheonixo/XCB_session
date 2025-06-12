@@ -9,6 +9,8 @@ Turns out it's more than likely something not initialized correctly,
 or being set/utilized wrongly or gcc. Strobe/flicker doesn't always occur
 depending on build or session being run.
 
+The X Synchronization Extension
+
 New test with window as 4 panes is overwriting a sliver of headerbar. It
 does not happen everytime, and can sometimes be more than sliver.
 
