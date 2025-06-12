@@ -97,6 +97,17 @@ _demo_draw(PhxObject *obj, cairo_t *cr) {
   const PhxRGBA *c = &colours[cdx];
 
   PhxRectangle *dbox = &nexus->draw_box;
+
+    /* Clear backgound surface. */
+  cairo_save(cr);
+  cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint(cr);
+  cairo_restore(cr);
+
+    /* Clip to drawing area. */
+  cairo_rectangle(cr, 0, 0, dbox->w, dbox->h);
+  cairo_clip(cr);
+
   cairo_rectangle(cr, dbox->x, dbox->y, dbox->w, dbox->h);
   cairo_set_source_rgba(cr, (1 - c->r),
                             (1 - c->g),
