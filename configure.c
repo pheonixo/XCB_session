@@ -754,8 +754,8 @@ _interface_resurface(PhxInterface *iface) {
       inspect->state &= ~(NBIT_HORZ_TOUCH | NBIT_VERT_TOUCH);
       inspect->state |= OBIT_SUR_TOUCH;
       r = inspect->mete_box;
-      if ( (r.w > inspect->sur_width)
-          || (r.h > inspect->sur_height) ) {
+      if ( (r.w > (int16_t)inspect->sur_width)
+          || (r.h > (int16_t)inspect->sur_height) ) {
         cairo_status_t error;
         DEBUG_ASSERT((inspect->surface == NULL),
                                              "error: _interface_resurface");
