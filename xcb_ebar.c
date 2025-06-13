@@ -351,7 +351,7 @@ user_configure_layout(PhxInterface *iface) {
 
   RECTANGLE(nexus_box, 0, 0, 600, 28);
   nexus = ui_nexus_create(iface, nexus_box);
-  nexus->state = HXPD_RGT;
+  nexus->state |= HXPD_RGT;
   nexus->_draw_cb = NULL;
   nexus->_event_cb = nexus_events;
   nexus->attrib->bg_fill.r = (double)0x0D4/0x0FF;
@@ -364,7 +364,7 @@ user_configure_layout(PhxInterface *iface) {
 
   RECTANGLE(nexus_box, 0, 28, 600, 28);
   nexus = ui_nexus_create(iface, nexus_box);
-  nexus->state = HXPD_RGT;
+  nexus->state |= HXPD_RGT;
   nexus->_draw_cb = NULL;
   nexus->_event_cb = nexus_events;
   nexus->attrib->bg_fill.r = (double)0x0D4/0x0FF;
@@ -376,7 +376,7 @@ user_configure_layout(PhxInterface *iface) {
 
   RECTANGLE(nexus_box, 0, 56, 600, 28);
   nexus = ui_nexus_create(iface, nexus_box);
-  nexus->state = HXPD_RGT;
+  nexus->state |= HXPD_RGT;
   nexus->_draw_cb = NULL;
   nexus->_event_cb = nexus_events;
   nexus->attrib->bg_fill.r = (double)0x0D4/0x0FF;
@@ -388,7 +388,7 @@ user_configure_layout(PhxInterface *iface) {
 
   RECTANGLE(nexus_box, 0, 84, 600, 28);
   nexus = ui_nexus_create(iface, nexus_box);
-  nexus->state = HXPD_RGT;
+  nexus->state |= HXPD_RGT;
   nexus->_draw_cb = NULL;
   nexus->_event_cb = nexus_events;
   nexus->attrib->bg_fill.r = (double)0x0D4/0x0FF;

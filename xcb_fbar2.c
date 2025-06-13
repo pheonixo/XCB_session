@@ -999,7 +999,7 @@ _findport_create(PhxInterface *iface, PhxRectangle configure) {
     /* Note: could do this after objects created. All objects would
       then start as 'static'. */
   nexus->type = PHX_FPORT;
-  nexus->state = HXPD_RGT;
+  nexus->state |= HXPD_RGT;
   nexus->_draw_cb  = NULL;
   nexus->_event_cb = _findport_meter;
   nexus->_raze_cb  = _findport_raze;
