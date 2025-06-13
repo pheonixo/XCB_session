@@ -51,3 +51,4 @@ extern xcb_atom_t XDND_TYPELIST;
 extern void  ui_atoms_initialize(xcb_connection_t *);
 
 #endif /* __SESS_ATOMS_H__ */
+
