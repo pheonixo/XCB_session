@@ -49,24 +49,26 @@ user_configure_layout(PhxInterface *iface) {
         nexus->min_max.w = 40 + ndx;
       }
 
+      /* creating nfuse instead of just nexus */
     RECTANGLE(nexus_box, 40 + 2*40, 90, 80, 120);
     subsubfuse = ui_nfuse_create((PhxInterface*)subfuse, nexus_box);
-
     subsubfuse->state &= ~(HXPD_MSK | VXPD_MSK);
     subsubfuse->state |= HXPD_LFT | VXPD_TOP;
-
     subsubfuse->min_max.w = 40+2*40 + 80;
     subsubfuse->min_max.h = 90 + 120;
+        /* internal nexus */
       for (ndx = 0; ndx < 120; ndx += 40) {
         RECTANGLE(nexus_box, 0, ndx, 80, 40);
         nexus = ui_nexus_create((PhxInterface*)subsubfuse, nexus_box);
         nexus->state |= HXPD_LFT | VXPD_TOP;
       }
 
+      /* creating nfuse instead of just nexus */
     RECTANGLE(nexus_box, 40+2*40+80, 40, 80, 300 - 80);
     subsubfuse = ui_nfuse_create((PhxInterface*)subfuse, nexus_box);
     subsubfuse->min_max.w = 40+2*40+80 + 80;
     subsubfuse->min_max.h = 300 - 40;
+        /* internal nexus */
       for (ndx = 0; ndx < 80; ndx += 40) {
         RECTANGLE(nexus_box,ndx, 0, 40, 300 - 80);
         nexus = ui_nexus_create((PhxInterface*)subsubfuse, nexus_box);
