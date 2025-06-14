@@ -56,7 +56,7 @@ user_configure_port_layout(PhxInterface *iface) {
 
   RECTANGLE(nexus_box, 800 - 40, 0, 40, 200);
   nexus = ui_nexus_create(iface, nexus_box);
-    /* Set constant height, x moves */
+    /* Set constant width, x moves */
   nexus->state |= HXPD_LFT | VXPD_BTM;
 }
 
