@@ -16,7 +16,8 @@ extern PhxRGBA RGBA_SELECTION;
 extern PhxRGBA RGBA_TEXT_FGFILL;
 extern PhxRGBA RGBA_SEARCH_FGFILL;
 
-extern bool              _interface_draw(PhxInterface *iface);
+extern bool              _interface_draw(PhxInterface *iface,
+                                         xcb_expose_event_t *expose);
 extern void              ui_invalidate_rectangle(PhxInterface *iface,
                                                  PhxRectangle dirty);
 extern void              ui_invalidate_object(PhxObject *obj);

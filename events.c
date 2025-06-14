@@ -475,7 +475,7 @@ _event_expose(xcb_generic_event_t *nvt) {
   DEBUG_ASSERT( ( ((int16_t)expose->x < 0) || ((int16_t)expose->y < 0) ),
                    "probable failure: _event_expose().");
 
-  _interface_draw(iface);
+  _interface_draw(iface, expose);
 
   cr = cairo_create(iface->vid_buffer);
   cairo_rectangle(cr, expose->x, expose->y,
