@@ -457,8 +457,8 @@ _plpt_sweep(PhxInterface *iface, uint16_t ndx, int16_t hD, int16_t vD,
       if (hOffset != 0) {
         if ( ((inspect->state & HXPD_MSK) == HXPD_RGT)
             && (!x_moves) ) {
-          if ( ((ibox->x + ibox->w) == hbox.x)
-              || ((ibox->x + ibox->w) == inspect->min_max.w) )
+/*          if ( ((ibox->x + ibox->w) == hbox.x)
+              || ((ibox->x + ibox->w) == inspect->min_max.w) )*/
             inspect->state |= NBIT_HORZ_TOUCH;
           inspect->mete_box.w += hOffset;
           inspect->draw_box.w += hOffset;
@@ -471,8 +471,8 @@ _plpt_sweep(PhxInterface *iface, uint16_t ndx, int16_t hD, int16_t vD,
       if (vOffset != 0) {
         if ( ((inspect->state & VXPD_MSK) == VXPD_BTM)
             && (!y_moves) ) {
-          if ( ((ibox->y + ibox->h) == vbox.y)
-              || ((ibox->y + ibox->h) == inspect->min_max.h) )
+/*          if ( ((ibox->y + ibox->h) == vbox.y)
+              || ((ibox->y + ibox->h) == inspect->min_max.h) )*/
             inspect->state |= NBIT_VERT_TOUCH;
           inspect->mete_box.h += vOffset;
           inspect->draw_box.h += vOffset;
@@ -754,22 +754,24 @@ _interface_resurface(PhxInterface *iface) {
       inspect->state &= ~(NBIT_HORZ_TOUCH | NBIT_VERT_TOUCH);
       inspect->state |= OBIT_SUR_TOUCH;
       r = inspect->mete_box;
+      visible = ( (r.w > 0) && ((r.x + r.w) > 0)
+                 && (r.h > 0) && ((r.y + r.h) > 0) );
+      ui_visible_set((PhxObject*)inspect, visible);
       if ( (r.w > (int16_t)inspect->sur_width)
           || (r.h > (int16_t)inspect->sur_height) ) {
         cairo_status_t error;
         DEBUG_ASSERT((inspect->surface == NULL),
-                                             "error: _interface_resurface");
+                                           "error(1): _interface_resurface");
         cairo_surface_destroy(inspect->surface);
+        if (r.w < (int16_t)inspect->sur_width)   r.w = inspect->sur_width;
+        if (r.h < (int16_t)inspect->sur_height)  r.h = inspect->sur_height;
         inspect->surface = ui_surface_create_similar(iface, r.w, r.h);
         error = cairo_surface_status(inspect->surface);
         DEBUG_ASSERT((error != CAIRO_STATUS_SUCCESS),
-                                           "error: _interface_resurface()");
+                                           "error(2): _interface_resurface()");
         inspect->sur_width  = r.w;
         inspect->sur_height = r.h;
       }
-      visible = ( (r.w > 0) && ((r.x + r.w) > 0)
-                 && (r.h > 0) && ((r.y + r.h) > 0) );
-      ui_visible_set((PhxObject*)inspect, visible);
     }
       /* Call even if zero rectangle, just to reset internal state flag. */
     if ( (OBJECT_BASE_TYPE(inspect) == PHX_NFUSE)
