@@ -660,10 +660,11 @@ _hbtn_minimize_event(PhxInterface *iface,
   uint8_t response = nvt->response_type & (uint8_t)0x7F;
   if (response == XCB_BUTTON_RELEASE) {
       /* When has WM and not in override-redirect. */
+      /* Can't assume WM_CHANGE_STATE is supported because exists.
+        Another client may have set. */
     if ( (!!(session->WMstate & HAS_WM))
         && !(!!(iface->state & SBIT_UNDECORATED)
-           && (_MOTIF_WM_HINTS == XCB_ATOM_NONE)
-           && (WM_CHANGE_STATE == XCB_ATOM_NONE)) ) {
+           && (_MOTIF_WM_HINTS == XCB_ATOM_NONE)) ) {
       xcb_button_press_event_t *bp = (xcb_button_press_event_t*)nvt;
       xcb_screen_t *screen
         = xcb_setup_roots_iterator(xcb_get_setup(session->connection)).data;
@@ -696,7 +697,7 @@ _hbtn_minimize_event(PhxInterface *iface,
         values[0] = iface->mete_box.x;
         values[1] = iface->mete_box.y;
         values[2] = iface->mete_box.w;
-        values[3] = HEADER_HEIGHT;
+        values[3] = maxof(HEADER_HEIGHT, iface->szhints.y);
       }
       xcb_configure_window(session->connection, iface->window,
                    XCB_CONFIG_WINDOW_X     | XCB_CONFIG_WINDOW_Y
@@ -1104,7 +1105,7 @@ user_configure_layout(PhxInterface *iface) {
 
   RECTANGLE(nexus_box, 0, 0, 500, 14 + 10);
   hbar = ui_nexus_create(iface, nexus_box);
-  hbar->state = HXPD_RGT;
+  hbar->state |= HXPD_RGT;
   hbar->type = PHX_HEADERBAR;
   iface->state |= SBIT_HEADERBAR;
   hbar->_draw_cb = _draw_hdr_background;
@@ -1195,9 +1196,8 @@ main(int argc, char *argv[]) {
 
 #if DEBUG_EVENTS_ON
   debug_flags &= ~((uint64_t)1 << XCB_MOTION_NOTIFY);
-  debug_flags &= ~((uint64_t)1 << XCB_CONFIGURE_NOTIFY);
 /*
-*/
+  debug_flags &= ~((uint64_t)1 << XCB_CONFIGURE_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_EXPOSE);
   debug_flags &= ~((uint64_t)1 << XCB_KEY_PRESS);
   debug_flags &= ~((uint64_t)1 << XCB_KEY_RELEASE);
@@ -1209,6 +1209,7 @@ main(int argc, char *argv[]) {
   debug_flags &= ~((uint64_t)1 << XCB_FOCUS_OUT);
   debug_flags &= ~((uint64_t)1 << XCB_VISIBILITY_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_PROPERTY_NOTIFY);
+*/
 #endif
 
     /* A 'topmost' decorated window */

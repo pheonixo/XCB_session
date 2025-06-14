@@ -1,5 +1,14 @@
 #include "textviews.h"
 #include "buttons.h"
+#include "gfuse.h"
+
+/* Headerbars need to be versatile enough that a user might even
+  wish it to be a shade-type where enter its normal position will
+  cause it to unfurl. */
+/* It should be this application's responsiblity to ensure it's
+  in nexus list as topmost nexus. Developer has responsiblity for
+  add on nexus' mins, maxs, positions. */
+
 
 extern void  ext_cairo_blur_surface(cairo_surface_t *, int, int);
 
@@ -651,10 +660,11 @@ _hbtn_minimize_event(PhxInterface *iface,
   uint8_t response = nvt->response_type & (uint8_t)0x7F;
   if (response == XCB_BUTTON_RELEASE) {
       /* When has WM and not in override-redirect. */
+      /* Can't assume WM_CHANGE_STATE is supported because exists.
+        Another client may have set. */
     if ( (!!(session->WMstate & HAS_WM))
         && !(!!(iface->state & SBIT_UNDECORATED)
-           && (_MOTIF_WM_HINTS == XCB_ATOM_NONE)
-           && (WM_CHANGE_STATE == XCB_ATOM_NONE)) ) {
+           && (_MOTIF_WM_HINTS == XCB_ATOM_NONE)) ) {
       xcb_button_press_event_t *bp = (xcb_button_press_event_t*)nvt;
       xcb_screen_t *screen
         = xcb_setup_roots_iterator(xcb_get_setup(session->connection)).data;
@@ -687,7 +697,7 @@ _hbtn_minimize_event(PhxInterface *iface,
         values[0] = iface->mete_box.x;
         values[1] = iface->mete_box.y;
         values[2] = iface->mete_box.w;
-        values[3] = HEADER_HEIGHT;
+        values[3] = maxof(HEADER_HEIGHT, iface->szhints.y);
       }
       xcb_configure_window(session->connection, iface->window,
                    XCB_CONFIG_WINDOW_X     | XCB_CONFIG_WINDOW_Y
@@ -923,6 +933,7 @@ focus_set:
       if (!!(mouse->state & XCB_MOD_MASK_CONTROL))
             wmgr_btn->child->_draw_cb = _draw_symbol_resize;
       else  wmgr_btn->child->_draw_cb = _draw_symbol_move;
+puts("finished drag XCB_BUTTON_RELEASE");
       ui_active_drag_set(NULL);
       ui_active_within_set(obj, mouse->state);
       return true;
@@ -1070,7 +1081,7 @@ user_configure_layout(PhxInterface *iface) {
 
   RECTANGLE(nexus_box, 0, 0, 500, 14 + 10);
   hbar = ui_nexus_create(iface, nexus_box);
-  hbar->state = HXPD_RGT;
+  hbar->state |= HXPD_RGT;
   hbar->type = PHX_HEADERBAR;
   iface->state |= SBIT_HEADERBAR;
   hbar->_draw_cb = _draw_hdr_background;
