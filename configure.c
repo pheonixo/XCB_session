@@ -457,9 +457,7 @@ _plpt_sweep(PhxInterface *iface, uint16_t ndx, int16_t hD, int16_t vD,
       if (hOffset != 0) {
         if ( ((inspect->state & HXPD_MSK) == HXPD_RGT)
             && (!x_moves) ) {
-/*          if ( ((ibox->x + ibox->w) == hbox.x)
-              || ((ibox->x + ibox->w) == inspect->min_max.w) )*/
-            inspect->state |= NBIT_HORZ_TOUCH;
+          inspect->state |= NBIT_HORZ_TOUCH;
           inspect->mete_box.w += hOffset;
           inspect->draw_box.w += hOffset;
         } else {
@@ -471,9 +469,7 @@ _plpt_sweep(PhxInterface *iface, uint16_t ndx, int16_t hD, int16_t vD,
       if (vOffset != 0) {
         if ( ((inspect->state & VXPD_MSK) == VXPD_BTM)
             && (!y_moves) ) {
-/*          if ( ((ibox->y + ibox->h) == vbox.y)
-              || ((ibox->y + ibox->h) == inspect->min_max.h) )*/
-            inspect->state |= NBIT_VERT_TOUCH;
+          inspect->state |= NBIT_VERT_TOUCH;
           inspect->mete_box.h += vOffset;
           inspect->draw_box.h += vOffset;
         } else {
@@ -772,11 +768,11 @@ _interface_resurface(PhxInterface *iface) {
         inspect->sur_width  = r.w;
         inspect->sur_height = r.h;
       }
+        /* At minimum, reset internal state flag. */
+      if ( (OBJECT_BASE_TYPE(inspect) == PHX_NFUSE)
+          && (inspect->ncount != 0) )
+        _interface_resurface((PhxInterface*)inspect);
     }
-      /* Call even if zero rectangle, just to reset internal state flag. */
-    if ( (OBJECT_BASE_TYPE(inspect) == PHX_NFUSE)
-        && (inspect->ncount != 0) )
-      _interface_resurface((PhxInterface*)inspect);
   } while ((++idx) < iface->ncount);
 }
 
