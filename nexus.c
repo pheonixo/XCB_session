@@ -264,6 +264,10 @@ topmost:
                       "error: _ui_nexus_create_for() surface creation");
     nexus->sur_width  = nexus->draw_box.w;
     nexus->sur_height = nexus->draw_box.h;
+
+      /* On creation, should user attach _draw_cb, they shouldn't
+        need to invalidate. We tell draw unit here. */
+    nexus->state |= OBIT_SUR_TOUCH;
   }
 
   nexus->i_mount = iface;
