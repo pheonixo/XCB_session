@@ -625,7 +625,7 @@ _window_create(PhxRectangle configure) {
   xcb_screen_t *screen;
   xcb_window_t window;
   uint32_t mask;
-  uint32_t values[2];
+  uint32_t values[3];
 
   if ( (configure.w <= 0) || (configure.h <= 0) )
     return 0;
@@ -650,7 +650,7 @@ _window_create(PhxRectangle configure) {
   window = xcb_generate_id(connection);
   screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
 
-  mask      = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
+  mask      = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_CURSOR;
   values[0] = screen->white_pixel;
   values[1] = XCB_EVENT_MASK_EXPOSURE       | XCB_EVENT_MASK_BUTTON_PRESS   |
               XCB_EVENT_MASK_BUTTON_RELEASE | XCB_EVENT_MASK_POINTER_MOTION |
@@ -659,6 +659,7 @@ _window_create(PhxRectangle configure) {
               XCB_EVENT_MASK_FOCUS_CHANGE   | XCB_EVENT_MASK_STRUCTURE_NOTIFY |
               XCB_EVENT_MASK_PROPERTY_CHANGE |
               XCB_EVENT_MASK_VISIBILITY_CHANGE;
+  values[2] = session->cursor_default;
 
     /* ignores x, y, border_width (virus) */
   xcb_create_window(connection,
@@ -673,11 +674,6 @@ _window_create(PhxRectangle configure) {
                     XCB_WINDOW_CLASS_INPUT_OUTPUT, /* class          */
                     screen->root_visual,           /* visual         */
                     mask, values);                 /* masks */
-
-    /* When creating windows after xcb_main() running. */
-  if (session->cursor_default != 0)
-    xcb_change_window_attributes(connection, window,
-                                 XCB_CW_CURSOR, &session->cursor_default);
 
     /* Set for WMs. twm does need this! */
   _window_input_set(window);

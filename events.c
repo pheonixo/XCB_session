@@ -819,29 +819,6 @@ xcb_main(void) {
     DEBUG_ASSERT(true, "error: nothing for xcb_main() to do.");
     return;
   }
-    /* Test if Window manager exists. Might even be us? */
-  if (!(session->WMstate & HAS_WM))  {
-    xcb_screen_t *screen;
-    xcb_get_window_attributes_cookie_t c0;
-    xcb_get_window_attributes_reply_t *r0;
-    screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
-    c0 = xcb_get_window_attributes(connection, screen->root);
-    r0 = xcb_get_window_attributes_reply(connection, c0, NULL);
-    session->WMstate |=
-       !!(r0->all_event_masks & XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT);
-    free(r0);
-  }
-
-    /* XXX Don't know supportive test to use other then has_WM.
-      So to include twm with has_WM and include setting of cursor
-      use _MOTIF_WM_HINTS. */
-  if ( (CURSOR_DEFAULT != NULL)
-      || (_MOTIF_WM_HINTS == XCB_ATOM_NONE) ) {
-    const char *named
-      = (CURSOR_DEFAULT != NULL) ? CURSOR_DEFAULT : "left_ptr";
-    ui_cursor_initialize(named);
-  }
-
     /* application-wide clipboard */
   session->xclipboard = xclb_initialize(connection);
 #if (DND_INTERNAL_ON || DND_EXTERNAL_ON)

@@ -307,20 +307,6 @@ _xcb_keysym_alloc(xcb_connection_t *connection) {
 #pragma mark *** Cursor ***
 
 void
-ui_cursor_initialize(const char *named) {
-
-  uint16_t sdx;
-  session->cursor_default
-    = xcb_cursor_load_cursor(session->cursor_ctx, named);
-  sdx = session->ncount;
-  do
-    xcb_change_window_attributes(session->connection,
-                                 session->iface[(--sdx)]->window,
-                                 XCB_CW_CURSOR, &session->cursor_default);
-  while (sdx != 0);
-}
-
-void
 ui_cursor_set_named(const char *named, xcb_window_t window) {
 
     /* Request for default or WM control */
@@ -378,6 +364,9 @@ PhxSession *
 _session_create(xcb_connection_t *connection) {
 
   xcb_screen_t *screen;
+  xcb_get_window_attributes_cookie_t c0;
+  xcb_get_window_attributes_reply_t *r0;
+  const char *named;
   size_t aSz;
 
   if (session != NULL)
@@ -398,7 +387,21 @@ _session_create(xcb_connection_t *connection) {
 
     /* Global cursor, get the first screen */
   screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
+
+    /* Test if a window manager exists. Should application be used
+      as window manager, screen->root gets altered prior to here.
+      Cursor too would be prior. */
+  c0 = xcb_get_window_attributes(connection, screen->root);
+  r0 = xcb_get_window_attributes_reply(connection, c0, NULL);
+  session->WMstate |=
+       !!(r0->all_event_masks & XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT);
+  free(r0);
+
+    /* Set a default or 'NULL' cursor for our windows. */
   xcb_cursor_context_new(connection, screen, &session->cursor_ctx);
+  named = (CURSOR_DEFAULT != NULL) ? CURSOR_DEFAULT : "left_ptr";
+  session->cursor_default
+    = xcb_cursor_load_cursor(session->cursor_ctx, named);
 
     /* list of windows/iface */
   aSz = OBJS_ALLOC * sizeof(PhxInterface*);

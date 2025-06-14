@@ -156,7 +156,6 @@ extern PhxSession *      _session_create(xcb_connection_t *connection);
 
 extern void              ui_session_shutdown(void);
 
-extern void              ui_cursor_initialize(const char *named);
 extern void              ui_cursor_set_named(const char *named,
                                              xcb_window_t window);
 extern const char *      ui_cursor_get_named(void);
