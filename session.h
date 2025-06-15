@@ -41,7 +41,7 @@ typedef struct phx_findboard_t                           phx_findboard_t;
   Maximun debug uses debug_flag to shut off event messages
   you don't want to receive. During a gdb session one can even
   temporarily turn on/off event reporting by setting/unsetting bits. */ 
-#define DEBUG_MINIMUM     0
+#define DEBUG_MINIMUM     1
 #include "events_debug.h"
 /* above affects atom globals */
 #include "atoms.h"
@@ -141,6 +141,7 @@ typedef struct _PhxSession {
 
 /* defines within session.c */
 extern PhxSession *session;
+extern FILE *_debug_wh;
 
 extern bool              _obj_alloc_test(void **abstract,
                                          size_t abstract_size,

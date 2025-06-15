@@ -3,6 +3,7 @@
 #include "objects.h"
 
 PhxSession *session = NULL;
+FILE *_debug_wh = NULL;
 
 #pragma mark *** Accessors ***
 
@@ -383,6 +384,13 @@ _session_create(xcb_connection_t *connection) {
   if (session != NULL)
     return session;
 
+    /* Initialize a FILE* to write messages to. */
+    /* Depending on 'DEBUG' setting, file/stderr will
+      get run loop errors, additional developer errors, or
+      both plus debug event info. */
+  _debug_wh = fopen("./xcb_session.debug", "w");
+  if (_debug_wh == NULL)  _debug_wh = stderr;
+
   session = (PhxSession*)malloc(sizeof(PhxSession));
   if (session == NULL)  return NULL;
   memset(session, 0, sizeof(PhxSession));
@@ -483,10 +491,8 @@ _interface_remove_for(xcb_window_t window) {
 void
 ui_session_shutdown(void) {
   xcb_disconnect(session->connection);
-#if DEBUG_EVENTS_ON
   if (_debug_wh != stderr)
     fclose(_debug_wh);
-#endif
   if (_NET_WM_STRING != NULL)
     free(_NET_WM_STRING);
 #if DND_EXTERNAL_ON

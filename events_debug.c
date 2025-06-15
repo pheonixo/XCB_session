@@ -6,20 +6,9 @@ uint64_t debug_flags = ~0;
 
 #if DEBUG_EVENTS_ON
 
-static bool file_openned = false;
-FILE *_debug_wh;
-
 void
 _debug_assert(bool test, const char *message) {
 
-  if (!file_openned) {
-    _debug_wh = stderr;
-    if (!(session->WMstate & HAS_WM)) {
-      _debug_wh = fopen("./xcb_session.debug", "w");
-      if (_debug_wh == NULL)  _debug_wh = stderr;
-    }
-    file_openned = true;
-  }
   if (test) {
       /* Incase user debugging with XTerm */
     if (_debug_wh != stderr)
@@ -96,8 +85,6 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
   uint8_t response = nvt->response_type & (uint8_t)0x7F;
   uint64_t on_bit = (uint64_t)1 << response;
   if ((debug_flags & on_bit) == 0)  return;
-    /* Used to initialize _debug_wh */
-  if (!file_openned)  _debug_assert(false, caller);
 
   switch (response) {
 

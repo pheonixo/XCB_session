@@ -168,10 +168,6 @@ _event_keyboard(xcb_generic_event_t *nvt) {
   return false;
 }
 
-/*#define DEBUG_BUTTON(a,b) \
-  printf("       %d, SBIT_%s.\n", (a), (b)) */
-#define DEBUG_BUTTON(a,b) (void)(a), (void)(b)
-
 static bool
 _event_mouse(xcb_generic_event_t *nvt) {
 
@@ -794,11 +790,15 @@ _process_event(xcb_generic_event_t *nvt) {
     default:
       if (nvt->response_type == 0) {
         xcb_generic_error_t *err = (xcb_generic_error_t*)nvt;
-        printf("error: %"PRIu8"\n", err->error_code);
+        if (_debug_wh != stderr)
+          fprintf(stderr, "error: %"PRIu8"\n", err->error_code);
+        fprintf(_debug_wh, "error: %"PRIu8"\n", err->error_code);
         break;
       }
         /* Unknown event type, use to track coding problems */
-      printf("Unknown event: %"PRIu8"\n", nvt->response_type);
+      if (_debug_wh != stderr)
+        fprintf(stderr, "Unknown event: %"PRIu8"\n", nvt->response_type);
+      fprintf(_debug_wh, "Unknown event: %"PRIu8"\n", nvt->response_type);
       break;
 
   } /* end switch(response_type) */

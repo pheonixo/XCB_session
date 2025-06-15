@@ -25,6 +25,7 @@ XHDR = \
   clipboard.c \
   drag.h \
   timers.h \
+  events_debug.h \
   draw.h \
   configure.h \
   nexus.h \
