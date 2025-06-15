@@ -483,6 +483,10 @@ _interface_remove_for(xcb_window_t window) {
 void
 ui_session_shutdown(void) {
   xcb_disconnect(session->connection);
+#if DEBUG_EVENTS_ON
+  if (_debug_wh != stderr)
+    fclose(_debug_wh);
+#endif
   if (_NET_WM_STRING != NULL)
     free(_NET_WM_STRING);
 #if DND_EXTERNAL_ON

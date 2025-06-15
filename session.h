@@ -30,9 +30,19 @@ typedef struct phx_findboard_t                           phx_findboard_t;
 /* mapping of state bits to avoid conflicts */
 #include "statebits.h"
 
-/* If wish to include dnd between objects and/or windows */
+/* If wish to include dnd between objects and/or windows.
+  This needs to be defined before atoms. */
 #define DND_INTERNAL_ON   1
 #define DND_EXTERNAL_ON   1
+/* Two settings, 0 excludes debug code from compiling (~30k).
+  1 allows for two states of compiled reporting. */
+#define DEBUG_EVENTS_ON   1  /* should end up as compiler -D */
+/* Debug minimum reports only what should be design issues.
+  Maximun debug uses debug_flag to shut off event messages
+  you don't want to receive. During a gdb session one can even
+  temporarily turn on/off event reporting by setting/unsetting bits. */ 
+#define DEBUG_MINIMUM     0
+#include "events_debug.h"
 /* above affects atom globals */
 #include "atoms.h"
 /* event loop attached to session, clipboard.h, and drag.h */
@@ -60,20 +70,6 @@ extern char *strdup(const char*);
 #endif
 
 #define absof(a) ((a) < 0 ? -(a) : (a))
-
-#define DEBUG_EVENTS_ON 1
-#if DEBUG_EVENTS_ON
- extern void _debug_event(xcb_generic_event_t *nvt, const char *caller);
-/* #define DEBUG_EVENTS(a)    _debug_event(nvt, (a))*/
- #define DEBUG_EVENTS(a)    (void)(a)
-   /* during debug, allowed to turn off/on specific events */
- extern uint64_t debug_flags;
- #define DEBUG_ASSERT(a, b) \
-   if ((a)) fprintf(stderr, "%s\n", (b))
-#else
- #define DEBUG_EVENTS(a)     (void)(a)
- #define DEBUG_ASSERT(a, b)  (void)(a), (void)(b)
-#endif
 
 /* globals */
 #define OBJS_ALLOC  16
