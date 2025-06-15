@@ -974,6 +974,8 @@ puts("finished drag XCB_BUTTON_RELEASE");
     if (wD != 0) {
       uint16_t idx;
       PhxObject *wm_button = NULL;
+      hbar->mete_box.w += wD;
+      hbar->draw_box.w += wD;
       if ((idx = hbar->ncount) != 0)
         do {
           PhxObject *inspect = hbar->objects[(--idx)];
@@ -988,7 +990,7 @@ puts("finished drag XCB_BUTTON_RELEASE");
         ui_invalidate_object(obj);
       }
     }
-    /*return false;*/
+    return true;
   }
 
   return _default_nexus_meter(iface, nvt, obj);
