@@ -1,7 +1,7 @@
-#include "session.h"
-#include "windows.h"
-#include "nexus.h"
-#include "gfuse.h"
+#include "../session.h"
+#include "../windows.h"
+#include "../nexus.h"
+#include "../gfuse.h"
 
 static void
 background_l2r_layout(PhxInterface *iface, int16_t offset) {

@@ -1,8 +1,8 @@
-#include "session.h"
-#include "windows.h"
-#include "nexus.h"
-#include "nfuse.h"
-#include "gfuse.h"
+#include "../session.h"
+#include "../windows.h"
+#include "../nexus.h"
+#include "../nfuse.h"
+#include "../gfuse.h"
 
 /* Name window, use configure_test.c:case 23 as background. */
 static void

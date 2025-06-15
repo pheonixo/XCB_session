@@ -54,7 +54,7 @@ Current state is a multi-window application with DND, clipboard, dropdown window
 The findbar is what started this project, since Linux was without one, and the toolkit refused to allow. Text is supplimented with full UTF-8 with proper or 'different' than other. It uses simple key combos of ^e for enter of selected as search string, ^E for enter of selected as replacement string and ^f for find. Both are editable and scrollable. Options of goto previous, next, replace, replace with moving to next, and replace all. Dialog popup still needed for directory searches and when textview being searched is too small for good viewable findbar.
 
 ## Examples
-Currently all 'xcb_*'.c files are design and workable applications. The makefile can build all or look into to see individual builds and names for each. These are examples of creation of applications or individuals pieces of object design prior to incorporation into XCB_session. The TODO has some notes on concepts.
+Design/creations are located in forge. Currently all 'xcb_*'.c files are design and workable applications. The makefile can build all or look into to see individual builds and names for each. These are examples of creation of applications or individuals pieces of object design prior to incorporation into XCB_session. The TODO has some notes on concepts.
 
 ## Concept
 Create a window or interface. Add drawing ports or nexus to interface. Add objects to drawing ports. Objects are intended to respond to events. There are 3 basic callbacks to an object: draw, all others, and raze(destroy). Any window will quit with ^q. This is also intended for the long haul so binary compat is of major import.

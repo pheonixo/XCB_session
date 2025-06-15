@@ -1,6 +1,6 @@
-#include "textviews.h"
-#include "buttons.h"
-#include "gfuse.h"
+#include "../textviews.h"
+#include "../buttons.h"
+#include "../gfuse.h"
 
 /* Headerbars need to be versatile enough that a user might even
   wish it to be a shade-type where enter its normal position will

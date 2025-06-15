@@ -1,8 +1,8 @@
-#include "textviews.h"
-#include "buttons.h"
-#include "labels.h"
-#include "configure.h"
-#include "banks.h"
+#include "../textviews.h"
+#include "../buttons.h"
+#include "../labels.h"
+#include "../configure.h"
+#include "../banks.h"
 
 /* button   [21] | 3 (15) 3,1 (15) 3 | (-2) (20,22) */
 /* textview [21] | 2 (15) 4,2 (15) 4 | (0)  */

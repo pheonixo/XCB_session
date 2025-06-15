@@ -1,7 +1,7 @@
-#include "nexus.h"
-#include "buttons.h"
-#include "banks.h"
-#include "configure.h"
+#include "../nexus.h"
+#include "../buttons.h"
+#include "../banks.h"
+#include "../configure.h"
 
 static void
 result_cb(PhxBank *ibank) {

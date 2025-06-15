@@ -1,5 +1,5 @@
-#include "session.h"
-#include "windows.h"
+#include "../session.h"
+#include "../windows.h"
 
 /* Name title of window, set baground colour. */
 static void

@@ -1,7 +1,7 @@
-#include "nexus.h"
-#include "buttons.h"
-#include "banks.h"
-#include "configure.h"
+#include "../nexus.h"
+#include "../buttons.h"
+#include "../banks.h"
+#include "../configure.h"
 
 static char *strings[] = {
   "editor_bar.c", "editor_bar.h", "lci_sessions.c",

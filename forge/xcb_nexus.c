@@ -1,6 +1,6 @@
-#include "session.h"
-#include "windows.h"
-#include "nexus.h"
+#include "../session.h"
+#include "../windows.h"
+#include "../nexus.h"
 
 /* Name window, use configure_test.c:case 23. */
 static void

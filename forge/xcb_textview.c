@@ -1,5 +1,5 @@
-#include "textviews.h"
-#include "labels.h"
+#include "../textviews.h"
+#include "../labels.h"
 
 static char *
 user_textstring(void) {

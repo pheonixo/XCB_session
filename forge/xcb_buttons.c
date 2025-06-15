@@ -1,6 +1,6 @@
-#include "nexus.h"
-#include "buttons.h"
-#include "labels.h"
+#include "../nexus.h"
+#include "../buttons.h"
+#include "../labels.h"
 
 static void
 _draw_test(PhxObject *b, cairo_t *cr) {
