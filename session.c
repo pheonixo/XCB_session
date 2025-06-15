@@ -307,6 +307,21 @@ _xcb_keysym_alloc(xcb_connection_t *connection) {
 #pragma mark *** Cursor ***
 
 void
+ui_cursor_initialize(xcb_connection_t *connection) {
+
+  xcb_screen_t *screen;
+  const char *named;
+
+    /* Global cursor, get the first screen */
+  screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
+    /* Set a default or 'NULL' cursor for our windows. */
+  xcb_cursor_context_new(connection, screen, &session->cursor_ctx);
+  named = (CURSOR_DEFAULT != NULL) ? CURSOR_DEFAULT : "left_ptr";
+  session->cursor_default
+    = xcb_cursor_load_cursor(session->cursor_ctx, named);
+}
+
+void
 ui_cursor_set_named(const char *named, xcb_window_t window) {
 
     /* Request for default or WM control */
@@ -363,10 +378,6 @@ ui_cursor_get_named(void) {
 PhxSession *
 _session_create(xcb_connection_t *connection) {
 
-  xcb_screen_t *screen;
-  xcb_get_window_attributes_cookie_t c0;
-  xcb_get_window_attributes_reply_t *r0;
-  const char *named;
   size_t aSz;
 
   if (session != NULL)
@@ -385,24 +396,6 @@ _session_create(xcb_connection_t *connection) {
     return NULL;
   }
 
-    /* Global cursor, get the first screen */
-  screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
-
-    /* Test if a window manager exists. Should application be used
-      as window manager, screen->root gets altered prior to here.
-      Cursor too would be prior. */
-  c0 = xcb_get_window_attributes(connection, screen->root);
-  r0 = xcb_get_window_attributes_reply(connection, c0, NULL);
-  session->WMstate |=
-       !!(r0->all_event_masks & XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT);
-  free(r0);
-
-    /* Set a default or 'NULL' cursor for our windows. */
-  xcb_cursor_context_new(connection, screen, &session->cursor_ctx);
-  named = (CURSOR_DEFAULT != NULL) ? CURSOR_DEFAULT : "left_ptr";
-  session->cursor_default
-    = xcb_cursor_load_cursor(session->cursor_ctx, named);
-
     /* list of windows/iface */
   aSz = OBJS_ALLOC * sizeof(PhxInterface*);
   session->iface = malloc(aSz);
@@ -420,8 +413,11 @@ _session_create(xcb_connection_t *connection) {
   }
   memset(session->stack_order, 0, aSz);
 
-    /* Global atoms for Clipboard and DND use. */
+    /* Global atoms for WM existance, Clipboard, DND use, et al. */
   ui_atoms_initialize(connection);
+
+    /* Set up for cursor, and window XCB_CW_CURSOR default. */
+  ui_cursor_initialize(connection);
 
   return session;
 }
