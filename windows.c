@@ -265,23 +265,6 @@ _default_interface_meter(PhxInterface *iface,
 
     kp     = (xcb_key_press_event_t*)nvt;
     keyval = _xcb_keysym_for(kp->detail, kp->state);
-
-    if ( (keyval >= (uint16_t)0xffe1)
-       && (keyval <= (uint16_t)0xffee) ) {
-      PhxObject *within = ui_active_within_get();
-      if ( (within != NULL)
-          && (ui_window_for(within) == iface->window) ) {
-        if (!!(iface->state & SBIT_UNDECORATED)) {
-            /* Get PHX_HEADERBAR for this iface. */
-          PhxNexus *inspect;
-          uint16_t idx = 0;
-          while ((inspect = iface->nexus[idx])->type != PHX_HEADERBAR) idx++;
-          inspect->_event_cb(iface, nvt, within);
-        }
-      }
-      return true;
-    }
-
     if ( (!locus)
         && (!!(kp->state & XCB_MOD_MASK_CONTROL)) ) {
       if (keyval == 'q') {
