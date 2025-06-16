@@ -1185,6 +1185,17 @@ user_configure_layout(PhxInterface *iface) {
   obtn->child->_draw_cb = _draw_symbol_move;
   ui_visible_set(obtn->child, false);
 
+    /* place here as a reminder that on creation that both
+      HAS_WM and focus, (focus follow mouse), need to be known
+      at time of creation. */
+  {
+  uint16_t hdx;
+  bool sensitive = (ui_active_focus_get() != NULL);
+  for (hdx = 0; hdx < hbar->ncount; hdx++) {
+    PhxObject *obj = hbar->objects[hdx];
+    ui_sensitive_set(obj, sensitive);
+  }
+  }
   return hbar;
 }
 
