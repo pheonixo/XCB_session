@@ -872,8 +872,6 @@ void
 _interface_configure(PhxInterface *iface, int16_t hD, int16_t vD) {
 
   Image_s cImage;
-  IData_s *idata;
-  uint16_t icount;
 
   if (!IS_WINDOW_TYPE(iface)) {
     DEBUG_ASSERT(true, "error: entry type _interface_configure().");
@@ -881,14 +879,6 @@ _interface_configure(PhxInterface *iface, int16_t hD, int16_t vD) {
   }
 
   if (_cImage_initialize(&cImage))  return;
-
-    /* Creates before image, for notify of altered configure size */
-  icount = cImage.icount;
-  idata = &cImage.idata[icount];
-  cImage.icount += 1;
-  idata->nexus = (PhxNexus*)iface;
-  idata->mete_box = iface->mete_box;
-  idata->draw_box = iface->draw_box;
 
   iface->mete_box.w += hD;
   iface->draw_box.w += hD;
