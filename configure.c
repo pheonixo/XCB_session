@@ -888,6 +888,7 @@ _interface_configure(PhxInterface *iface, int16_t hD, int16_t vD) {
   cImage.icount += 1;
   idata->nexus = (PhxNexus*)iface;
   idata->mete_box = iface->mete_box;
+  idata->mete_box.x = (iface->mete_box.y = 0);
   idata->draw_box = iface->draw_box;
 
   iface->mete_box.w += hD;
