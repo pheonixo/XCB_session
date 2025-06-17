@@ -370,13 +370,15 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
       buffer0[reply->name_len] = 0;
       free(reply);
       if (strcmp(buffer0, "WM_PROTOCOLS") == 0) {
-        char buffer1[64];
+        char buffer1[64] = "XCB_ATOM_NONE";
         reply
           = xcb_get_atom_name_reply(session->connection,
          xcb_get_atom_name(session->connection, message->data.data32[0]), NULL);
-        memmove(buffer1, xcb_get_atom_name_name(reply), reply->name_len);
-        buffer1[reply->name_len] = 0;
-        free(reply);
+        if (reply != NULL) {
+          memmove(buffer1, xcb_get_atom_name_name(reply), reply->name_len);
+          buffer1[reply->name_len] = 0;
+          free(reply);
+        }
         if (_debug_wh != stderr)
           fprintf(stderr, "%"PRIu32" XCB_CLIENT_MESSAGE %s:%s\n",
                message->window, buffer0, buffer1);
