@@ -394,6 +394,21 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
       break;
     }
 
+    case XCB_MAPPING_NOTIFY: {    /* response_type 34 */
+      xcb_mapping_notify_event_t *keymap
+        = (xcb_mapping_notify_event_t*)nvt;
+      if (_debug_wh != stderr)
+        fprintf(stderr, "window        %"PRIu32", MAPPING_NOTIFY."
+         " request=%"PRIu8" first=%"PRIu8" count=%"PRIu8"  %s\n",
+         0, keymap->request, keymap->first_keycode,
+         keymap->count, caller);
+      fprintf(_debug_wh, "window        %"PRIu32", MAPPING_NOTIFY."
+         " request=%"PRIu8" first=%"PRIu8" count=%"PRIu8"  %s\n",
+         0, keymap->request, keymap->first_keycode,
+         keymap->count, caller);
+      break;
+    }
+
     default:
       if (nvt->response_type == 0) {
         xcb_generic_error_t *err = (xcb_generic_error_t*)nvt;
