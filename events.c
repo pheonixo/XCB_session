@@ -5,6 +5,8 @@
 #include "drag.h"
 
 #include <poll.h>
+/* In session.c, intended as private but mapping notify needs it. */
+extern void  _xcb_keysym_alloc(xcb_connection_t *connection);
 
 #pragma mark *** Event Support ***
 
@@ -784,6 +786,14 @@ _process_event(xcb_generic_event_t *nvt) {
         = (xcb_client_message_event_t*)nvt;
       if (cm->type != WM_PROTOCOLS)  _event_selection(nvt);
       else                           _event_protocols(nvt);
+      break;
+    }
+
+    case XCB_MAPPING_NOTIFY: {    /* response_type 34 */
+      xcb_mapping_notify_event_t *keymap
+        = (xcb_mapping_notify_event_t*)nvt;
+      if (keymap->request == XCB_MAPPING_KEYBOARD)
+        _xcb_keysym_alloc(session->connection);
       break;
     }
 

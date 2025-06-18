@@ -10,10 +10,12 @@ XXTRA = \
   renderutil/util.c \
   image/xcb_image.c \
   util/xcb_aux.c
+#  util-keysyms/keysyms.c
 
 LXTRA = -lxcb-shm -lxcb-render
 
 LLIBS = -lxcb -lcairo $(LXTRA)
+#LLIBS = -lxcb -lX11 -lX11-xcb -lcairo $(LXTRA)
 
 # HDR/SCR: Pheonix code creation
 XHDR = \

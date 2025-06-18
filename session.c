@@ -1,6 +1,7 @@
 #include "session.h"
 #include "windows.h"
 #include "objects.h"
+#include <unistd.h>
 
 PhxSession *session = NULL;
 FILE *_debug_wh = NULL;
@@ -282,7 +283,7 @@ _xcb_keysym_for(xcb_keycode_t keycode, uint16_t modifiers) {
   return sym;
 }
 
-/* iface to hold global values */
+/* session to hold global values */
 void
 _xcb_keysym_alloc(xcb_connection_t *connection) {
 
@@ -376,6 +377,31 @@ ui_cursor_get_named(void) {
 
 #pragma mark *** Session ***
 
+/* XXX setup for Linux only, buffers, name poorly handled.
+  Quickly thrown together to have multiple apps at once. */
+static void
+_debug_file_handle_create(void) {
+
+  pid_t  pid;
+  char cline[128];
+  FILE *rh;
+
+  pid = getpid();
+  sprintf(cline, "/proc/%d/cmdline", pid);
+  if ((rh = fopen(cline, "r")) != NULL) { 
+    char file[32];
+    char *delimiter;
+
+    fgets(cline, 128, rh);
+    fclose(rh);
+    delimiter = strrchr(cline, '/');
+    sprintf(file, ".%s.debug", delimiter);
+    _debug_wh = fopen(file, "w");
+  }
+  if (_debug_wh == NULL)  _debug_wh = stderr;
+
+}
+
 PhxSession *
 _session_create(xcb_connection_t *connection) {
 
@@ -388,8 +414,7 @@ _session_create(xcb_connection_t *connection) {
     /* Depending on 'DEBUG' setting, file/stderr will
       get run loop errors, additional developer errors, or
       both plus debug event info. */
-  _debug_wh = fopen("./xcb_session.debug", "w");
-  if (_debug_wh == NULL)  _debug_wh = stderr;
+  _debug_file_handle_create();
 
   session = (PhxSession*)malloc(sizeof(PhxSession));
   if (session == NULL)  return NULL;
