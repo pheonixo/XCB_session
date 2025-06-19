@@ -935,7 +935,7 @@ focus_set:
       else  wmgr_btn->child->_draw_cb = _draw_symbol_move;
 puts("finished drag XCB_BUTTON_RELEASE");
       ui_active_drag_set(NULL);
-      ui_active_within_set(obj, mouse->state);
+      ui_active_within_set(obj, mouse->event_x, mouse->event_y, mouse->state);
       return true;
     }
     return _default_nexus_meter(iface, nvt, obj);

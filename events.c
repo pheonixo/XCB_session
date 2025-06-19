@@ -251,7 +251,6 @@ _event_mouse(xcb_generic_event_t *nvt) {
           /* if an object and wants FOCUS_ONCLICK, return */
         if ( (!IS_IFACE_TYPE(obj))
             && ((obj->state & OBIT_FOCUS_ONCLICK) != 0) ) {
-          puts("using as focus click");
           bptime = mouse->time;
             /* Some objects may draw different based on focus. */
           ui_invalidate_object(obj);
@@ -339,7 +338,7 @@ _event_motion(xcb_generic_event_t *nvt) {
 
     /* Drag selection is still possiblity. Send locus notices if changed. */
   if (ui_active_within_get() != obj)
-    ui_active_within_set(obj, motion->state);
+    ui_active_within_set(obj, motion->event_x, motion->event_y, motion->state);
 
     /* Find/set for mount under pointer. */
   imount = _coordinates_for_object(iface, nvt, obj, xPtr, yPtr);
@@ -397,7 +396,7 @@ _event_enter(xcb_generic_event_t *nvt) {
   }
     /* Need basic on entry, objects set to their desire. */
   ui_cursor_set_named("left_ptr", xing->event);
-  ui_active_within_set(obj, xing->state);
+  ui_active_within_set(obj, xing->event_x, xing->event_y, xing->state);
 
   return true;
 }
@@ -412,7 +411,7 @@ _event_leave(xcb_generic_event_t *nvt) {
     return true;
 
   if (xing->mode == XCB_NOTIFY_MODE_NORMAL)
-    ui_active_within_set(NULL, xing->state);
+    ui_active_within_set(NULL, xing->event_x, xing->event_y, xing->state);
   return true;
 }
 
@@ -432,22 +431,8 @@ _event_focus(xcb_generic_event_t *nvt) {
     iface->state &= ~SBIT_CLICKS;
       /* On non-dropdown windows, first content click focuses. */
     if ( (locus) && (!ui_window_is_transient(focus->event)) ) {
-#if 1
       if (!!(iface->state & SBIT_MAPPED))
         _window_stack_topmost(iface);
-#else
-      if (!!(iface->state & SBIT_MAPPED)) {
-        uint16_t idx;
-        const static uint32_t values[] = { XCB_STACK_MODE_ABOVE };
-        xcb_configure_window(session->connection, iface->window,
-                             XCB_CONFIG_WINDOW_STACK_MODE, values);
-        for (idx = 0; idx < session->ncount; idx++)
-          if (iface == session->stack_order[idx])  break;
-        for (; idx < session->ncount; idx++)
-          session->stack_order[idx] = session->stack_order[(idx + 1)];
-        session->stack_order[(session->ncount - 1)] = iface;
-      }
-#endif
     }
   }
   if (!locus) {

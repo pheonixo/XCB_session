@@ -1,6 +1,8 @@
 #ifndef __SESS_APPLICATION_H__
 #define __SESS_APPLICATION_H__
 
+#define FOCUS_FOLLOWS_MOUSE  1
+
 #define USE_XLIB 0
 #if USE_XLIB
 #include <X11/Xlib-xcb.h>   /* -lxcb -lX11 -lX11-xcb */
@@ -41,7 +43,7 @@ typedef struct phx_findboard_t                           phx_findboard_t;
   Maximun debug uses debug_flag to shut off event messages
   you don't want to receive. During a gdb session one can even
   temporarily turn on/off event reporting by setting/unsetting bits. */ 
-#define DEBUG_MINIMUM     1
+#define DEBUG_MINIMUM     0
 #include "events_debug.h"
 /* above affects atom globals */
 #include "atoms.h"
@@ -164,6 +166,8 @@ extern PhxObject *       ui_active_focus_get(void);
 extern void              ui_active_focus_set(PhxObject *obj);
 extern PhxObject *       ui_active_within_get(void);
 extern void              ui_active_within_set(PhxObject *obj,
+                                              int16_t event_x,
+                                              int16_t event_y,
                                               uint16_t state);
 extern PhxObject *       ui_active_drag_get(void);
 extern void              ui_active_drag_set(PhxObject *obj);

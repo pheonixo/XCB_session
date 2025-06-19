@@ -74,13 +74,18 @@ ui_active_within_get(void) {
   Mode will indicate if in drag. */
 /* Add state to allow notify with mod keys. */
 void
-ui_active_within_set(PhxObject *obj, uint16_t state) {
+ui_active_within_set(PhxObject *obj,
+                     int16_t event_x,
+                     int16_t event_y,
+                     uint16_t state) {
 
   xcb_enter_notify_event_t notify = { 0 };
   PhxInterface *iface;
   PhxObject *within;
 
   notify.detail = XCB_NOTIFY_DETAIL_NONE;
+  notify.event_x = event_x;
+  notify.event_y = event_y;
   notify.state = state;
 #if DND_EXTERNAL_ON
   if ( (ui_active_drag_get() != NULL)
