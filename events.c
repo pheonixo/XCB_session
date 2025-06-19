@@ -528,8 +528,18 @@ _event_configure(xcb_generic_event_t *nvt) {
   if ((configure->x | configure->y) != 0) {
     if ( (iface->mete_box.x != configure->x)
         || (iface->mete_box.y != configure->y) ) {
-      iface->mete_box.x = configure->x;
-      iface->mete_box.y = configure->y;
+        /* Needed, if want accurate positioning. WM is unreliable.
+          Use separingly, causes severe delays. */
+      xcb_connection_t *connection = session->connection;
+      xcb_screen_t *screen
+        = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
+      xcb_translate_coordinates_reply_t *cfg
+        = xcb_translate_coordinates_reply(connection,
+                          xcb_translate_coordinates(connection,
+                                configure->event, screen->root, 0, 0), NULL);
+      iface->mete_box.x = cfg->dst_x;
+      iface->mete_box.y = cfg->dst_y;
+      free(cfg);
     }
   }
   return true;
