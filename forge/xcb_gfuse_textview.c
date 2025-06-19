@@ -115,6 +115,8 @@ main(int argc, char *argv[]) {
   debug_flags &= ~((uint64_t)1 << XCB_PROPERTY_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_ENTER_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_LEAVE_NOTIFY);
+  debug_flags &= ~((uint64_t)1 << XCB_FOCUS_IN);
+  debug_flags &= ~((uint64_t)1 << XCB_FOCUS_OUT);
   debug_flags &= ~((uint64_t)1 << XCB_CLIENT_MESSAGE);
 */
 #endif
