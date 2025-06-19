@@ -192,6 +192,8 @@ _event_mouse(xcb_generic_event_t *nvt) {
   }
   obj = _get_object_at_pointer(iface, x, y);
 
+  if (ui_active_drag_get() != NULL)  goto drag_release;
+
     /* Scroll wheel doesn't deal with focus, is 'within' based.
       More than likely, all buttons other than 1. */
   if ((mouse->detail >= 4) && (mouse->detail <= 7)) {
@@ -227,6 +229,7 @@ _event_mouse(xcb_generic_event_t *nvt) {
   }
 
   if (!locus) {
+drag_release:
     if (ui_active_drag_get() != NULL)
       return _drag_finish(iface, nvt, obj);
     if ((iface->state & SBIT_SELECTING) != 0) {
@@ -376,17 +379,14 @@ _event_enter(xcb_generic_event_t *nvt) {
       _NET_WM_MOVERESIZE_CANCEL. We regain focus even after we had to
       call ungrab_pointer() to start drag. */
   if (!!(iface->state & SBIT_HBR_DRAG)) {
-    if (xing->mode == XCB_NOTIFY_MODE_UNGRAB) {
-      if ( (_NET_WM_STRING == NULL)
-          || (strcmp(_NET_WM_STRING, "Compiz") != 0) )
-        return true;
-      puts(" finished drag XCB_ENTER_NOTIFY");
-      iface->state &= ~SBIT_HBR_DRAG;
-      ui_active_drag_set(NULL);
-    } else {
-      ui_active_within_set(obj, xing->state);
+    if (xing->mode != XCB_NOTIFY_MODE_UNGRAB)
       return true;
-    }
+    if ( (_NET_WM_STRING == NULL)
+        || (strcmp(_NET_WM_STRING, "Compiz") != 0) )
+      return true;
+    puts(" finished drag XCB_ENTER_NOTIFY");
+    iface->state &= ~SBIT_HBR_DRAG;
+    ui_active_drag_set(NULL);
   }
 
   if (obj == NULL) {

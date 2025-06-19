@@ -235,6 +235,13 @@ _drag_finish(PhxInterface *iface, xcb_generic_event_t *nvt, PhxObject *obj) {
       || ((iface->state & SBIT_HBR_DRAG) != 0) )
     return has_drag->_event_cb(iface, nvt, obj);
 
+ #if DND_EXTERNAL_ON
+  if (xdndActivated_get(session->xdndserver)) {
+    xdnd_drag_drop(session->xdndserver);
+    return true;
+  }
+ #endif
+
   if (obj != NULL) {
     if ((obj->state & OBIT_DND_AWARE) != 0) {
         /* 2 cases: in object that has drag, in object other than has_drag */
@@ -249,12 +256,7 @@ _drag_finish(PhxInterface *iface, xcb_generic_event_t *nvt, PhxObject *obj) {
       }
     }
   }
- #if DND_EXTERNAL_ON
-  if (obj == NULL) {
-    xdnd_drag_drop(session->xdndserver);
-    return true;
-  }
- #endif
+
     /* Reset or drop finish for has_drag */
   if (!has_drag->_event_cb(iface, nvt, obj)) {
     DEBUG_ASSERT((obj != ui_active_within_get()),
@@ -545,6 +547,40 @@ xdnd_status_event(xcb_window_t window, xcb_client_message_data_t *param) {
 
 #if DND_EXTERNAL_ON
 
+/* Given: called from session of 'has_drag'. */
+static void
+_dnd_focus_adjust(xcb_window_t focused, xcb_window_t target) {
+
+  xcb_client_message_event_t *message;
+
+  if (!!(session->WMstate & HAS_WM)) {
+    xcb_screen_t *screen
+      = xcb_setup_roots_iterator(xcb_get_setup(session->connection)).data;
+    message = calloc(32, 1);
+    message->response_type  = XCB_CLIENT_MESSAGE;
+    message->format         = 32;
+    message->window         = target;
+    message->type           = _NET_ACTIVE_WINDOW;
+    message->data.data32[0] = 1;
+    message->data.data32[1] = XCB_CURRENT_TIME;
+    message->data.data32[2] = focused;
+    xcb_send_event(session->connection, false, screen->root,
+                     XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT |
+                     XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY, (char*)message);
+  }
+  ui_active_focus_set(NULL);
+
+  message = calloc(32, 1);
+  message->response_type  = XCB_CLIENT_MESSAGE;
+  message->format         = 32;
+  message->window         = target;
+  message->type           = WM_PROTOCOLS;
+  message->data.data32[0] = WM_TAKE_FOCUS;
+  xcb_send_event(session->connection, false, message->window,
+                         XCB_EVENT_MASK_NO_EVENT, (char*)message);
+  xcb_flush(session->connection);
+}
+
 bool
 _dnd_selection_event(xcb_generic_event_t *nvt) {
 
@@ -604,15 +640,24 @@ _dnd_selection_event(xcb_generic_event_t *nvt) {
       if (xdnd_process_message(session->xdndserver, cm)) {
           /* XdndFinished is when we end setting to no drag state */
         DND_DEBUG_PUTS("ui_active_drag_set(NULL) _dnd_selection_event()");
-          /* Base on drop accepted, set topmost */
+          /* Based on drop accepted, set topmost. If in one of our app
+            windows, drop was on 'within'. 'within' should now be topmost
+            and its window be set as focused. */
         if (ui_active_within_get() != NULL) {
           PhxObject *within = ui_active_within_get();
+            /* Where 'within' is app window but not the drag source. */
           if (ui_window_for(within) != cm->window)
             _window_stack_topmost(ui_interface_for(ui_window_for(within)));
         } else if (cm->type == XDND_FINISHED) {
-          xcb_set_input_focus(session->connection,
-                              XCB_INPUT_FOCUS_PARENT,
-                              cm->data.data32[0], XCB_CURRENT_TIME);
+/* This should be outside window received drop. They should be topmost
+and we should loose focus. cm->data.data32[0] should probably be sent a
+TAKE_FOCUS, and we should set cm->window or has_drag focus out. It is up
+to other client app what to do about focus, not us.
+*/
+/* This should probably be part of XDND. This is more at Icccm were
+  its more like the WM during XDND. Reminder: there may be no WM, but
+  client maybe designed for one or may be a focus follow mouse. */
+          _dnd_focus_adjust(cm->window, cm->data.data32[0]);
         }
         ui_active_drag_set(NULL);
       }
