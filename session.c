@@ -50,6 +50,15 @@ ui_active_focus_set(PhxObject *obj) {
     notify.response_type = XCB_FOCUS_IN;
     notify.event = ui_window_for(obj);
     iface = ui_interface_for(notify.event);
+    if (!(session->WMstate & HAS_WM))
+      if (!!(iface->state & SBIT_HEADERBAR)) {
+        if ( (obj->type != PHX_HEADERBAR)
+            || (obj->i_mount->type != PHX_HEADERBAR) ) {
+          iface->_event_cb(iface, (xcb_generic_event_t*)&notify, obj);
+          session->has_focus = obj;
+          return;
+        }
+      }
     if (obj->_event_cb == NULL) {
       DEBUG_ASSERT(true, "error: undefined _event_cb... ui_active_focus_set()");
       session->has_focus = (PhxObject*)iface;

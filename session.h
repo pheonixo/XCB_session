@@ -1,8 +1,6 @@
 #ifndef __SESS_APPLICATION_H__
 #define __SESS_APPLICATION_H__
 
-#define FOCUS_FOLLOWS_MOUSE  1
-
 #define USE_XLIB 0
 #if USE_XLIB
 #include <X11/Xlib-xcb.h>   /* -lxcb -lX11 -lX11-xcb */

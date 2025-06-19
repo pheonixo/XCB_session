@@ -398,6 +398,14 @@ _event_enter(xcb_generic_event_t *nvt) {
   ui_cursor_set_named("left_ptr", xing->event);
   ui_active_within_set(obj, xing->event_x, xing->event_y, xing->state);
 
+    /* No WM || twm  should pass. */
+  if ( (!(session->WMstate & HAS_WM))
+      || (_NET_WM_STRING == NULL) ) {
+      /* Set focus first, raises window on focus test. */
+    ui_active_focus_set((PhxObject*)iface);
+    _window_stack_topmost(iface);
+  }
+
   return true;
 }
 
@@ -410,8 +418,11 @@ _event_leave(xcb_generic_event_t *nvt) {
   if (!!(ui_interface_for(xing->event)->state & SBIT_HBR_DRAG))
     return true;
 
-  if (xing->mode == XCB_NOTIFY_MODE_NORMAL)
+  if (xing->mode == XCB_NOTIFY_MODE_NORMAL) {
     ui_active_within_set(NULL, xing->event_x, xing->event_y, xing->state);
+    if (!(session->WMstate & HAS_WM))
+      ui_active_focus_set(NULL);
+  }
   return true;
 }
 

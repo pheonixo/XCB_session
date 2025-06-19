@@ -1,5 +1,12 @@
 TODO notes:
 
+focus follows mouse needed
+that means have to rely on take focus if has window manager?
+or just set internal by enter and rely on my reaction to my internal.
+When add TAKE_FOCUS be sure to topmost. Compiz didn't raise when it alloted focus.
+
+On twm, issue hard to reproduce: occasionally on deiconify get partial redraw.
+
 More printf conversions needed
 grep -iIRne "printf(" ./*
 All messages to go to stderr and file

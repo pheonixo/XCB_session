@@ -181,6 +181,7 @@ ui_attributes_font_em_set(PhxObject *obj, int16_t font_em) {
 void
 _window_stack_topmost(PhxInterface *iface) {
 
+  PhxInterface *fface;
   uint16_t idx;
 
   if (iface == NULL)  return;
@@ -217,18 +218,17 @@ _window_stack_topmost(PhxInterface *iface) {
       xcb_flush(connection);
     }
   }
-/* On WMs dont raise unless takes focus. */
-  if (!(session->WMstate & HAS_WM))
-  {
+    /* On WMs dont raise unless takes focus. On map, when focus follows
+      mouse, it's probable we don't get focus. */
+  fface = (PhxInterface*)ui_active_focus_get();
+  if (fface != NULL)
+    fface = ui_interface_for(ui_window_for((PhxObject*)fface));
+  if ( (!(session->WMstate & HAS_WM))
+      || (fface == iface) ) {
     const static uint32_t values[] = { XCB_STACK_MODE_ABOVE };
     xcb_configure_window(session->connection, iface->window,
                          XCB_CONFIG_WINDOW_STACK_MODE, values);
     iface->state &= ~SBIT_CLICKS;
-/*
-    xcb_set_input_focus(session->connection,
-                        XCB_INPUT_FOCUS_PARENT,
-                        iface->window, XCB_CURRENT_TIME);
-*/
   }
 }
 
