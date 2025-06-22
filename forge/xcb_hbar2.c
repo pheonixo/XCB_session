@@ -592,13 +592,6 @@ _drag_begin_hbtn(PhxInterface *iface,
 
   xcb_grab_pointer_cookie_t c0;
   xcb_grab_pointer_reply_t *r0;
-  const char *named;
-
-  ctrl_pressed = (!!(motion->state & XCB_MOD_MASK_CONTROL));
-  if (ctrl_pressed)
-        named = "top_right_corner";
-  else  named = "move";
-  ui_cursor_set_named(named, motion->event);
 
   if ( (!!(session->WMstate & HAS_WM))
       && (_MOTIF_WM_HINTS != XCB_ATOM_NONE)
@@ -801,6 +794,20 @@ _hbtn_manager_event(PhxInterface *iface,
 
   response = nvt->response_type & (uint8_t)0x7F;
 
+  if ( (response == XCB_BUTTON_PRESS)
+      || (response == XCB_BUTTON_RELEASE) ) {
+    xcb_button_press_event_t *mouse
+      = (xcb_button_press_event_t*)nvt;
+    const char *named = NULL;
+    if (response == XCB_BUTTON_PRESS) {
+      ctrl_pressed = (!!(mouse->state & XCB_MOD_MASK_CONTROL));
+      if (ctrl_pressed)
+            named = "top_right_corner";
+      else  named = "move";
+    }
+    ui_cursor_set_named(named, mouse->event);
+  }
+
   if ( (response == XCB_KEY_PRESS)
       || (response == XCB_KEY_RELEASE) ) {
       /* Allow modifier keys to alter functionality when no drag. */
@@ -809,10 +816,12 @@ _hbtn_manager_event(PhxInterface *iface,
       xcb_keysym_t keyval = _xcb_keysym_for(kp->detail, kp->state);
       if (   (keyval == 0x0ffe3)                       /* XK_Control_L */
           || (keyval == 0x0ffe4) ) {                   /* XK_Control_R */
-        if (response == XCB_KEY_PRESS)
-              obj->child->_draw_cb = _draw_symbol_resize;
-        else  obj->child->_draw_cb = _draw_symbol_move;
-        ui_invalidate_object(obj);
+        if (!(kp->state & XCB_KEY_BUT_MASK_BUTTON_1)) {
+          if (response == XCB_KEY_PRESS)
+                obj->child->_draw_cb = _draw_symbol_resize;
+          else  obj->child->_draw_cb = _draw_symbol_move;
+          ui_invalidate_object(obj);
+        }
       }
     }
       /* Even thou we respond to modifier, pass false to allow
@@ -823,6 +832,8 @@ _hbtn_manager_event(PhxInterface *iface,
   if (response == XCB_ENTER_NOTIFY) {
     xcb_enter_notify_event_t *xing
       = (xcb_enter_notify_event_t*)nvt;
+      /* Want to receive control key. */
+    ui_active_focus_set(obj);
     ui_sensitive_set(obj, true);
     if (!!(xing->state & XCB_MOD_MASK_CONTROL))
       obj->child->_draw_cb = _draw_symbol_resize;
@@ -1209,7 +1220,6 @@ main(int argc, char *argv[]) {
 
 #if DEBUG_EVENTS_ON
   debug_flags &= ~((uint64_t)1 << XCB_MOTION_NOTIFY);
-/*
   debug_flags &= ~((uint64_t)1 << XCB_CONFIGURE_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_EXPOSE);
   debug_flags &= ~((uint64_t)1 << XCB_KEY_PRESS);
@@ -1222,7 +1232,6 @@ main(int argc, char *argv[]) {
   debug_flags &= ~((uint64_t)1 << XCB_FOCUS_OUT);
   debug_flags &= ~((uint64_t)1 << XCB_VISIBILITY_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_PROPERTY_NOTIFY);
-*/
 #endif
 
     /* A 'topmost' decorated window */
