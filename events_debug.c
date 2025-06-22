@@ -243,13 +243,13 @@ _debug_event(xcb_generic_event_t *nvt, const char *caller) {
       test = ui_interface_for(expose->window);
       if (_debug_wh != stderr)
         fprintf(stderr, "window %"PRIu32", EXPOSE. Region"
-         " (%"PRIu16",%"PRIu16",%"PRIu16",%"PRIu16")  %s\n",
+         " (%"PRIu16",%"PRIu16",%"PRIu16",%"PRIu16") count=%"PRIu16" %s\n",
          test->window, expose->x, expose->y,
-         expose->width, expose->height, caller);
+         expose->width, expose->height, expose->count, caller);
       fprintf(_debug_wh, "window %"PRIu32", EXPOSE. Region"
-         " (%"PRIu16",%"PRIu16",%"PRIu16",%"PRIu16")  %s\n",
+         " (%"PRIu16",%"PRIu16",%"PRIu16",%"PRIu16") count=%"PRIu16" %s\n",
          test->window, expose->x, expose->y,
-         expose->width, expose->height, caller);
+         expose->width, expose->height, expose->count, caller);
       break;
     }
     case XCB_VISIBILITY_NOTIFY: { /* response_type 15 */

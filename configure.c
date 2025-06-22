@@ -717,6 +717,7 @@ _interface_configure_callbacks(PhxInterface *iface, Image_s *cImage) {
       PhxRectangle swap_draw = inspect->draw_box;
       inspect->mete_box = nd->mete_box;
       inspect->draw_box = nd->draw_box;
+      configure.event  = inspect->window;
       configure.window = inspect->window;
       configure.x      = swap_mete.x;
       configure.y      = swap_mete.y;
@@ -724,7 +725,6 @@ _interface_configure_callbacks(PhxInterface *iface, Image_s *cImage) {
       configure.height = swap_mete.h;
 
 #if DEBUG_EVENTS_ON
-      configure.event = iface->window;
       DEBUG_EVENTS("_interface_configure_callbacks");
 #endif
       handled = inspect->_event_cb(iface, (void*)nvt, (PhxObject*)inspect);

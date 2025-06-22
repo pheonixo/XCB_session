@@ -402,7 +402,7 @@ _debug_file_handle_create(void) {
 
   pid = getpid();
   sprintf(cline, "/proc/%d/cmdline", pid);
-  if ((rh = fopen(cline, "r")) != NULL) { 
+  if ((rh = fopen(cline, "r")) != NULL) {
     char file[32];
     char *delimiter;
 
