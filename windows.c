@@ -608,7 +608,7 @@ _window_create(PhxRectangle configure) {
   xcb_screen_t *screen;
   xcb_window_t window;
   uint32_t mask;
-  uint32_t values[3];
+  uint32_t values[2];
 
   if ( (configure.w <= 0) || (configure.h <= 0) )
     return 0;
@@ -633,16 +633,17 @@ _window_create(PhxRectangle configure) {
   window = xcb_generate_id(connection);
   screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
 
-  mask      = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_CURSOR;
-  values[0] = screen->white_pixel;
-  values[1] = XCB_EVENT_MASK_EXPOSURE       | XCB_EVENT_MASK_BUTTON_PRESS   |
+    /* Credit to Uli Schlachter for explaining XCB_CW_BACK_PIXEL, the
+      removal which solved my high speed drawing problems. */
+  mask      = XCB_CW_EVENT_MASK | XCB_CW_CURSOR;
+  values[0] = XCB_EVENT_MASK_EXPOSURE       | XCB_EVENT_MASK_BUTTON_PRESS   |
               XCB_EVENT_MASK_BUTTON_RELEASE | XCB_EVENT_MASK_POINTER_MOTION |
               XCB_EVENT_MASK_ENTER_WINDOW   | XCB_EVENT_MASK_LEAVE_WINDOW   |
               XCB_EVENT_MASK_KEY_PRESS      | XCB_EVENT_MASK_KEY_RELEASE    |
               XCB_EVENT_MASK_FOCUS_CHANGE   | XCB_EVENT_MASK_STRUCTURE_NOTIFY |
               XCB_EVENT_MASK_PROPERTY_CHANGE |
               XCB_EVENT_MASK_VISIBILITY_CHANGE;
-  values[2] = session->cursor_default;
+  values[1] = session->cursor_default;
 
     /* ignores x, y, border_width (virus) */
   xcb_create_window(connection,

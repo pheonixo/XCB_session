@@ -1,27 +1,12 @@
 TODO notes:
 
-focus follows mouse needed
-that means have to rely on take focus if has window manager?
-or just set internal by enter and rely on my reaction to my internal.
-When add TAKE_FOCUS be sure to topmost. Compiz didn't raise when it alloted focus.
-
-On twm, issue hard to reproduce: occasionally on deiconify get partial redraw.
-
 More printf conversions needed
 grep -iIRne "printf(" ./*
 All messages to go to stderr and file
 User can use printf durning debug of designs bypassing this mechanism.
 
-On no-WM, can't switch focus to a non-XCB_session application.
-This includes GDB.
-
-Strobing/flickering solved by bit gravity added to window.
-Remove bit gravity! Does not redraw correctly for application design.
-Turns out it's more than likely something not initialized correctly,
-or being set/utilized wrongly or gcc. Strobe/flicker doesn't always occur
-depending on build or session being run.
-
-The X Synchronization Extension
+Strobing/flashing solved thanks to Uli Schlachter. Was window creation
+with XCB_CW_BACK_PIXEL being defined.
 
 New test with window as 4 panes is overwriting a sliver of headerbar. It
 does not happen everytime, and can sometimes be more than sliver.
