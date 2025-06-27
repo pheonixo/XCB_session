@@ -527,32 +527,36 @@ _event_visibility(xcb_generic_event_t *nvt) {
 static bool
 _event_configure(xcb_generic_event_t *nvt) {
 
+  int16_t hD, vD;
   xcb_configure_notify_event_t *configure
     = (xcb_configure_notify_event_t*)nvt;
 
   PhxInterface *iface = ui_interface_for(configure->event);
-  int16_t hD = configure->width - iface->mete_box.w;
-  int16_t vD = configure->height - iface->mete_box.h;
+
+    /* Do not use 0,0 as exclusion, case maximize. */
+    /* Posiition should be placed first for _interface_configure()
+      to pass accurate positioning for configure notices. */
+  if ( (iface->mete_box.x != configure->x)
+      || (iface->mete_box.y != configure->y) ) {
+      /* Needed, if want accurate positioning. WM is unreliable.
+        Use separingly, causes severe delays. */
+    xcb_connection_t *connection = session->connection;
+    xcb_screen_t *screen
+      = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
+    xcb_translate_coordinates_reply_t *cfg
+      = xcb_translate_coordinates_reply(connection,
+                        xcb_translate_coordinates(connection,
+                              configure->event, screen->root, 0, 0), NULL);
+    iface->mete_box.x = cfg->dst_x;
+    iface->mete_box.y = cfg->dst_y;
+    free(cfg);
+  }
+
+  hD = configure->width - iface->mete_box.w;
+  vD = configure->height - iface->mete_box.h;
   if ((hD != 0) || (vD != 0))
     _interface_configure(iface, hD, vD);
 
-  if ((configure->x | configure->y) != 0) {
-    if ( (iface->mete_box.x != configure->x)
-        || (iface->mete_box.y != configure->y) ) {
-        /* Needed, if want accurate positioning. WM is unreliable.
-          Use separingly, causes severe delays. */
-      xcb_connection_t *connection = session->connection;
-      xcb_screen_t *screen
-        = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
-      xcb_translate_coordinates_reply_t *cfg
-        = xcb_translate_coordinates_reply(connection,
-                          xcb_translate_coordinates(connection,
-                                configure->event, screen->root, 0, 0), NULL);
-      iface->mete_box.x = cfg->dst_x;
-      iface->mete_box.y = cfg->dst_y;
-      free(cfg);
-    }
-  }
   return true;
 }
 
