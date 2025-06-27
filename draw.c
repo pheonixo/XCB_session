@@ -90,28 +90,31 @@ _nexus_count(PhxNexus *nexus) {
   return (1 + nexus->ncount);
 }
 
+/* XXX Issue: WM send peicemeal expose signals. Drawing based on clip
+  region must be ignored if has to be redrawn. Then it can paint the
+  expose signals clip area when valid. So problem is routine doesn't know
+  invalid area not going to be redrawn, and when asked to paint invalid
+  it assumes its been redrawn.
+   No WM draws entire exposed. Paints invalid when asked to. */
 static void
 _nexus_walk(PhxInterface *iface, cairo_t *face_cr, PhxRectangle clip_box) {
 
   uint16_t ndx = 0;
     /* walk all iface nexus, ascending since layered system */
   do {
-    bool draw_it;
     cairo_t *cr;
     PhxRectangle cbox = clip_box;  /* Unsure if needed to speed up. */
     PhxNexus *nexus = iface->nexus[ndx];
 
-      /* Must clear OBIT_SUR_TOUCH first! */
-    draw_it = (!!(nexus->state & OBIT_SUR_TOUCH));
-    nexus->state &= ~OBIT_SUR_TOUCH;
-
-      /* Is nexus in visible draw area? */
     DEBUG_ASSERT((nexus->surface == NULL),
                                "error: NULL surface... _nexus_walk()");
-      /* Seperated for demodraw. Immediate below should be joined. */
+
+      /* Seperated code for Demodraw code. */
+      /* Is nexus in visible draw area? Keep TOUCH if not redrawng. */
     if (!ui_visible_get((PhxObject*)nexus)) {
       continue;
     }
+      /* Is nexus in clip draw area? Keep TOUCH if not redrawng. */
     if (!_intersection(nexus, &cbox)) {
       colour_select += _nexus_count(nexus);
       colour_select %= 12;
@@ -119,15 +122,18 @@ _nexus_walk(PhxInterface *iface, cairo_t *face_cr, PhxRectangle clip_box) {
     }
 
       /* Was it changed from last time it was drawn? */
-    if (!draw_it) {
+    if (!(nexus->state & OBIT_SUR_TOUCH)) {
         /* Demodraw code. */
       colour_select += _nexus_count(nexus);
       colour_select %= 12;
         /* Paint untouched nexus->surface to iface->surface. */
       goto painted_surface;
     }
-      /* Demodraw code.*/
+      /* Demodraw code. */
     colour_select++, colour_select %= 12;
+
+      /* Must clear OBIT_SUR_TOUCH first! */
+    nexus->state &= ~OBIT_SUR_TOUCH;
 
         /* Start drawing nexus and its contents. */
     cr = cairo_create(nexus->surface);
