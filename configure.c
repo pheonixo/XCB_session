@@ -150,7 +150,7 @@ _gfuse_delta_adjust(PhxNFuse *inspect, int16_t *hD, int16_t *vD,
         yOffset = _vcheck((PhxNexus*)inspect, (yOffset - icmp));
           /* extra check against min with yD < 0 */
         if (yD < 0) {
-         adj = (gravity == 15) ? (GRIPSZ << 1) : GRIPSZ;
+          adj = (gravity == 15) ? (GRIPSZ << 1) : GRIPSZ;
           if ((vbox.y - adj) <= inspect->min_max.y)
             yOffset = inspect->min_max.y + adj - vbox.h;
         }
@@ -217,15 +217,17 @@ _gfuse_delta_adjust(PhxNFuse *inspect, int16_t *hD, int16_t *vD,
     if (yOffset != 0) {
       inspect->state |= NBIT_VERT_TOUCH;
       adj = (gravity == 15) ? (GRIPSZ << 1) : GRIPSZ;
+        /* Height with applied offset must be minimum of grip sizes. */
       if ((ibox->h + yOffset) < adj) {
-        if (ibox->y > 0) {
+          /* adding yOffset causes height < grip. */
+        if (ibox->y > 0) {  /* can grip move towards 0? */
           if ((ibox->y + yOffset) < 0) {
+              /* partial move toward 0. */
             inspect->mete_box.h = adj;
             inspect->draw_box.h = 0;
             yOffset = -ibox->y;
           }
           inspect->mete_box.y += yOffset;
-            /* alter to allow y at top of grip */
           yOffset -= adj;
           pp = true;
         } else {
@@ -374,6 +376,7 @@ if (is_gfuse) {
   } while (ndx != 0);
 }
 
+/* Deal with motion from top/left origins. */
 static void
 _plpt_sweep(PhxInterface *iface, uint16_t ndx, int16_t hD, int16_t vD,
                        Image_s *cImage) {
@@ -396,25 +399,31 @@ _plpt_sweep(PhxInterface *iface, uint16_t ndx, int16_t hD, int16_t vD,
 
   if (hD < 0)  hbox.w = hbox.x - hD;
   else         hbox.w = hbox.x, hbox.x -= hD;
-  if ( ((inspect->state & VXPD_MSK) == VXPD_TOP)
-      || (inspect->type == PHX_GFUSE) )
+  if ((inspect->state & VXPD_MSK) == VXPD_TOP)
     hbox.h = ibox->y + ibox->h;
   if (vD < 0)  vbox.h = vbox.y - vD;
   else         vbox.h = vbox.y, vbox.y -= vD;
-  if ( ((inspect->state & HXPD_MSK) == HXPD_LFT)
-      || (inspect->type == PHX_GFUSE) )
+  if ((inspect->state & HXPD_MSK) == HXPD_LFT)
     vbox.w = ibox->x + ibox->w;
 
+#if 1
+    /* When a SOUTH or CENTER gfuse, y moves until gfuse height equals
+      its grip(s). */
   y_moves = ( (inspect->type == PHX_GFUSE)
              && ((inspect->state & GRAVITY_MASK) == GRAVITY_SOUTH)
              && (ibox->h != GRIPSZ) );
+    /* If y moves (height==grip) then offset push region by grip(s). */
   if (y_moves)
     vbox.h += ibox->h, vbox.y += ibox->h;
+    /* When a EAST or CENTER gfuse, x moves until gfuse width equals
+      its grip(s). */
   x_moves = ( (inspect->type == PHX_GFUSE)
              && ((inspect->state & GRAVITY_MASK) == GRAVITY_EAST)
              && (ibox->w != GRIPSZ) );
+    /* If x moves (width==grip) then offset push region by grip(s). */
   if (x_moves)
     hbox.w += ibox->w, hbox.x += ibox->w;
+#endif
 
   do {
     int16_t icmp, iend, ibgn;
@@ -450,6 +459,14 @@ _plpt_sweep(PhxInterface *iface, uint16_t ndx, int16_t hD, int16_t vD,
         }
       }
     }
+
+/* When pushing from top, may encounter a gfuse. A gfuse will deal with inner
+  motion until it's equal to its grip(s). Upon no more inner, the grip(s) move
+  by y, until it reaches the window's bottom, or other gfuse(s) that can no
+  longer move/compress. */
+if ( (inspect->type == PHX_GFUSE) && ((inspect->mete_box.h + vD) < 0) ) {
+  y_moves = true;
+}
 
     if ((hOffset != 0) || (vOffset != 0)) {
       bool pp = false;
@@ -729,8 +746,9 @@ _interface_configure_callbacks(PhxInterface *iface, Image_s *cImage) {
 #endif
       handled = inspect->_event_cb(iface, (void*)nvt, (PhxObject*)inspect);
         /* set mete_box to _interface_configure() results */
-      inspect->mete_box = swap_mete;
-      if (!handled)  inspect->draw_box = swap_draw;
+      if (!handled)
+        inspect->mete_box = swap_mete,
+        inspect->draw_box = swap_draw;
     }
   } while (idx != 0);
 }
@@ -909,15 +927,17 @@ _interface_configure(PhxInterface *iface, int16_t hD, int16_t vD) {
 
     if (iface->surface != NULL)
       cairo_surface_destroy(iface->surface);
+
+    iface->sur_width  = maxof(iface->draw_box.w, iface->sur_width);
+    iface->sur_height = maxof(iface->draw_box.h, iface->sur_height);
+
     iface->surface
-      = ui_surface_create_similar(iface, iface->draw_box.w, iface->draw_box.h);
+      = ui_surface_create_similar(iface, iface->sur_width, iface->sur_height);
     error = cairo_surface_status(iface->surface);
     if (error != CAIRO_STATUS_SUCCESS) {
       DEBUG_ASSERT(true, "Some weird cairo error...?!");
       goto rejected;
     }
-    iface->sur_width  = iface->draw_box.w;
-    iface->sur_height = iface->draw_box.h;
   }
 
   if (iface->ncount != 0) {
