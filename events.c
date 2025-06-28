@@ -534,7 +534,7 @@ _event_configure(xcb_generic_event_t *nvt) {
   PhxInterface *iface = ui_interface_for(configure->event);
 
     /* Do not use 0,0 as exclusion, case maximize. */
-    /* Posiition should be placed first for _interface_configure()
+    /* Position should be placed first for _interface_configure()
       to pass accurate positioning for configure notices. */
   if ( (iface->mete_box.x != configure->x)
       || (iface->mete_box.y != configure->y) ) {
