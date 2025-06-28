@@ -382,9 +382,9 @@ _configure_invalidate(struct _sigtimer *tmr) {
     /* Because of server lag, verify iface wasn't deleted. */
   iface = (ui_interface_for(tmr->iface->window));
   if (iface != NULL) {
+      /* Not enough skipped to validate use of 'same as last' compare. */
     int32_t values[3];
     union rectangle_endianess rect_u;
-
     rect_u.r64 = tmr->data;
     values[2] = rect_u.rect.h;
     values[1] = rect_u.rect.w;
@@ -1059,23 +1059,25 @@ user_add_text(PhxInterface *iface) {
     /* Want ports to overlay with closest to headerbar being topmost */
   RECTANGLE(nexus_box, 0, (14 + 10),
                           iface->mete_box.w,
-                          iface->mete_box.h - (14 + 10));
+                          iface->mete_box.h - (14 + 10) - (2*quad_height));
   nexus = ui_nexus_create(iface, nexus_box);
   nexus->state |= HXPD_RGT | VXPD_BTM;
 
-
-/*
-  RECTANGLE(nexus_box, 0, iface->mete_box.h - quad_height,
+  RECTANGLE(nexus_box, 0, iface->mete_box.h - (2*quad_height),
                           iface->mete_box.w,
                           quad_height);
-  nexus = ui_nexus_create(iface, nexus_box);
-  nexus->state |= HXPD_RGT | VXPD_BTM;
-
-  nexus_box.y -= quad_height;
-  nfuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_SOUTH);
+  nfuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_NORTH);
   nfuse->state |= HXPD_RGT | VXPD_BTM;
   nfuse->min_max.y = hbar->mete_box.h;
 
+  RECTANGLE(nexus_box, 0, iface->mete_box.h - quad_height,
+                          iface->mete_box.w,
+                          quad_height);
+  nfuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_NORTH);
+  nfuse->state |= HXPD_RGT | VXPD_BTM;
+  nfuse->min_max.y = hbar->mete_box.h + GRIPSZ;
+
+/*
   nexus_box.y -= quad_height;
   nfuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_SOUTH);
   nfuse->state |= HXPD_RGT | VXPD_BTM;
@@ -1108,7 +1110,7 @@ user_configure_layout(PhxInterface *iface) {
   ui_window_undecorate_set(window);
 
   HEADER_HEIGHT = (14 + 10);
-  wmin_height = HEADER_HEIGHT + GRIPSZ;
+  wmin_height = HEADER_HEIGHT + (2 * GRIPSZ);
   ui_window_minimum_set(window, 4 * HEADER_HEIGHT, wmin_height);
 
     /* On an undecorated window, allow only 1 headerbar.
@@ -1123,11 +1125,6 @@ user_configure_layout(PhxInterface *iface) {
   iface->state |= SBIT_HEADERBAR;
   hbar->_draw_cb = _draw_hdr_background;
   hbar->_event_cb = _default_headerbar_meter;
-
-    /* A blurr image takes too long to draw from scratch when performing
-      a resize drag. With refinements, without blurr, button drawing now
-      too slow causing strobing.
-  hbar->exclusive = create_blurr(hbar); */
 
   ypos = (int16_t)(((double)(14 + 10) * 0.208333) + 0.499999);
   xpos = ypos + 3;
@@ -1216,7 +1213,7 @@ main(int argc, char *argv[]) {
   xcb_window_t window;
 
     /* window size and position */
-  PhxRectangle configure = { 100, 100, 500, 500 };
+  PhxRectangle configure = { 800, 200, 500, 800 };
 
 #if DEBUG_EVENTS_ON
   debug_flags &= ~((uint64_t)1 << XCB_MOTION_NOTIFY);
