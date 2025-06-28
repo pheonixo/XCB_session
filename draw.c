@@ -172,14 +172,19 @@ _nexus_walk(PhxInterface *iface, cairo_t *face_cr, PhxRectangle clip_box) {
         cairo_set_source_rgba(cr, c->r, c->g, c->b, c->a);
         cairo_paint(cr);
       }
-      if (subfuse->ncount != 0)
+      if (subfuse->ncount != 0) {
+          /* Must alter clip_box to nfuse mete_box. ??? translated. */
         _nexus_walk((PhxInterface*)subfuse, cr, clip_box);
+      }
       goto drawn_surface;
     }
     if (nexus->type == PHX_NFUSE) {
         /* Note difference: nexus objects use cr as 'face_cr'. */
-      if (nexus->ncount != 0)
-        _nexus_walk((PhxInterface*)nexus, cr, clip_box);
+      if (nexus->ncount != 0) {
+          /* Must alter clip_box to nfuse mete_box. We can still
+            paint, if called for, but we had to redraw this nfuse. */
+        _nexus_walk((PhxInterface*)nexus, cr, nexus->mete_box);
+      }
       goto drawn_surface;
     }
 
