@@ -40,7 +40,7 @@ typedef struct phx_findboard_t                           phx_findboard_t;
 /* Debug minimum reports only what should be design issues.
   Maximun debug uses debug_flag to shut off event messages
   you don't want to receive. During a gdb session one can even
-  temporarily turn on/off event reporting by setting/unsetting bits. */ 
+  temporarily turn on/off event reporting by setting/unsetting bits. */
 #define DEBUG_MINIMUM     0
 #include "events_debug.h"
 /* above affects atom globals */

@@ -18,6 +18,7 @@ void
 ui_active_focus_set(PhxObject *obj) {
 
   xcb_focus_in_event_t notify = { 0 };
+  xcb_generic_event_t *nvt = (xcb_generic_event_t*)&notify;
   PhxInterface *iface;
   PhxObject *focused;
 
@@ -41,9 +42,9 @@ ui_active_focus_set(PhxObject *obj) {
           to 'window' focus. Objects within iface do lose focus. */
       if ( !IS_WINDOW_TYPE(focused)
            && (focused->type != PHX_HEADERBAR) )
-        focused->_event_cb(iface, (xcb_generic_event_t*)&notify, focused);
+        focused->_event_cb(iface, nvt, focused);
       if (obj == NULL)
-        iface->_event_cb(iface, (xcb_generic_event_t*)&notify, focused);
+        iface->_event_cb(iface, nvt, focused);
     }
   }
   if (obj != NULL) {
@@ -54,7 +55,7 @@ ui_active_focus_set(PhxObject *obj) {
       if (!!(iface->state & SBIT_HEADERBAR)) {
         if ( (obj->type != PHX_HEADERBAR)
             || (obj->i_mount->type != PHX_HEADERBAR) ) {
-          iface->_event_cb(iface, (xcb_generic_event_t*)&notify, obj);
+          iface->_event_cb(iface, nvt, obj);
           session->has_focus = obj;
           return;
         }
@@ -64,7 +65,25 @@ ui_active_focus_set(PhxObject *obj) {
       session->has_focus = (PhxObject*)iface;
       return;
     }
-    obj->_event_cb(iface, (xcb_generic_event_t*)&notify, obj);
+      /* If not handled, then object doesn't accept focus. Must walk
+        'up' the tree to find a focus owner. */
+    if (!(obj->_event_cb(iface, nvt, obj))) {
+      PhxObject *mount = obj;
+        /* First check obj is object or child of. */
+      if ( (!IS_IFACE_TYPE(obj))
+          && (obj->o_mount != obj) ) {
+        if ((mount = obj->o_mount)->_event_cb != NULL)
+          if (mount->_event_cb(iface, nvt, obj))
+            goto focus_accepted;
+      }
+        /* If iface, accept focus, else walk to see if inbetween. */
+      while (!IS_WINDOW_TYPE((mount = (PhxObject*)mount->i_mount))) {
+        if ( (mount->_event_cb != NULL)
+            && (mount->_event_cb(iface, nvt, obj)) )  break;
+      }
+focus_accepted:
+      obj = mount;
+    }
   }
   session->has_focus = obj;
 }
