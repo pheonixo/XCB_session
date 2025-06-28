@@ -93,6 +93,11 @@ xxnex: $(FORGE)xcb_nexus.c   $(SRC) $(XHDR) makefile
 	@echo "  CC -o xxnex"
 	@gcc $(CFLAGS) -o xxnex $(FORGE)xcb_nexus.c    $(SRC) $(LIBS)
 
+# nexus: creation/testing of _interface_configure()
+xxcfg: $(FORGE)xcb_configure.c   $(SRC) $(XHDR) makefile
+	@echo "  CC -o xxcfg"
+	@gcc $(CFLAGS) -o xxcfg $(FORGE)xcb_configure.c $(SRC) $(LIBS)
+
 # gfuse: 2 window test of gravities north and east abilites
 xxgne: $(FORGE)xcb_gfne.c    $(SRC) $(XHDR) makefile 
 	@echo "  CC -o xxgne"
@@ -156,5 +161,6 @@ xxhbr2: $(FORGE)xcb_hbar2.c $(SRC) $(XHDR) libctype.a makefile
 	@echo "  CC -o xxhbr2"
 	@gcc $(CFLAGS) -o xxhbr2 $(FORGE)xcb_hbar2.c $(SRC) $(LIBS) -L./ -lctype
 
-all: xxssn xxss2 xxnex xxgne xxfse xxbtn xxtv1 xxtxt xxgtx xxbnk xxebr \
-xxfbr xxfbr2 xxhbr
+all: xxssn xxss2 xxnex xxcfg xxgne xxfse xxbtn xxtv1 xxtxt xxgtx xxbnk \
+xxebr xxfbr xxfbr2 xxhbr
+
