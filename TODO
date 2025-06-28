@@ -1,5 +1,10 @@
 TODO notes:
 
+  configure XXX
+On nexus creation, setting of expand needs to be a function. 'rays' need
+to be set based on static.
+Verify gfuse are setting 'rays'
+
 More printf conversions needed
 grep -iIRne "printf(" ./*
 All messages to go to stderr and file
