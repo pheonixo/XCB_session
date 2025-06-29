@@ -68,7 +68,7 @@ _intersection(PhxInterface *iface,
     do
       mbox.x += mount->mete_box.x,
       mbox.y += mount->mete_box.y;
-    while (iface != (mount = mount->i_mount));    
+    while (iface != (mount = mount->i_mount));
   }
 
   if (mbox.x >= (clip_box.x + clip_box.w))  return false;
