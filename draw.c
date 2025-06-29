@@ -56,25 +56,27 @@ _object_walk(PhxNexus *nexus, cairo_t *cr) {
   cairo_clip_extents(cr, &x1, &y1, &x2, &y2);
   printf("%.2f %.2f %.2f %.2f\n", x1, y1, x2, y2);
 */
+
 static bool
-_intersection(PhxNexus *nexus, PhxRectangle *clip_box) {
+_intersection(PhxInterface *iface,
+              PhxNexus *nexus,
+              PhxRectangle clip_box) {
 
   PhxRectangle mbox = nexus->mete_box;
-  PhxInterface *mount = nexus->i_mount;
-  if (!IS_WINDOW_TYPE(mount))
+  if (iface != nexus->i_mount) {
+    PhxInterface *mount = nexus->i_mount;
     do
       mbox.x += mount->mete_box.x,
       mbox.y += mount->mete_box.y;
-    while (!IS_WINDOW_TYPE((mount = mount->i_mount)));
+    while (iface != (mount = mount->i_mount));    
+  }
 
-  if (mbox.x >= (clip_box->x + clip_box->w))  return false;
-  if (mbox.y >= (clip_box->y + clip_box->h))  return false;
-  if (mbox.x < clip_box->x)
-    if (clip_box->x >= (mbox.x + mbox.w))     return false;
-  if (mbox.y < clip_box->y)
-    if (clip_box->y >= (mbox.y + mbox.h))     return false;
-
-  *clip_box = mbox;
+  if (mbox.x >= (clip_box.x + clip_box.w))  return false;
+  if (mbox.y >= (clip_box.y + clip_box.h))  return false;
+  if (mbox.x < clip_box.x)
+    if (clip_box.x >= (mbox.x + mbox.w))     return false;
+  if (mbox.y < clip_box.y)
+    if (clip_box.y >= (mbox.y + mbox.h))     return false;
   return true;
 }
 
@@ -90,12 +92,6 @@ _nexus_count(PhxNexus *nexus) {
   return (1 + nexus->ncount);
 }
 
-/* XXX Issue: WM send peicemeal expose signals. Drawing based on clip
-  region must be ignored if has to be redrawn. Then it can paint the
-  expose signals clip area when valid. So problem is routine doesn't know
-  invalid area not going to be redrawn, and when asked to paint invalid
-  it assumes its been redrawn.
-   No WM draws entire exposed. Paints invalid when asked to. */
 static void
 _nexus_walk(PhxInterface *iface, cairo_t *face_cr, PhxRectangle clip_box) {
 
@@ -103,19 +99,18 @@ _nexus_walk(PhxInterface *iface, cairo_t *face_cr, PhxRectangle clip_box) {
     /* walk all iface nexus, ascending since layered system */
   do {
     cairo_t *cr;
-    PhxRectangle cbox = clip_box;  /* Unsure if needed to speed up. */
     PhxNexus *nexus = iface->nexus[ndx];
 
     DEBUG_ASSERT((nexus->surface == NULL),
                                "error: NULL surface... _nexus_walk()");
 
       /* Seperated code for Demodraw code. */
-      /* Is nexus in visible draw area? Keep TOUCH if not redrawng. */
+      /* Is nexus in visible draw area? Keep TOUCH for when redrawng. */
     if (!ui_visible_get((PhxObject*)nexus)) {
       continue;
     }
-      /* Is nexus in clip draw area? Keep TOUCH if not redrawng. */
-    if (!_intersection(nexus, &cbox)) {
+      /* Is nexus in clip draw area? Keep TOUCH for when redrawng. */
+    if (!_intersection(iface, nexus, clip_box)) {
       colour_select += _nexus_count(nexus);
       colour_select %= 12;
       continue;
@@ -173,17 +168,20 @@ _nexus_walk(PhxInterface *iface, cairo_t *face_cr, PhxRectangle clip_box) {
         cairo_paint(cr);
       }
       if (subfuse->ncount != 0) {
-          /* Must alter clip_box to nfuse mete_box. ??? translated. */
-        _nexus_walk((PhxInterface*)subfuse, cr, clip_box);
+          /* subfuse->draw_box should be equal to translate x,y and
+            equal to the area we allow drawing in. Content within
+            should be relative drawing to this system of coordinates. */
+        _nexus_walk((PhxInterface*)subfuse, cr, subfuse->draw_box);
       }
       goto drawn_surface;
     }
     if (nexus->type == PHX_NFUSE) {
         /* Note difference: nexus objects use cr as 'face_cr'. */
       if (nexus->ncount != 0) {
-          /* Must alter clip_box to nfuse mete_box. We can still
-            paint, if called for, but we had to redraw this nfuse. */
-        _nexus_walk((PhxInterface*)nexus, cr, nexus->mete_box);
+          /* nfuse->draw_box should be equal to the area we allow
+            drawing in. Content within should be relative drawing to
+            this system of coordinates. */
+        _nexus_walk((PhxInterface*)nexus, cr, nexus->draw_box);
       }
       goto drawn_surface;
     }
