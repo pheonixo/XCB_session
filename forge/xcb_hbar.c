@@ -1195,6 +1195,7 @@ main(int argc, char *argv[]) {
   PhxRectangle configure = { 100, 100, 500, 500 };
 
 #if DEBUG_EVENTS_ON
+    /* turn off reporting of these events */
   debug_flags &= ~((uint64_t)1 << XCB_MOTION_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_CONFIGURE_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_EXPOSE);

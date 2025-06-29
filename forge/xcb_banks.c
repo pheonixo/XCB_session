@@ -74,13 +74,20 @@ main(int argc, char *argv[]) {
   PhxRectangle configure = { 800, 200, 300, 200 };
 
 #if DEBUG_EVENTS_ON
+    /* turn off reporting of these events */
   debug_flags &= ~((uint64_t)1 << XCB_MOTION_NOTIFY);
-  debug_flags &= ~((uint64_t)1 << XCB_PROPERTY_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_CONFIGURE_NOTIFY);
+  debug_flags &= ~((uint64_t)1 << XCB_EXPOSE);
+  debug_flags &= ~((uint64_t)1 << XCB_KEY_PRESS);
+  debug_flags &= ~((uint64_t)1 << XCB_KEY_RELEASE);
+  debug_flags &= ~((uint64_t)1 << XCB_BUTTON_PRESS);
+  debug_flags &= ~((uint64_t)1 << XCB_BUTTON_RELEASE);
   debug_flags &= ~((uint64_t)1 << XCB_ENTER_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_LEAVE_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_FOCUS_IN);
   debug_flags &= ~((uint64_t)1 << XCB_FOCUS_OUT);
+  debug_flags &= ~((uint64_t)1 << XCB_VISIBILITY_NOTIFY);
+  debug_flags &= ~((uint64_t)1 << XCB_PROPERTY_NOTIFY);
 #endif
 
     /* A 'topmost' decorated window */

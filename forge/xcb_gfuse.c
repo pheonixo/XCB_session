@@ -24,6 +24,7 @@ user_configure_layout(PhxInterface *iface) {
   fuse = ui_gfuse_create(iface, nexus_box, XCB_GRAVITY_CENTER);
     /* lock grip 'w', 'h', 50 each */
   subfuse = (PhxNFuse*)fuse->nexus[0];
+  subfuse->state |= HXPD_RGT | VXPD_BTM;
   subfuse->min_max.w = 630;
   subfuse->min_max.h = 500;
 
@@ -40,6 +41,7 @@ user_configure_layout(PhxInterface *iface) {
       /* creating nfuse instead of just nexus */
     RECTANGLE(nexus_box, 40, 40, 80, 300 - 80);
     subsubfuse = ui_nfuse_create((PhxInterface*)subfuse, nexus_box);
+    subsubfuse->state |= HXPD_LFT | VXPD_TOP;
     subsubfuse->min_max.w = 40 + 2*40;
     subsubfuse->min_max.h = 300 - 40;
         /* internal nexus */
@@ -52,7 +54,6 @@ user_configure_layout(PhxInterface *iface) {
       /* creating nfuse instead of just nexus */
     RECTANGLE(nexus_box, 40 + 2*40, 90, 80, 120);
     subsubfuse = ui_nfuse_create((PhxInterface*)subfuse, nexus_box);
-    subsubfuse->state &= ~(HXPD_MSK | VXPD_MSK);
     subsubfuse->state |= HXPD_LFT | VXPD_TOP;
     subsubfuse->min_max.w = 40+2*40 + 80;
     subsubfuse->min_max.h = 90 + 120;
@@ -60,12 +61,12 @@ user_configure_layout(PhxInterface *iface) {
       for (ndx = 0; ndx < 120; ndx += 40) {
         RECTANGLE(nexus_box, 0, ndx, 80, 40);
         nexus = ui_nexus_create((PhxInterface*)subsubfuse, nexus_box);
-        nexus->state |= HXPD_LFT | VXPD_TOP;
       }
 
       /* creating nfuse instead of just nexus */
     RECTANGLE(nexus_box, 40+2*40+80, 40, 80, 300 - 80);
     subsubfuse = ui_nfuse_create((PhxInterface*)subfuse, nexus_box);
+    subsubfuse->state |= HXPD_LFT | VXPD_TOP;
     subsubfuse->min_max.w = 40+2*40+80 + 80;
     subsubfuse->min_max.h = 300 - 40;
         /* internal nexus */
@@ -89,12 +90,20 @@ main(int argc, char *argv[]) {
   PhxRectangle configure = { 200, 200, 800, 600 };
 
 #if DEBUG_EVENTS_ON
-    /* turn off XCB_MOTION_NOTIFY reporting */
+    /* turn off reporting of these events */
   debug_flags &= ~((uint64_t)1 << XCB_MOTION_NOTIFY);
-  debug_flags &= ~((uint64_t)1 << XCB_PROPERTY_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_CONFIGURE_NOTIFY);
   debug_flags &= ~((uint64_t)1 << XCB_EXPOSE);
+  debug_flags &= ~((uint64_t)1 << XCB_KEY_PRESS);
+  debug_flags &= ~((uint64_t)1 << XCB_KEY_RELEASE);
+  debug_flags &= ~((uint64_t)1 << XCB_BUTTON_PRESS);
+  debug_flags &= ~((uint64_t)1 << XCB_BUTTON_RELEASE);
+  debug_flags &= ~((uint64_t)1 << XCB_ENTER_NOTIFY);
+  debug_flags &= ~((uint64_t)1 << XCB_LEAVE_NOTIFY);
+  debug_flags &= ~((uint64_t)1 << XCB_FOCUS_IN);
+  debug_flags &= ~((uint64_t)1 << XCB_FOCUS_OUT);
   debug_flags &= ~((uint64_t)1 << XCB_VISIBILITY_NOTIFY);
+  debug_flags &= ~((uint64_t)1 << XCB_PROPERTY_NOTIFY);
 #endif
 
     /* A 'topmost' decorated window */
