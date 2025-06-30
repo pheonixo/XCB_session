@@ -300,6 +300,8 @@ ui_invalidate_rectangle(PhxInterface *iface, PhxRectangle dirty) {
     dirty.y += iface->mete_box.y;
     iface = iface->i_mount;
   }
+  iface->state |= OBIT_SUR_TOUCH;
+
   dirty.w += dirty.x, dirty.h += dirty.y;
   if ((dirty.w <= 0) || (dirty.h <= 0))  return;
   if (dirty.x < 0)  dirty.x = 0;
@@ -329,7 +331,12 @@ ui_invalidate_object(PhxObject *obj) {
   PhxInterface *mount = (PhxInterface*)obj;
   struct _sigtimer *tmr;
 
-  if (!IS_WINDOW_TYPE(mount)) {
+  if (IS_WINDOW_TYPE(mount)) {
+    uint16_t ndx;
+    mount->state |= OBIT_SUR_TOUCH;
+    for (ndx = 0; ndx < mount->ncount; ndx++)
+      mount->nexus[ndx]->state |= OBIT_SUR_TOUCH;
+  } else {
     if (IS_IFACE_TYPE(mount))  mount->state |= OBIT_SUR_TOUCH;
     do {
       dirty_u.rect.x += mount->mete_box.x,
