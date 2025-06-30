@@ -199,7 +199,11 @@ _default_bank_run(PhxBank *ibank, xcb_generic_event_t *nvt, PhxObject *obj) {
     }
     ui_invalidate_object((PhxObject*)ibank->i_mount);
       /* send results of run to caller */
-    if (vault->_result_cb != NULL)  vault->_result_cb(ibank);
+    if (vault->_result_cb != NULL) {
+      vault->_result_cb(ibank);
+        /* Release not to affect any object under removed dropdown. */
+      ibank->i_mount->state |= SBIT_RELEASE_IGNORE;
+    }
 
     return false;
   }
@@ -277,6 +281,7 @@ _default_bank_meter(PhxInterface *iface,
       vault->in_idx = vault->on_idx;
       vObj = dropdown->nexus[0]->objects[vault->in_idx];
       _attrib_colours_swap(vObj->attrib, (PhxAttr*)&vault->bg_fill);
+      ui_invalidate_object(vObj);
     }
     xcb_map_window(session->connection, dropdown->window);
   }
