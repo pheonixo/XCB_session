@@ -12,6 +12,8 @@
 
 extern void  ext_cairo_blur_surface(cairo_surface_t *, int, int);
 
+PhxNexus *  ui_headerbar_for(PhxInterface *iface);
+
 #ifndef M_PI
  #define M_PI 3.14159265358979323846
 #endif
@@ -382,9 +384,9 @@ _configure_invalidate(struct _sigtimer *tmr) {
     /* Because of server lag, verify iface wasn't deleted. */
   iface = (ui_interface_for(tmr->iface->window));
   if (iface != NULL) {
+      /* Not enough skipped to validate use of 'same as last' compare. */
     int32_t values[3];
     union rectangle_endianess rect_u;
-
     rect_u.r64 = tmr->data;
     values[2] = rect_u.rect.h;
     values[1] = rect_u.rect.w;
@@ -884,7 +886,7 @@ _default_headerbar_meter(PhxInterface *iface,
     PhxNexus *hbar;
     uint16_t ndx;
 focus_set:
-    hbar = (PhxNexus*)obj;
+    hbar = ui_headerbar_for(iface);
     ndx = hbar->ncount;
     while (ndx != 0) {
       PhxObject *inspect = hbar->objects[(--ndx)];
@@ -1099,11 +1101,6 @@ user_configure_layout(PhxInterface *iface) {
   iface->state |= SBIT_HEADERBAR;
   hbar->_draw_cb = _draw_hdr_background;
   hbar->_event_cb = _default_headerbar_meter;
-
-    /* A blurr image takes too long to draw from scratch when performing
-      a resize drag. With refinements, without blurr, button drawing now
-      too slow causing strobing.
-  hbar->exclusive = create_blurr(hbar); */
 
   ypos = (int16_t)(((double)(14 + 10) * 0.208333) + 0.499999);
   xpos = ypos + 3;

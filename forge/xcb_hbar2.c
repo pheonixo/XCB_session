@@ -12,6 +12,8 @@
 
 extern void  ext_cairo_blur_surface(cairo_surface_t *, int, int);
 
+PhxNexus *  ui_headerbar_for(PhxInterface *iface);
+
 #ifndef M_PI
  #define M_PI 3.14159265358979323846
 #endif
@@ -884,7 +886,7 @@ _default_headerbar_meter(PhxInterface *iface,
     PhxNexus *hbar;
     uint16_t ndx;
 focus_set:
-    hbar = (PhxNexus*)obj;
+    hbar = ui_headerbar_for(iface);
     ndx = hbar->ncount;
     while (ndx != 0) {
       PhxObject *inspect = hbar->objects[(--ndx)];
