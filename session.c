@@ -77,9 +77,12 @@ ui_active_focus_set(PhxObject *obj) {
             goto focus_accepted;
       }
         /* If iface, accept focus, else walk to see if inbetween. */
-      while (!IS_WINDOW_TYPE((mount = (PhxObject*)mount->i_mount))) {
-        if ( (mount->_event_cb != NULL)
-            && (mount->_event_cb(iface, nvt, obj)) )  break;
+        /* Caution: A transient' mount is not itself. */
+      if (!IS_WINDOW_TYPE(mount)) {
+        while (!IS_WINDOW_TYPE((mount = (PhxObject*)mount->i_mount))) {
+          if ( (mount->_event_cb != NULL)
+              && (mount->_event_cb(iface, nvt, obj)) )  break;
+        }
       }
 focus_accepted:
       obj = mount;
