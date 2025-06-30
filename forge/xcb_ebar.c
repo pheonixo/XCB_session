@@ -41,6 +41,7 @@ btn_delete_file(PhxInterface *iface,
     PhxBank *ibank = ui_dropdown_from(actuator);
     PhxVault *vault = (PhxVault*)ibank->exclusive;
     ui_bank_remove_object(ibank, vault->on_idx);
+    ui_invalidate_object((PhxObject*)ibank);
   }
   return _default_button_meter(iface, nvt, obj);
 }
