@@ -250,6 +250,8 @@ user_configure_layout(PhxInterface *iface, uint8_t layout) {
 
       RECTANGLE(nexus_box, 800 - 120, 200 - 120, 80, 120);
       fuse = ui_nfuse_create(iface, nexus_box);
+        /* Unlike 6... cause x movement. */
+      fuse->state |= HXPD_LFT;
           /* fuse these 3 together */
         for (hdx = 0; hdx < 120; hdx += 40) {
           RECTANGLE(nexus_box, 0, hdx, 80, 40);
