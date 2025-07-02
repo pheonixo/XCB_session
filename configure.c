@@ -456,8 +456,6 @@ _prpb_sweep(PhxInterface *iface, uint16_t ndx, int16_t hD, int16_t vD,
           }
         } else {
           inspect->mete_box.y += vOffset;
-          inspect->mete_box.h += vOffset;
-          inspect->draw_box.h += vOffset;
           pp = true;
         }
       }
