@@ -108,6 +108,11 @@ xxfse: $(FORGE)xcb_gfuse.c   $(SRC) $(XHDR) makefile
 	@echo "  CC -o xxfse"
 	@gcc $(CFLAGS) -o xxfse $(FORGE)xcb_gfuse.c    $(SRC) $(LIBS)
 
+# gfuse cardinal resize conformance testing
+xxgrsz: $(FORGE)xcb_grip_resize.c $(SRC) $(XHDR) libctype.a makefile
+	@echo "  CC -o xxgrsz"
+	@gcc $(CFLAGS) -o xxgrsz $(FORGE)xcb_grip_resize.c $(SRC) $(LIBS) -L./ -lctype
+
 # object button (multiple button objects)
 xxbtn: $(FORGE)xcb_buttons.c $(SRC) $(XHDR) makefile
 	@echo "  CC -o xxbtn"
@@ -162,5 +167,5 @@ xxhbr2: $(FORGE)xcb_hbar2.c $(SRC) $(XHDR) libctype.a makefile
 	@gcc $(CFLAGS) -o xxhbr2 $(FORGE)xcb_hbar2.c $(SRC) $(LIBS) -L./ -lctype
 
 all: xxssn xxss2 xxnex xxcfg xxgne xxfse xxbtn xxtv1 xxtxt xxgtx xxbnk \
-xxebr xxfbr xxfbr2 xxhbr
+xxebr xxfbr xxfbr2 xxhbr xxhbr2 xxgrsz
 
