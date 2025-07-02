@@ -83,7 +83,7 @@ _vcheck(PhxNexus *inspect, int16_t offset) {
 }
 
 static int16_t
-_hcheck(PhxNexus *inspect, int16_t offset) {
+_rgt_hcheck(PhxNexus *inspect, int16_t offset) {
 
   int16_t ix = inspect->mete_box.x;
     /* Does X move? */
@@ -93,6 +93,21 @@ _hcheck(PhxNexus *inspect, int16_t offset) {
   }
 
   ix += inspect->mete_box.w;
+  if ((ix + offset) > inspect->min_max.w)
+    offset = inspect->min_max.w - ix;
+
+  return offset;
+}
+
+
+static int16_t
+_lft_hcheck(PhxNexus *inspect, int16_t offset) {
+
+  int16_t ix = inspect->mete_box.x;
+
+  if ((ix + offset) < inspect->min_max.x)
+    offset = inspect->min_max.x - ix;
+
   if ((ix + offset) > inspect->min_max.w)
     offset = inspect->min_max.w - ix;
 
@@ -122,7 +137,7 @@ _gfuse_delta_adjust(PhxNFuse *inspect, int16_t *hD, int16_t *vD,
       if ( (icmp >= hbox.x) && (icmp <= hbox.w) ) {
         xOffset = hbox.w;
         if (xD < 0)  xOffset = hbox.x;
-        xOffset = _hcheck((PhxNexus*)inspect, (xOffset - icmp));
+        xOffset = _rgt_hcheck((PhxNexus*)inspect, (xOffset - icmp));
           /* extra check against min with xD < 0 */
         if (xD < 0) {
           adj = (gravity == 15) ? (GRIPSZ << 1) : GRIPSZ;
@@ -136,7 +151,7 @@ _gfuse_delta_adjust(PhxNFuse *inspect, int16_t *hD, int16_t *vD,
         if ( (icmp >= hbox.x) && (icmp <= hbox.w) ) {
           xOffset = hbox.w;
           if (xD < 0)  xOffset = hbox.x;
-          xOffset = _hcheck((PhxNexus*)inspect, (xOffset - icmp));
+          xOffset = _rgt_hcheck((PhxNexus*)inspect, (xOffset - icmp));
         }
       }
     }
@@ -268,121 +283,9 @@ assign:
   return pp;
 }
 
-/* Called by ui_nexus_resize() and itself.
-  push right/btm pull (occurs when 'within' port has resize) */
 static void
-_prpb_sweep(PhxInterface *iface, uint16_t ndx, int16_t hD, int16_t vD,
-                       Image_s *cImage) {
-
-  PhxRectangle *ibox, hbox, vbox;
-  PhxNexus *inspect;
-  bool is_gfuse;
-
-  if (ndx == 0)  return;
-
-  inspect = iface->nexus[ndx];
-  ibox = &inspect->mete_box;
-  hbox.x = (vbox.x = ibox->x);
-  hbox.y = (vbox.y = ibox->y);
-  hbox.w = hbox.x + ibox->w;     /* create points */
-  hbox.h = inspect->min_max.h;   /* min_max are points */
-  vbox.w = inspect->min_max.w;   /* min_max are points */
-  vbox.h = vbox.y + ibox->h;     /* create points */
-
-  if (hD < 0)  hbox.x = hbox.w, hbox.w -= hD;
-  else         hbox.x = hbox.w - hD;
-  if ((is_gfuse = (inspect->type == PHX_GFUSE)))
-    hbox.h = ibox->y + ibox->h;
-  if (vD < 0)  vbox.y = vbox.h, vbox.h -= vD;
-  else         vbox.y = vbox.h - vD;
-  if (is_gfuse)
-    vbox.w = ibox->x + ibox->w;
-
-  do {
-    int16_t icmp, iend, ibgn;
-    int16_t hOffset = 0, vOffset = 0;
-    inspect = iface->nexus[(--ndx)];
-    ibox = &inspect->mete_box;
-
-    if ( ((inspect->state & HXPD_MSK) != 0) && (hD != 0) ) {
-      iend = inspect->min_max.h;
-      if ((inspect->state & VXPD_MSK) != 0)
-        iend = ibox->y + ibox->h;
-      ibgn = (ibox->y < 0) ? 0 : ibox->y;
-      if ( (ibgn >= hbox.y) && (iend <= hbox.h) ) {
-        icmp = ibox->x;
-        if ( (icmp >= hbox.x) && (icmp <= hbox.w) ) {
-          hOffset = hbox.w;
-          if (hD < 0)  hOffset = hbox.x;
-
-if (is_gfuse) {
-  int16_t offset = hOffset - icmp;
-  int16_t ix = inspect->mete_box.x;
-  if ((ix + offset) < inspect->min_max.x)
-    offset = inspect->min_max.x - ix;
-  if ((ix + offset) > inspect->min_max.w)
-    offset = inspect->min_max.w - ix;
-  hOffset = offset;
-} else
-          hOffset = _hcheck(inspect, (hOffset - icmp));
-        }
-      }
-    }
-    if ( ((inspect->state & VXPD_MSK) != 0) && (vD != 0) ) {
-      iend = inspect->min_max.w;
-      if ((inspect->state & HXPD_MSK) != 0)
-        iend = ibox->x + ibox->w;
-      ibgn = (ibox->x < 0) ? 0 : ibox->x;
-      if ( (ibgn >= vbox.x) && (iend <= vbox.w) ) {
-        icmp = ibox->y;
-        if ( (icmp >= vbox.y) && (icmp <= vbox.h) ) {
-          vOffset = vbox.h;
-          if (vD < 0)  vOffset = vbox.y;
-          vOffset = _vcheck(inspect, (vOffset - icmp));
-        }
-      }
-    }
-
-    if ((hOffset != 0) || (vOffset != 0)) {
-      bool pp = false;
-      _mark_nexus(inspect, cImage);
-      if (hOffset != 0) {
-        if ((inspect->state & HXPD_MSK) == HXPD_RGT) {
-          if ( (ibox->x == hbox.w) || (ibox->x == inspect->min_max.w) )
-            inspect->state |= NBIT_HORZ_TOUCH;
-          inspect->mete_box.x += hOffset;
-          inspect->mete_box.w -= hOffset;
-          inspect->draw_box.w -= hOffset;
-        } else {
-          inspect->state |= NBIT_HORZ_TOUCH;
-          inspect->mete_box.x += hOffset;
-          pp = true;
-        }
-      }
-      if (vOffset != 0) {
-        if ((inspect->state & VXPD_MSK) == VXPD_BTM) {
-          if ( (ibox->y == vbox.y) || (ibox->y == inspect->min_max.h) )
-            inspect->state |= NBIT_VERT_TOUCH;
-          inspect->mete_box.y += vOffset;
-          inspect->mete_box.h -= vOffset;
-          inspect->draw_box.h -= vOffset;
-        } else {
-          inspect->state |= NBIT_VERT_TOUCH;
-          inspect->mete_box.y += vOffset;
-          inspect->mete_box.h += vOffset;
-          inspect->draw_box.h += vOffset;
-          pp = true;
-        }
-      }
-      if (pp) _prpb_sweep(iface, ndx, hOffset, vOffset, cImage);
-    }
-  } while (ndx != 0);
-}
-
-static void
-_plpt_rays(PhxNexus *nexus,
-           int16_t hD, int16_t vD,
-           PhxRectangle *rH, PhxRectangle *rV) {
+_rays(PhxNexus *nexus, int16_t hD, int16_t vD,
+      PhxRectangle *rH, PhxRectangle *rV, bool type) {
 
   PhxRectangle hbox, vbox;
   const PhxRectangle *ibox;
@@ -400,14 +303,21 @@ _plpt_rays(PhxNexus *nexus,
 
     /* based off directional resize, adjust initial ray points.
       This will also make 0 motion when none in a direction. */
-  if (hD < 0)  hbox.w = hbox.x - hD;          /* left, use w as origin pt */
-  else         hbox.w = hbox.x, hbox.x -= hD; /* right, swap values, x origin */
-  if ((nexus->state & VXPD_MSK) == VXPD_TOP)
-    hbox.h = ibox->y + ibox->h;               /* limit h ray */
-  if (vD < 0)  vbox.h = vbox.y - vD;          /* up, h as origin */
-  else         vbox.h = vbox.y, vbox.y -= vD; /* down, swap, y as origin */
-  if ((nexus->state & HXPD_MSK) == HXPD_LFT)
-    vbox.w = ibox->x + ibox->w;               /* limit w ray */
+  if (type) {
+    if (hD < 0)  hbox.w = hbox.x - hD;          /* left, use w as origin pt */
+    else         hbox.w = hbox.x, hbox.x -= hD; /* right, swap, x as origin */
+    if ((nexus->state & VXPD_MSK) == VXPD_TOP)
+      hbox.h = ibox->y + ibox->h;               /* limit h ray */
+    if (vD < 0)  vbox.h = vbox.y - vD;          /* up, h as origin */
+    else         vbox.h = vbox.y, vbox.y -= vD; /* down, swap, y as origin */
+    if ((nexus->state & HXPD_MSK) == HXPD_LFT)
+      vbox.w = ibox->x + ibox->w;               /* limit w ray */
+  } else {
+    if (hD < 0)  hbox.x = hbox.w, hbox.w -= hD;
+    else         hbox.x = hbox.w - hD;
+    if (vD < 0)  vbox.y = vbox.h, vbox.h -= vD;
+    else         vbox.y = vbox.h - vD;
+  }
 
 /* Need case where right motion forces grip(s) against window's width. */
 
@@ -454,6 +364,117 @@ _plpt_rays(PhxNexus *nexus,
   }
   *rH = hbox;
   *rV = vbox;
+}
+
+/* Called by ui_nexus_resize() and itself.
+  push right/btm pull (occurs when 'within' port has resize) */
+static void
+_prpb_sweep(PhxInterface *iface, uint16_t ndx, int16_t hD, int16_t vD,
+                       Image_s *cImage) {
+
+  PhxRectangle hbox, vbox;
+#if 0
+  bool is_gfuse;
+#endif
+
+  if (ndx == 0)  return;
+
+    /* Set 'ray' regions to determine moves. 0==use prpb adjusts. */
+  _rays(iface->nexus[ndx], hD, vD, &hbox, &vbox, 0);
+
+#if 0
+  is_gfuse = (iface->nexus[ndx]->type == PHX_GFUSE);
+#endif
+
+  do {
+    const PhxRectangle *ibox;
+    PhxNexus *inspect;
+    int16_t icmp, iend, ibgn;
+    int16_t hOffset = 0, vOffset = 0;
+    inspect = iface->nexus[(--ndx)];
+    ibox = &inspect->mete_box;
+
+    if ( ((inspect->state & HXPD_MSK) != 0) && (hD != 0) ) {
+      iend = inspect->min_max.h;
+      if ((inspect->state & VXPD_MSK) != 0)
+        iend = ibox->y + ibox->h;
+      ibgn = (ibox->y < 0) ? 0 : ibox->y;
+      if ( (ibgn >= hbox.y) && (iend <= hbox.h) ) {
+        icmp = ibox->x;
+        if ( (icmp >= hbox.x) && (icmp <= hbox.w) ) {
+          hOffset = hbox.w;
+          if (hD < 0)  hOffset = hbox.x;
+          hOffset = _lft_hcheck(inspect, (hOffset - icmp));
+        }
+      }
+    }
+    if ( ((inspect->state & VXPD_MSK) != 0) && (vD != 0) ) {
+      iend = inspect->min_max.w;
+      if ((inspect->state & HXPD_MSK) != 0)
+        iend = ibox->x + ibox->w;
+      ibgn = (ibox->x < 0) ? 0 : ibox->x;
+      if ( (ibgn >= vbox.x) && (iend <= vbox.w) ) {
+        icmp = ibox->y;
+        if ( (icmp >= vbox.y) && (icmp <= vbox.h) ) {
+          vOffset = vbox.h;
+          if (vD < 0)  vOffset = vbox.y;
+          vOffset = _vcheck(inspect, (vOffset - icmp));
+        }
+      }
+    }
+
+    if ((hOffset != 0) || (vOffset != 0)) {
+      bool pp = false;
+      _mark_nexus(inspect, cImage);
+      if (hOffset != 0) {
+        inspect->state |= NBIT_HORZ_TOUCH;
+        if ((inspect->state & HXPD_MSK) == HXPD_RGT) {
+          inspect->mete_box.x += hOffset;
+          if ( (inspect->type == PHX_GFUSE)
+              && (inspect->mete_box.w >= GRIPSZ) ) {
+            int16_t delta;
+            delta = minof((inspect->mete_box.w - GRIPSZ), hOffset);
+            inspect->mete_box.w -= delta;
+            inspect->draw_box.w -= delta;
+            pp = (inspect->mete_box.w == GRIPSZ);
+          } else {
+            inspect->mete_box.w -= hOffset;
+            inspect->draw_box.w -= hOffset;
+          }
+        } else {
+          inspect->mete_box.x += hOffset;
+          pp = true;
+        }
+      }
+      if (vOffset != 0) {
+        inspect->state |= NBIT_VERT_TOUCH;
+        if ((inspect->state & VXPD_MSK) == VXPD_BTM) {
+          inspect->mete_box.y += vOffset;
+          if ( (inspect->type == PHX_GFUSE)
+              && (inspect->mete_box.h >= GRIPSZ) ) {
+            int16_t delta;
+            delta = minof((inspect->mete_box.h - GRIPSZ), vOffset);
+            inspect->mete_box.h -= delta;
+            inspect->draw_box.h -= delta;
+            pp = (inspect->mete_box.h == GRIPSZ);
+          } else {
+            inspect->mete_box.h -= vOffset;
+            inspect->draw_box.h -= vOffset;
+          }
+        } else {
+          inspect->mete_box.y += vOffset;
+          inspect->mete_box.h += vOffset;
+          inspect->draw_box.h += vOffset;
+          pp = true;
+        }
+      }
+      DEBUG_ASSERT(( (inspect->type == PHX_GFUSE)
+                    && ( (inspect->mete_box.h < GRIPSZ)
+                        || (inspect->mete_box.w < GRIPSZ) ) ),
+                   "error: Crushed grip.");
+      if (pp) _prpb_sweep(iface, ndx, hOffset, vOffset, cImage);
+    }
+  } while (ndx != 0);
 }
 
 /* x moves if pushed against gravity bar, when hbox pushes on x for hD>0
@@ -533,8 +554,8 @@ _plpt_sweep(PhxInterface *iface, uint16_t ndx, int16_t hD, int16_t vD,
 
   if (ndx == 0)  return;
 
-    /* Set 'ray' regions to determine moves. */
-  _plpt_rays(iface->nexus[ndx], hD, vD, &hbox, &vbox);
+    /* Set 'ray' regions to determine moves. 1==use plpt adjusts. */
+  _rays(iface->nexus[ndx], hD, vD, &hbox, &vbox, 1);
 
   do {
     const PhxRectangle *ibox;
@@ -561,7 +582,7 @@ _plpt_sweep(PhxInterface *iface, uint16_t ndx, int16_t hD, int16_t vD,
         if ( (icmp >= hbox.x) && (icmp <= hbox.w) ) {
           hOffset = hbox.w;
           if (hD < 0)  hOffset = hbox.x;
-          hOffset = _hcheck(inspect, (hOffset - icmp));
+          hOffset = _rgt_hcheck(inspect, (hOffset - icmp));
         }
       }
     }
@@ -718,7 +739,7 @@ _interface_delta_sweep(PhxInterface *iface, int16_t hD, int16_t vD,
           if ( (icmp >= hbox.x) && (icmp <= hbox.w) ) {
             hOffset = hbox.w;
             if (hD < 0)  hOffset = hbox.x;
-            hOffset = _hcheck(inspect, (hOffset - icmp));
+            hOffset = _rgt_hcheck(inspect, (hOffset - icmp));
           }
         }
       }
