@@ -373,18 +373,11 @@ _prpb_sweep(PhxInterface *iface, uint16_t ndx, int16_t hD, int16_t vD,
                        Image_s *cImage) {
 
   PhxRectangle hbox, vbox;
-#if 0
-  bool is_gfuse;
-#endif
 
   if (ndx == 0)  return;
 
     /* Set 'ray' regions to determine moves. 0==use prpb adjusts. */
   _rays(iface->nexus[ndx], hD, vD, &hbox, &vbox, 0);
-
-#if 0
-  is_gfuse = (iface->nexus[ndx]->type == PHX_GFUSE);
-#endif
 
   do {
     const PhxRectangle *ibox;
