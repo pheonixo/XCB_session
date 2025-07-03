@@ -69,7 +69,7 @@ _cfg_interface_meter(PhxInterface *iface,
                                      iface->mete_box.h);
         }
           /* Set new layout. */
-        if ((++layout_counter) == 6)  layout_counter = 0;
+        if ((++layout_counter) == 8)  layout_counter = 0;
         user_configure_layout(session->iface[0], layout_counter);
 
         if ( (!!(session->WMstate & HAS_WM)) || (!locus) )
@@ -340,7 +340,7 @@ main(int argc, char *argv[]) {
       place this here. */
   session->iface[0]->_event_cb = _cfg_interface_meter;
     /* Since one window... instead of ui_interface_for() */
-  user_configure_layout(session->iface[0], 5);
+  user_configure_layout(session->iface[0], 0);
     /* Map the window on the screen */
   xcb_map_window(session->connection, window);
 
