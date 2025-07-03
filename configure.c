@@ -384,6 +384,7 @@ _prpb_sweep(PhxInterface *iface, uint16_t ndx, int16_t hD, int16_t vD,
     PhxNexus *inspect;
     int16_t icmp, iend, ibgn;
     int16_t hOffset = 0, vOffset = 0;
+
     inspect = iface->nexus[(--ndx)];
     ibox = &inspect->mete_box;
 
@@ -607,8 +608,10 @@ _plpt_sweep(PhxInterface *iface, uint16_t ndx, int16_t hD, int16_t vD,
             && (!x_moves) ) {
           if ( (inspect->type != PHX_GFUSE)
               || (hOffset >= (GRIPSZ - inspect->mete_box.w)) ) {
-            inspect->mete_box.w += hOffset;
-            inspect->draw_box.w += hOffset;
+            int16_t delta;
+            delta = maxof((GRIPSZ - inspect->mete_box.w), hOffset);
+            inspect->mete_box.w += delta;
+            inspect->draw_box.w += delta;
           } else {
             goto xdelta;
           }
@@ -618,8 +621,10 @@ _plpt_sweep(PhxInterface *iface, uint16_t ndx, int16_t hD, int16_t vD,
             inspect->mete_box.x += hOffset;
             if ( (inspect->type == PHX_GFUSE)
                 && ((inspect->state & HXPD_MSK) == HXPD_RGT) ) {
-              inspect->mete_box.w -= hOffset;
-              inspect->draw_box.w -= hOffset;
+              int16_t delta;
+              delta = minof((inspect->mete_box.w - GRIPSZ), hOffset);
+              inspect->mete_box.w -= delta;
+              inspect->draw_box.w -= delta;
             }
           } else {
             int16_t delta;
@@ -637,8 +642,10 @@ xdelta:     delta = GRIPSZ - inspect->mete_box.w;
             && (!y_moves) ) {
           if ( (inspect->type != PHX_GFUSE)
               || (vOffset >= (GRIPSZ - inspect->mete_box.h)) ) {
-            inspect->mete_box.h += vOffset;
-            inspect->draw_box.h += vOffset;
+            int16_t delta;
+            delta = maxof((GRIPSZ - inspect->mete_box.h), vOffset);
+            inspect->mete_box.h += delta;
+            inspect->draw_box.h += delta;
           } else {
             goto ydelta;
           }
@@ -648,8 +655,10 @@ xdelta:     delta = GRIPSZ - inspect->mete_box.w;
             inspect->mete_box.y += vOffset;
             if ( (inspect->type == PHX_GFUSE)
                 && ((inspect->state & VXPD_MSK) == VXPD_BTM) ) {
-              inspect->mete_box.h -= vOffset;
-              inspect->draw_box.h -= vOffset;
+              int16_t delta;
+              delta = minof((inspect->mete_box.h - GRIPSZ), vOffset);
+              inspect->mete_box.h -= delta;
+              inspect->draw_box.h -= delta;
             }
           } else {
             int16_t delta;
@@ -661,7 +670,6 @@ ydelta:     delta = GRIPSZ - inspect->mete_box.h;
           pp = true;
         }
       }
-
       DEBUG_ASSERT(( (inspect->type == PHX_GFUSE)
                     && ( (inspect->mete_box.h < GRIPSZ)
                         || (inspect->mete_box.w < GRIPSZ) ) ),
